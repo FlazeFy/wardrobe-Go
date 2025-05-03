@@ -12,6 +12,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 	authController := controllers.NewAuthController(db)
 	feedbackController := controllers.NewFeedbackController(db)
 	dictionaryController := controllers.NewDictionaryController(db)
+	historyController := controllers.NewHistoryController(db)
 
 	api := r.Group("/api/v2")
 	{
@@ -37,6 +38,11 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 			dictionary.GET("/", dictionaryController.GetAllDictionary)
 			dictionary.GET("/:dictionary_type", dictionaryController.GetDictionaryByType)
 			dictionary.POST("/", dictionaryController.CreateDictionary)
+		}
+		history := protected.Group("/history")
+		{
+			history.GET("/", historyController.GetAllHistory)
+			history.DELETE("/destroy/:id", historyController.HardDeleteHistoryById)
 		}
 	}
 }
