@@ -6,10 +6,11 @@ import (
 	"wardrobe/models"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GenerateToken(userId uint) (string, error) {
+func GenerateToken(userId uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userId,
 		"exp":     time.Now().Add(config.GetJWTExpirationDuration()).Unix(),

@@ -1,13 +1,41 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"wardrobe/config"
+	"wardrobe/models"
+	"wardrobe/routes"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"gorm.io/gorm"
+)
 
 func main() {
+	// Load Env
+	err := godotenv.Load()
+
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	db := config.ConnectDatabase()
+	MigrateAll(db)
+
 	router := gin.Default()
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-	router.Run()
+	MigrateAll(db)
+	routes.SetUpRoutes(router, db)
+	router.Run(":9000")
+}
+
+func MigrateAll(db *gorm.DB) {
+	db.AutoMigrate(
+		&models.Admin{},
+		&models.User{},
+		&models.Dictionary{},
+		&models.Error{},
+		&models.History{},
+		&models.Feedback{},
+		&models.Clothes{},
+		&models.ClothesUsed{},
+	)
 }
