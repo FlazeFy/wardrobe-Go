@@ -13,6 +13,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 	feedbackController := controllers.NewFeedbackController(db)
 	dictionaryController := controllers.NewDictionaryController(db)
 	historyController := controllers.NewHistoryController(db)
+	clothesController := controllers.NewClothesController(db)
 
 	api := r.Group("/api/v2")
 	{
@@ -43,6 +44,10 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		{
 			history.GET("/", historyController.GetAllHistory)
 			history.DELETE("/destroy/:id", historyController.HardDeleteHistoryById)
+		}
+		clothes := protected.Group("/clothes")
+		{
+			clothes.POST("/", clothesController.CreateClothes)
 		}
 	}
 }

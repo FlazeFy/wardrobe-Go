@@ -23,7 +23,8 @@ type (
 		IsFavorite   bool       `json:"is_favorite" gorm:"type:boolean;not null"`
 		IsScheduled  bool       `json:"is_scheduled" gorm:"type:boolean;not null"`
 		CreatedAt    time.Time  `json:"created_at" gorm:"type:timestamp;not null"`
-		UpdatedAt    time.Time  `json:"updated_at" gorm:"type:timestamp;null"`
+		UpdatedAt    *time.Time `json:"updated_at" gorm:"type:timestamp;null"`
+		DeletedAt    *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
 		// FK - User
 		CreatedBy uuid.UUID `json:"created_by" gorm:"not null"`
 		User      User      `json:"-" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

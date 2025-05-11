@@ -87,7 +87,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	}
 
 	// Validate : Dictionary Type Rules
-	allowedTypes := []string{"used_context", "wash_type"}
+	allowedTypes := []string{"used_context", "wash_type", "clothes_type", "clothes_category", "clothes_size", "clothes_made_from", "clothes_gender"}
 	isValidType := false
 	for _, t := range allowedTypes {
 		if req.DictionaryType == t {
@@ -98,6 +98,15 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	if !isValidType {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"message": "dictionary_type must be one of: " + strings.Join(allowedTypes, ", "),
+		})
+		return
+	}
+
+	// Query : Check Dictionary Name
+	var existing models.Dictionary
+	if err := c.DB.Where("dictionary_name = ?", req.DictionaryName).First(&existing).Error; err == nil {
+		ctx.JSON(http.StatusConflict, gin.H{
+			"message": "dictionary with the same name already exists",
 		})
 		return
 	}
