@@ -24,14 +24,22 @@ func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 	// Query
 	result := c.DB.Preload("User").Find(&data)
 	if result.Error != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"data":    nil,
-			"message": "history not found",
+			"message": "something went wrong",
 		})
 		return
 	}
 
 	// Response
+	if result.RowsAffected == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"data":    nil,
+			"message": "no feedback found",
+		})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
 		"data":    data,
 		"message": "history fetched",

@@ -22,17 +22,17 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 			auth.POST("/register", authController.Register)
 			auth.POST("/login", authController.Login)
 		}
-		feedback := api.Group("/feedback")
-		{
-			feedback.GET("/", feedbackController.GetAllFeedback)
-			feedback.POST("/", feedbackController.CreateFeedback)
-			feedback.DELETE("/destroy/:id", feedbackController.HardDeleteFeedbackById)
-		}
 
 		// Protected Routes
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 
+		feedback := protected.Group("/feedback")
+		{
+			feedback.GET("/", feedbackController.GetAllFeedback)
+			feedback.POST("/", feedbackController.CreateFeedback)
+			feedback.DELETE("/destroy/:id", feedbackController.HardDeleteFeedbackById)
+		}
 		dictionary := protected.Group("/dictionary")
 		{
 			dictionary.GET("/", dictionaryController.GetAllDictionary)

@@ -7,6 +7,7 @@ import (
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,10 +22,10 @@ func NewAuthController(db *gorm.DB) *AuthController {
 // Command
 func (ac *AuthController) Register(c *gin.Context) {
 	// Models
-	var user models.User
+	var req models.User
 
 	// Validate : Request Body
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"Error": err.Error(),
 		})
@@ -33,7 +34,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 
 	// Validate : If username or email already been used
 	var existing models.User
-	if err := ac.DB.Where("username = ? OR email = ?", user.Username, user.Email).First(&existing).Error; err == nil {
+	if err := ac.DB.Where("username = ? OR email = ?", req.Username, req.Email).First(&existing).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "username or email has already been used",
 		})
@@ -41,7 +42,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	}
 
 	// Hashing
-	if err := utils.HashPassword(&user, user.Password); err != nil {
+	if err := utils.HashPassword(&req, req.Password); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"Error": err.Error(),
 		})
@@ -49,6 +50,14 @@ func (ac *AuthController) Register(c *gin.Context) {
 	}
 
 	// Query
+	user := models.User{
+		ID:              uuid.New(),
+		Username:        req.Username,
+		Password:        req.Password,
+		Email:           req.Email,
+		TelegramUserId:  req.TelegramUserId,
+		TelegramIsValid: false,
+	}
 	result := ac.DB.Create(&user)
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

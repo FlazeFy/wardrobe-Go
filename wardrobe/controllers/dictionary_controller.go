@@ -6,6 +6,7 @@ import (
 	"wardrobe/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -48,24 +49,26 @@ func (c *DictionaryController) GetDictionaryByType(ctx *gin.Context) {
 	var data []models.Dictionary
 
 	// Query
-	if err := c.DB.Where("dictionary_type = ?", dictionaryType).Find(&data).Error; err != nil {
+	result := c.DB.Where("dictionary_type = ?", dictionaryType).Find(&data)
+	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"message": "dictionary not found",
+			"data":    nil,
+			"message": "something went wrong",
 		})
 		return
 	}
 
 	// Response
-	status := http.StatusNotFound
-	var res interface{} = nil
-
-	if len(data) > 0 {
-		status = http.StatusOK
-		res = data
+	if result.RowsAffected == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"data":    nil,
+			"message": "no dictionary found",
+		})
+		return
 	}
 
-	ctx.JSON(status, gin.H{
-		"data":    res,
+	ctx.JSON(http.StatusOK, gin.H{
+		"data":    data,
 		"message": "dictionary fetched",
 	})
 }
@@ -84,7 +87,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	}
 
 	// Validate : Dictionary Type Rules
-	allowedTypes := []string{"social_type", "interactions_mood"}
+	allowedTypes := []string{"used_context", "wash_type"}
 	isValidType := false
 	for _, t := range allowedTypes {
 		if req.DictionaryType == t {
@@ -101,6 +104,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 
 	// Query : Add Dictionary
 	dictionary := models.Dictionary{
+		ID:             uuid.New(),
 		DictionaryType: req.DictionaryType,
 		DictionaryName: req.DictionaryName,
 	}

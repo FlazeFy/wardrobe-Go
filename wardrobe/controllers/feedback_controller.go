@@ -3,8 +3,10 @@ package controllers
 import (
 	"net/http"
 	"wardrobe/models"
+	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -22,19 +24,26 @@ func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
 	var data []models.Feedback
 
 	// Query
-	c.DB.Find(&data)
-
-	// Response
-	status := http.StatusNotFound
-	var res interface{} = nil
-
-	if len(data) > 0 {
-		status = http.StatusOK
-		res = data
+	result := c.DB.Preload("User").Find(&data)
+	if result.Error != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"data":    nil,
+			"message": "something went wrong",
+		})
+		return
 	}
 
-	ctx.JSON(status, gin.H{
-		"data":    res,
+	// Response
+	if result.RowsAffected == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"data":    nil,
+			"message": "no feedback found",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data":    data,
 		"message": "feedback fetched",
 	})
 }
@@ -52,10 +61,21 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 		return
 	}
 
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	// Query : Add Feedback
 	feedback := models.Feedback{
+		ID:           uuid.New(),
 		FeedbackRate: req.FeedbackRate,
 		FeedbackBody: req.FeedbackBody,
+		CreatedBy:    *userId,
 	}
 	if err := c.DB.Create(&feedback).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{

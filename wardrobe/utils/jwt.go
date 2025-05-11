@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"time"
 	"wardrobe/config"
 	"wardrobe/models"
@@ -12,27 +13,35 @@ import (
 
 func GenerateToken(userId uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": userId,
+		"user_id": userId.String(),
 		"exp":     time.Now().Add(config.GetJWTExpirationDuration()).Unix(),
 		"iat":     time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
 	return token.SignedString(config.GetJWTSecret())
 }
 
-func ValidateToken(tokenString string) (uint, error) {
+func ValidateToken(tokenString string) (uuid.UUID, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return config.GetJWTSecret(), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userId := uint(claims["user_id"].(float64))
-		return userId, nil
+	if err != nil || !token.Valid {
+		return uuid.UUID{}, err
 	}
 
-	return 0, err
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return uuid.UUID{}, errors.New("invalid token claims")
+	}
+
+	userIdStr, ok := claims["user_id"].(string)
+	if !ok {
+		return uuid.UUID{}, errors.New("user_id is not a string")
+	}
+
+	return uuid.Parse(userIdStr)
 }
 
 func HashPassword(u *models.User, password string) error {
