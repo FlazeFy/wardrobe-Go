@@ -252,3 +252,83 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		"message": "clothes created",
 	})
 }
+
+func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
+	// Models
+	var req models.ClothesUsed
+
+	// Validate
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "invalid request body",
+		})
+		return
+	}
+
+	// Validate : Clothes Category Rules
+	allowedContexts := []string{"Worship", "Shopping", "Work", "School", "Campus", "Sport", "Party"}
+	ok := false
+	for _, v := range allowedContexts {
+		if req.UsedContext == v {
+			ok = true
+			break
+		}
+	}
+	if !ok {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "used_context must be one of: " + strings.Join(allowedContexts, ",")})
+		return
+	}
+
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Query : Add Clothes Used
+	clothes_used := models.ClothesUsed{
+		ID:          uuid.New(),
+		ClothesNote: req.ClothesNote,
+		ClothesId:   req.ClothesId,
+		UsedContext: req.UsedContext,
+		CreatedBy:   *userId,
+	}
+	if err := c.DB.Create(&clothes_used).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "failed to create clothes used",
+		})
+		return
+	}
+
+	// Response
+	ctx.JSON(http.StatusCreated, gin.H{
+		"data":    clothes_used,
+		"message": "clothes used created",
+	})
+}
+
+func (c *ClothesController) HardDeleteClothesUsedById(ctx *gin.Context) {
+	// Params
+	id := ctx.Param("id")
+
+	// Models
+	var clothes_used models.ClothesUsed
+
+	// Query
+	result := c.DB.Unscoped().First(&clothes_used, "id = ?", id)
+	if result.Error != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "clothes used not found",
+		})
+		return
+	}
+	c.DB.Unscoped().Delete(&clothes_used)
+
+	// Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "clothes used permanentally deleted",
+	})
+}

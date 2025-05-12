@@ -48,6 +48,8 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		clothes := protected.Group("/clothes")
 		{
 			clothes.POST("/", clothesController.CreateClothes)
+			clothes.POST("/history", clothesController.CreateClothesUsed)
+			clothes.DELETE("/history/:id", clothesController.HardDeleteClothesUsedById)
 		}
 	}
 }
