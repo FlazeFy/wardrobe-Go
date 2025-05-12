@@ -10,6 +10,7 @@ import (
 
 func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 	authController := controllers.NewAuthController(db)
+	questionController := controllers.NewQuestionController(db)
 	feedbackController := controllers.NewFeedbackController(db)
 	dictionaryController := controllers.NewDictionaryController(db)
 	historyController := controllers.NewHistoryController(db)
@@ -22,6 +23,11 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		{
 			auth.POST("/register", authController.Register)
 			auth.POST("/login", authController.Login)
+		}
+		question := api.Group("/question")
+		{
+			question.POST("/", questionController.CreateQuestion)
+			question.GET("/", questionController.GetAllQuestion)
 		}
 
 		// Protected Routes
@@ -48,6 +54,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		clothes := protected.Group("/clothes")
 		{
 			clothes.POST("/", clothesController.CreateClothes)
+			clothes.DELETE("/:id", clothesController.SoftDeleteClothesById)
 			clothes.POST("/history", clothesController.CreateClothesUsed)
 			clothes.DELETE("/history/:id", clothesController.HardDeleteClothesUsedById)
 		}

@@ -253,6 +253,37 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	})
 }
 
+func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
+	// Param
+	id := ctx.Param("id")
+
+	// Models
+	var clothes models.Clothes
+
+	if err := c.DB.First(&clothes, "id = ?", id).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "clothes not found",
+		})
+		return
+	}
+
+	now := time.Now()
+	clothes.DeletedAt = &now
+
+	// Query : Update Clothes
+	if err := c.DB.Save(&clothes).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "something went wrong",
+		})
+		return
+	}
+
+	// Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "clothes deleted",
+	})
+}
+
 func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
 	// Models
 	var req models.ClothesUsed
