@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -9,6 +11,7 @@ import (
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -185,11 +188,63 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		ClothesGender:   clothesGender,
 	}
 
+	// Query : Create Clothes
 	if err := c.DB.Create(&clothes).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "something went wrong",
 		})
 		return
+	}
+
+	// Get User Contact
+	userContext := utils.NewUserContext(c.DB)
+	contact, err := userContext.GetUserContact(*userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Send to Telegram
+	if contact.TelegramUserId != nil && contact.TelegramIsValid {
+		filename := fmt.Sprintf("clothes-%s.pdf", clothes.ID)
+		err = utils.GeneratePDF(clothes, filename)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to connect to Telegram bot",
+			})
+			return
+		}
+
+		telegramID, err := strconv.ParseInt(*contact.TelegramUserId, 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid Telegram User Id",
+			})
+			return
+		}
+		doc := tgbotapi.NewDocumentUpload(telegramID, filename)
+		doc.Caption = fmt.Sprintf("clothes created, its called '%s'", clothes.ClothesName)
+
+		_, err = bot.Send(doc)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to send PDF to Telegram",
+			})
+			return
+		}
+
+		// Cleanup
+		os.Remove(filename)
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
