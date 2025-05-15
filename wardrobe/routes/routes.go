@@ -15,6 +15,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 	dictionaryController := controllers.NewDictionaryController(db)
 	historyController := controllers.NewHistoryController(db)
 	clothesController := controllers.NewClothesController(db)
+	scheduleController := controllers.NewScheduleController(db)
 
 	api := r.Group("/api/v2")
 	{
@@ -57,6 +58,11 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 			clothes.DELETE("/:id", clothesController.SoftDeleteClothesById)
 			clothes.POST("/history", clothesController.CreateClothesUsed)
 			clothes.DELETE("/history/:id", clothesController.HardDeleteClothesUsedById)
+		}
+		schedule := protected.Group("/schedule")
+		{
+			schedule.POST("/", scheduleController.CreateSchedule)
+			schedule.DELETE("/destroy/:id", scheduleController.HardDeleteScheduleById)
 		}
 	}
 }

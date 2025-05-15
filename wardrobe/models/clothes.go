@@ -1,10 +1,20 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
+
+type ClothesContext struct {
+	DB *gorm.DB
+}
+
+func NewClothesContext(db *gorm.DB) *ClothesContext {
+	return &ClothesContext{DB: db}
+}
 
 type (
 	Clothes struct {
@@ -40,4 +50,28 @@ type (
 		ClothesGender      string     `json:"clothes_gender" gorm:"type:varchar(6);not null"`
 		DictionaryGender   Dictionary `json:"-" gorm:"foreignKey:ClothesGender;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
+	ClothesShortInfo struct {
+		ClothesName string `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		// FK - Dictionary
+		ClothesType        string     `json:"clothes_type" gorm:"type:varchar(36);not null"`
+		DictionaryType     Dictionary `json:"-" gorm:"foreignKey:ClothesType;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+		ClothesCategory    string     `json:"clothes_category" gorm:"type:varchar(36);not null"`
+		DictionaryCategory Dictionary `json:"-" gorm:"foreignKey:ClothesCategory;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	}
 )
+
+func (c *ClothesContext) GetClothesShortInfoById(id uuid.UUID) (*ClothesShortInfo, error) {
+	var clothes ClothesShortInfo
+	result := c.DB.Table("clothes").
+		Select("clothes_name,clothes_type,clothes_category").
+		Where("id = ?", id).
+		First(&clothes)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &clothes, nil
+}
