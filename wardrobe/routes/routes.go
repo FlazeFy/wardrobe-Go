@@ -61,6 +61,8 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		}
 		schedule := protected.Group("/schedule")
 		{
+			schedule.GET("/by_day/:day", scheduleController.GetScheduleByDay)
+			schedule.GET("/by_tomorrow/:day", scheduleController.GetScheduleForTomorrow)
 			schedule.POST("/", scheduleController.CreateSchedule)
 			schedule.DELETE("/destroy/:id", scheduleController.HardDeleteScheduleById)
 		}

@@ -24,6 +24,82 @@ func NewScheduleController(db *gorm.DB) *ScheduleController {
 	return &ScheduleController{DB: db}
 }
 
+// Query
+func (c *ScheduleController) GetScheduleByDay(ctx *gin.Context) {
+	// Params
+	day := ctx.Param("day")
+
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Query
+	scheduleContext := models.NewScheduleContext(c.DB)
+	res, err := scheduleContext.GetScheduleByDay(day, *userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	// Response
+	if len(res) == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"data":    nil,
+			"message": "no schedule found",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"data":    res,
+		"message": "schedule fetched",
+	})
+}
+
+func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
+	// Params
+	day := ctx.Param("day")
+
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Helper : Get Next Days
+	tomorrow := utils.GetNextDay(day, 1)
+	twoDaysLater := utils.GetNextDay(day, 2)
+
+	// Query : Get Schedule
+	scheduleContext := models.NewScheduleContext(c.DB)
+	resTomorrow, err := scheduleContext.GetScheduleByDay(tomorrow, *userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+	resTwoDaysLater, err := scheduleContext.GetScheduleByDay(twoDaysLater, *userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	// Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"tomorrow":           utils.CheckIfEmpty(resTomorrow),
+		"tomorrow_day":       tomorrow,
+		"two_days_later":     utils.CheckIfEmpty(resTwoDaysLater),
+		"two_days_later_day": twoDaysLater,
+	})
+}
+
 // Command
 func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	// Models
