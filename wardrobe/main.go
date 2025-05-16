@@ -45,5 +45,6 @@ func MigrateAll(db *gorm.DB) {
 		&models.UserRequest{},
 		&models.UserTrack{},
 		&models.UserWeather{},
+		&models.Wash{},
 	)
 }

@@ -257,10 +257,19 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 	// Param
 	id := ctx.Param("id")
 
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
 	// Models
 	var clothes models.Clothes
 
-	if err := c.DB.First(&clothes, "id = ?", id).Error; err != nil {
+	if err := c.DB.First(&clothes, "id = ? AND deleted_at is null AND created_by = ?", id, userId).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"message": "clothes not found",
 		})
@@ -281,6 +290,142 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "clothes deleted",
+	})
+}
+
+func (c *ClothesController) RecoverDeletedClothesById(ctx *gin.Context) {
+	// Param
+	id := ctx.Param("id")
+
+	// Models
+	var clothes models.Clothes
+
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	if err := c.DB.First(&clothes, "id = ? AND deleted_at is not null AND created_by = ?", id, userId).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "clothes not found",
+		})
+		return
+	}
+
+	clothes.DeletedAt = nil
+
+	// Query : Update Clothes
+	if err := c.DB.Save(&clothes).Error; err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"message": "something went wrong",
+		})
+		return
+	}
+
+	// Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "clothes recovered",
+	})
+}
+
+func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
+	// Params
+	id := ctx.Param("id")
+
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Models
+	var clothes models.Clothes
+	var schedule models.Schedule
+	var clothes_used models.ClothesUsed
+	var wash models.Wash
+	var outfit_rel models.OutfitRelation
+
+	uuidID, err := uuid.Parse(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid UUID"})
+		return
+	}
+
+	// Get Clothes
+	clothesContext := models.NewClothesContext(c.DB)
+	clothes_old, err := clothesContext.GetClothesShortInfoById(uuidID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Query : Delete Clothes
+	result := c.DB.Unscoped().First(&clothes, "id = ? AND deleted_at is not null AND created_by = ?", id, userId)
+	if result.Error != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"message": "clothes not found",
+		})
+		return
+	}
+	c.DB.Unscoped().Delete(&clothes)
+
+	// Query : Delete Clothes Relation
+	c.DB.Unscoped().Where("clothes_id = ? AND created_by = ?", id, userId).Delete(&schedule)
+	c.DB.Unscoped().Where("clothes_id = ? AND created_by = ?", id, userId).Delete(&clothes_used)
+	c.DB.Unscoped().Where("clothes_id = ? AND created_by = ?", id, userId).Delete(&wash)
+	c.DB.Unscoped().Where("clothes_id = ? AND created_by = ?", id, userId).Delete(&outfit_rel)
+
+	// Get User Contact
+	userContext := utils.NewUserContext(c.DB)
+	contact, err := userContext.GetUserContact(*userId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Send to Telegram
+	if contact.TelegramUserId != nil && contact.TelegramIsValid {
+		bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to connect to Telegram bot",
+			})
+			return
+		}
+
+		telegramID, err := strconv.ParseInt(*contact.TelegramUserId, 10, 64)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid Telegram User Id",
+			})
+			return
+		}
+		message := fmt.Sprintf("Your clothes called '%s' has been permentally removed from Wardrobe", clothes_old.ClothesName)
+		doc := tgbotapi.NewMessage(telegramID, message)
+
+		_, err = bot.Send(doc)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to send message to Telegram",
+			})
+			return
+		}
+	}
+
+	// Response
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "clothes permanentally deleted",
 	})
 }
 
@@ -349,7 +494,7 @@ func (c *ClothesController) HardDeleteClothesUsedById(ctx *gin.Context) {
 	var clothes_used models.ClothesUsed
 
 	// Query
-	result := c.DB.Unscoped().First(&clothes_used, "id = ?", id)
+	result := c.DB.Unscoped().First(&clothes_used, "id = ? AND deleted_at is not null", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"message": "clothes used not found",
