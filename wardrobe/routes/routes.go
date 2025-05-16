@@ -55,6 +55,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		clothes := protected.Group("/clothes")
 		{
 			clothes.POST("/", clothesController.CreateClothes)
+			clothes.GET("/last_history", clothesController.GetClothesLastHistory)
 			clothes.PUT("/recover/:id", clothesController.RecoverDeletedClothesById)
 			clothes.DELETE("/:id", clothesController.SoftDeleteClothesById)
 			clothes.DELETE("/destroy/:id", clothesController.HardDeleteClothesById)

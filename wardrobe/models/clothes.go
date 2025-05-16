@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ClothesContext struct {
@@ -58,6 +59,14 @@ type (
 		ClothesCategory    string     `json:"clothes_category" gorm:"type:varchar(36);not null"`
 		DictionaryCategory Dictionary `json:"-" gorm:"foreignKey:ClothesCategory;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
+	ClothesLastCreated struct {
+		ClothesName string    `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		CreatedAt   time.Time `json:"created_at" gorm:"type:timestamp;not null"`
+	}
+	ClothesLastDeleted struct {
+		ClothesName string     `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		DeletedAt   *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
+	}
 )
 
 func (c *ClothesContext) GetClothesShortInfoById(id uuid.UUID) (*ClothesShortInfo, error) {
@@ -66,6 +75,47 @@ func (c *ClothesContext) GetClothesShortInfoById(id uuid.UUID) (*ClothesShortInf
 		Select("clothes_name,clothes_type,clothes_category").
 		Where("id = ?", id).
 		First(&clothes)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &clothes, nil
+}
+
+func (c *ClothesContext) GetClothesLastCreated(ctx string, userID uuid.UUID) (*ClothesLastCreated, error) {
+	var clothes ClothesLastCreated
+
+	result := c.DB.Table("clothes").
+		Select("clothes_name, "+ctx).
+		Where("created_by = ?", userID).
+		Order(clause.OrderByColumn{
+			Column: clause.Column{Name: ctx},
+			Desc:   true,
+		}).First(&clothes)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &clothes, nil
+}
+
+func (c *ClothesContext) GetClothesLastDeleted(ctx string, userID uuid.UUID) (*ClothesLastDeleted, error) {
+	var clothes ClothesLastDeleted
+
+	result := c.DB.Table("clothes").
+		Select("clothes_name, "+ctx).
+		Where("created_by = ?", userID).
+		Where("deleted_at IS NOT NULL").
+		Order(clause.OrderByColumn{
+			Column: clause.Column{Name: ctx},
+			Desc:   true,
+		}).First(&clothes)
 
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, errors.New("clothes not found")

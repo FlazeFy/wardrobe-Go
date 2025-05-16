@@ -24,6 +24,59 @@ func NewClothesController(db *gorm.DB) *ClothesController {
 	return &ClothesController{DB: db}
 }
 
+// Query
+func (c *ClothesController) GetClothesLastHistory(ctx *gin.Context) {
+	// Get User ID
+	userIdStr, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "invalid user ID",
+		})
+		return
+	}
+
+	userId := *userIdStr
+
+	// Query : Get Last Created
+	clothesContext := models.NewClothesContext(c.DB)
+	resLastAdded, err := clothesContext.GetClothesLastCreated("created_at", userId)
+	if err != nil {
+		if err.Error() == "clothes not found" {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"status":  "failed",
+				"message": "no recently added clothes found",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "failed to fetch last added clothes",
+		})
+		return
+	}
+	// Query : Get Last Deleted
+	resLastDeleted, _ := clothesContext.GetClothesLastDeleted("deleted_at", userId)
+
+	// Response
+	data := gin.H{
+		"last_added_clothes":   resLastAdded.ClothesName,
+		"last_added_date":      resLastAdded.CreatedAt,
+		"last_deleted_clothes": nil,
+		"last_deleted_date":    nil,
+	}
+
+	if resLastDeleted != nil {
+		data["last_deleted_clothes"] = resLastDeleted.ClothesName
+		data["last_deleted_date"] = resLastDeleted.DeletedAt
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "clothes last history fetched",
+		"data":    data,
+	})
+}
+
 // Command
 func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	// Mandatory Field
