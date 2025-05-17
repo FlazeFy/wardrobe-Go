@@ -36,6 +36,7 @@ func (c *DictionaryController) GetAllDictionary(ctx *gin.Context) {
 	}
 
 	ctx.JSON(status, gin.H{
+		"status":  "success",
 		"data":    res,
 		"message": "dictionary fetched",
 	})
@@ -52,7 +53,7 @@ func (c *DictionaryController) GetDictionaryByType(ctx *gin.Context) {
 	result := c.DB.Where("dictionary_type = ?", dictionaryType).Find(&data)
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"data":    nil,
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -61,13 +62,14 @@ func (c *DictionaryController) GetDictionaryByType(ctx *gin.Context) {
 	// Response
 	if result.RowsAffected == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"data":    nil,
-			"message": "no dictionary found",
+			"status":  "failed",
+			"message": "dictionary not found",
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"data":    data,
 		"message": "dictionary fetched",
 	})
@@ -81,6 +83,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": "invalid request body",
 		})
 		return
@@ -97,6 +100,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	}
 	if !isValidType {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": "dictionary_type must be one of: " + strings.Join(allowedTypes, ", "),
 		})
 		return
@@ -106,6 +110,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	var existing models.Dictionary
 	if err := c.DB.Where("dictionary_name = ?", req.DictionaryName).First(&existing).Error; err == nil {
 		ctx.JSON(http.StatusConflict, gin.H{
+			"status":  "failed",
 			"message": "dictionary with the same name already exists",
 		})
 		return
@@ -119,6 +124,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	}
 	if err := c.DB.Create(&dictionary).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -126,6 +132,7 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
 		"data":    dictionary,
 		"message": "dictionary created",
 	})

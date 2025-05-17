@@ -30,7 +30,8 @@ func (c *ClothesController) GetClothesLastHistory(ctx *gin.Context) {
 	userIdStr, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid user ID",
+			"status":  "failed",
+			"message": "invalid user id",
 		})
 		return
 	}
@@ -41,16 +42,16 @@ func (c *ClothesController) GetClothesLastHistory(ctx *gin.Context) {
 	clothesContext := models.NewClothesContext(c.DB)
 	resLastAdded, err := clothesContext.GetClothesLastCreated("created_at", userId)
 	if err != nil {
-		if err.Error() == "clothes not found" {
-			ctx.JSON(http.StatusNotFound, gin.H{
+		if err.Error() != "clothes not found" {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "failed",
-				"message": "no recently added clothes found",
+				"message": "something went wrong",
 			})
 			return
 		}
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"message": "failed to fetch last added clothes",
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -74,6 +75,39 @@ func (c *ClothesController) GetClothesLastHistory(ctx *gin.Context) {
 		"status":  "success",
 		"message": "clothes last history fetched",
 		"data":    data,
+	})
+}
+
+func (c *ClothesController) GetDeletedClothes(ctx *gin.Context) {
+	// Get User ID
+	userIdStr, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "invalid user id",
+		})
+		return
+	}
+
+	userId := *userIdStr
+
+	// Query : Get Deleted Clothes
+	clothesContext := models.NewClothesContext(c.DB)
+	res, err := clothesContext.GetDeletedClothes(userId)
+
+	// Response
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "clothes fetched",
+		"data":    res,
 	})
 }
 
@@ -112,7 +146,10 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	if priceStr != "" {
 		price, err := strconv.Atoi(priceStr)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid clothes_price"})
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status":  "failed",
+				"message": "invalid clothes_price",
+			})
 			return
 		}
 		clothesPrice = &price
@@ -123,7 +160,10 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	if buyAtStr != "" {
 		t, err := time.Parse(time.RFC3339, buyAtStr)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid clothes_buy_at"})
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status":  "failed",
+				"message": "invalid clothes_buy_at",
+			})
 			return
 		}
 		clothesBuyAt = &t
@@ -139,7 +179,10 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "clothes_category must be one of: " + strings.Join(allowedCategories, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "clothes_category must be one of: " + strings.Join(allowedCategories, ","),
+		})
 		return
 	}
 
@@ -153,7 +196,10 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "clothes_type must be one of: " + strings.Join(allowedTypes, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "clothes_type must be one of: " + strings.Join(allowedTypes, ","),
+		})
 		return
 	}
 
@@ -167,7 +213,10 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "clothes_gender must be one of: " + strings.Join(allowedGenders, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "clothes_gender must be one of: " + strings.Join(allowedGenders, ","),
+		})
 		return
 	}
 
@@ -181,7 +230,10 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "clothes_made_from must be one of: " + strings.Join(allowedMadeFroms, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "clothes_made_from must be one of: " + strings.Join(allowedMadeFroms, ","),
+		})
 		return
 	}
 
@@ -195,14 +247,20 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "clothes_size must be one of: " + strings.Join(allowedSizes, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "clothes_size must be one of: " + strings.Join(allowedSizes, ","),
+		})
 		return
 	}
 
 	// Query : Check Clothes Name
 	var existing models.Clothes
 	if err := c.DB.Where("clothes_name = ?", clothesName).First(&existing).Error; err == nil {
-		ctx.JSON(http.StatusConflict, gin.H{"message": "clothes with the same name already exists"})
+		ctx.JSON(http.StatusConflict, gin.H{
+			"status":  "failed",
+			"message": "clothes with the same name already exists",
+		})
 		return
 	}
 
@@ -210,7 +268,8 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
+			"status":  "failed",
+			"message": "invalid user id",
 		})
 		return
 	}
@@ -244,6 +303,7 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	// Query : Create Clothes
 	if err := c.DB.Create(&clothes).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -254,7 +314,8 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	contact, err := userContext.GetUserContact(*userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"status":  "failed",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -265,7 +326,8 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		err = utils.GeneratePDF(clothes, filename)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
+				"status":  "failed",
+				"message": err.Error(),
 			})
 			return
 		}
@@ -273,7 +335,8 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to connect to Telegram bot",
+				"status":  "failed",
+				"message": "Failed to connect to Telegram bot",
 			})
 			return
 		}
@@ -281,7 +344,8 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		telegramID, err := strconv.ParseInt(*contact.TelegramUserId, 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "Invalid Telegram User Id",
+				"status":  "failed",
+				"message": "Invalid Telegram User Id",
 			})
 			return
 		}
@@ -291,7 +355,8 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 		_, err = bot.Send(doc)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to send PDF to Telegram",
+				"status":  "failed",
+				"message": "Failed to send PDF to Telegram",
 			})
 			return
 		}
@@ -301,6 +366,7 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
 		"data":    clothes,
 		"message": "clothes created",
 	})
@@ -314,7 +380,8 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
+			"status":  "failed",
+			"message": "invalid user id",
 		})
 		return
 	}
@@ -324,6 +391,7 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 
 	if err := c.DB.First(&clothes, "id = ? AND deleted_at is null AND created_by = ?", id, userId).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "clothes not found",
 		})
 		return
@@ -335,6 +403,7 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 	// Query : Update Clothes
 	if err := c.DB.Save(&clothes).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -342,6 +411,7 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "clothes deleted",
 	})
 }
@@ -357,13 +427,15 @@ func (c *ClothesController) RecoverDeletedClothesById(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
+			"status":  "failed",
+			"message": "invalid user id",
 		})
 		return
 	}
 
 	if err := c.DB.First(&clothes, "id = ? AND deleted_at is not null AND created_by = ?", id, userId).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "clothes not found",
 		})
 		return
@@ -374,6 +446,7 @@ func (c *ClothesController) RecoverDeletedClothesById(ctx *gin.Context) {
 	// Query : Update Clothes
 	if err := c.DB.Save(&clothes).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -381,6 +454,7 @@ func (c *ClothesController) RecoverDeletedClothesById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "clothes recovered",
 	})
 }
@@ -393,7 +467,8 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
+			"status":  "failed",
+			"message": "invalid user id",
 		})
 		return
 	}
@@ -407,7 +482,10 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 
 	uuidID, err := uuid.Parse(id)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "invalid UUID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "invalid UUID",
+		})
 		return
 	}
 
@@ -416,7 +494,8 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 	clothes_old, err := clothesContext.GetClothesShortInfoById(uuidID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"status":  "failed",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -425,6 +504,7 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 	result := c.DB.Unscoped().First(&clothes, "id = ? AND deleted_at is not null AND created_by = ?", id, userId)
 	if result.Error != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "clothes not found",
 		})
 		return
@@ -442,7 +522,8 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 	contact, err := userContext.GetUserContact(*userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"status":  "failed",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -452,7 +533,8 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 		bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to connect to Telegram bot",
+				"status":  "failed",
+				"message": "Failed to connect to Telegram bot",
 			})
 			return
 		}
@@ -460,7 +542,8 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 		telegramID, err := strconv.ParseInt(*contact.TelegramUserId, 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "Invalid Telegram User Id",
+				"status":  "failed",
+				"message": "Invalid Telegram User Id",
 			})
 			return
 		}
@@ -470,7 +553,8 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 		_, err = bot.Send(doc)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to send message to Telegram",
+				"status":  "failed",
+				"message": "Failed to send message to Telegram",
 			})
 			return
 		}
@@ -478,6 +562,7 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "clothes permanentally deleted",
 	})
 }
@@ -489,6 +574,7 @@ func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": "invalid request body",
 		})
 		return
@@ -504,7 +590,10 @@ func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "used_context must be one of: " + strings.Join(allowedContexts, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "used_context must be one of: " + strings.Join(allowedContexts, ","),
+		})
 		return
 	}
 
@@ -512,6 +601,7 @@ func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": err.Error(),
 		})
 		return
@@ -527,6 +617,7 @@ func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
 	}
 	if err := c.DB.Create(&clothes_used).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "failed to create clothes used",
 		})
 		return
@@ -534,6 +625,7 @@ func (c *ClothesController) CreateClothesUsed(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
 		"data":    clothes_used,
 		"message": "clothes used created",
 	})
@@ -550,6 +642,7 @@ func (c *ClothesController) HardDeleteClothesUsedById(ctx *gin.Context) {
 	result := c.DB.Unscoped().First(&clothes_used, "id = ? AND deleted_at is not null", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "clothes used not found",
 		})
 		return
@@ -558,6 +651,7 @@ func (c *ClothesController) HardDeleteClothesUsedById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "clothes used permanentally deleted",
 	})
 }

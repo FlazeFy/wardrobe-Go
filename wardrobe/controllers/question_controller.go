@@ -28,13 +28,14 @@ func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
 	// Response
 	if result.RowsAffected == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"data":    nil,
-			"message": "no question found",
+			"status":  "failed",
+			"message": "question not found",
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "failed",
 		"data":    data,
 		"message": "question fetched",
 	})
@@ -48,6 +49,7 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": "invalid request body",
 		})
 		return
@@ -62,6 +64,7 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 	}
 	if err := c.DB.Create(&question).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "failed to create question",
 		})
 		return
@@ -69,6 +72,7 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
 		"data":    question,
 		"message": "question created",
 	})

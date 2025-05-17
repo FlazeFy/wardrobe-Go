@@ -27,7 +27,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	// Validate : Request Body
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
+			"message": err.Error(),
 		})
 		return
 	}
@@ -36,7 +36,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	var existing models.User
 	if err := ac.DB.Where("username = ? OR email = ?", req.Username, req.Email).First(&existing).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "username or email has already been used",
+			"message": "username or email has already been used",
 		})
 		return
 	}
@@ -44,7 +44,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	// Hashing
 	if err := utils.HashPassword(&req, req.Password); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
+			"message": err.Error(),
 		})
 		return
 	}
@@ -61,7 +61,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	result := ac.DB.Create(&user)
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"Error": result.Error,
+			"message": result.Error,
 		})
 		return
 	}
@@ -70,7 +70,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	token, err := utils.GenerateToken(user.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"Error": result.Error,
+			"message": result.Error,
 		})
 		return
 	}
@@ -90,7 +90,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Validate : Request Body
 	if err := c.ShouldBindJSON(&loginReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"Error": err.Error(),
+			"message": err.Error(),
 		})
 		return
 	}
@@ -98,7 +98,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Query
 	if err := ac.DB.Where("email = ?", loginReq.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"Error": "invalid email",
+			"message": "invalid email",
 		})
 		return
 	}
@@ -106,7 +106,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Validate : Password
 	if err := utils.CheckPassword(&user, loginReq.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"Error": "invalid password",
+			"message": "invalid password",
 		})
 		return
 	}
@@ -115,7 +115,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	token, err := utils.GenerateToken(user.ID)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"Error": "error generating token",
+			"message": "error generating token",
 		})
 		return
 	}

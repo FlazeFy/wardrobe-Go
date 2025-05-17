@@ -33,6 +33,7 @@ func (c *ScheduleController) GetScheduleByDay(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": err.Error(),
 		})
 		return
@@ -42,20 +43,24 @@ func (c *ScheduleController) GetScheduleByDay(ctx *gin.Context) {
 	scheduleContext := models.NewScheduleContext(c.DB)
 	res, err := scheduleContext.GetScheduleByDay(day, *userId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
 		return
 	}
 
 	// Response
 	if len(res) == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"data":    nil,
-			"message": "no schedule found",
+			"status":  "failed",
+			"message": "schedule not found",
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"data":    res,
 		"message": "schedule fetched",
 	})
@@ -69,6 +74,7 @@ func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": err.Error(),
 		})
 		return
@@ -82,21 +88,30 @@ func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
 	scheduleContext := models.NewScheduleContext(c.DB)
 	resTomorrow, err := scheduleContext.GetScheduleByDay(tomorrow, *userId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
 		return
 	}
 	resTwoDaysLater, err := scheduleContext.GetScheduleByDay(twoDaysLater, *userId)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
 		return
 	}
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
-		"tomorrow":           utils.CheckIfEmpty(resTomorrow),
-		"tomorrow_day":       tomorrow,
-		"two_days_later":     utils.CheckIfEmpty(resTwoDaysLater),
-		"two_days_later_day": twoDaysLater,
+		"status": "success",
+		"data": gin.H{
+			"tomorrow":           utils.CheckIfEmpty(resTomorrow),
+			"tomorrow_day":       tomorrow,
+			"two_days_later":     utils.CheckIfEmpty(resTwoDaysLater),
+			"two_days_later_day": twoDaysLater,
+		},
 	})
 }
 
@@ -108,6 +123,7 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": "invalid request body",
 		})
 		return
@@ -124,7 +140,10 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 		}
 	}
 	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": "day must be one of: " + strings.Join(allowedDays, ",")})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "day must be one of: " + strings.Join(allowedDays, ","),
+		})
 		return
 	}
 
@@ -132,6 +151,7 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": err.Error(),
 		})
 		return
@@ -158,6 +178,7 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	// Query : Create Schedule
 	if err := c.DB.Create(&schedule).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -168,7 +189,8 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	contact, err := userContext.GetUserContact(*userId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"status":  "failed",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -178,7 +200,8 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	clothes, err := clothesContext.GetClothesShortInfoById(clothes_id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"status":  "failed",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -188,7 +211,8 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 		bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to connect to Telegram bot",
+				"status":  "failed",
+				"message": "Failed to connect to Telegram bot",
 			})
 			return
 		}
@@ -196,7 +220,8 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 		telegramID, err := strconv.ParseInt(*contact.TelegramUserId, 10, 64)
 		if err != nil {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "Invalid Telegram User Id",
+				"status":  "failed",
+				"message": "Invalid Telegram User Id",
 			})
 			return
 		}
@@ -206,13 +231,15 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 		_, err = bot.Send(doc)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to send message to Telegram",
+				"status":  "failed",
+				"message": "Failed to send message to Telegram",
 			})
 			return
 		}
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
 		"data":    schedule,
 		"message": "schedule created",
 	})
@@ -229,6 +256,7 @@ func (c *ScheduleController) HardDeleteScheduleById(ctx *gin.Context) {
 	result := c.DB.Unscoped().First(&schedule, "id = ?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "schedule not found",
 		})
 		return
@@ -237,6 +265,7 @@ func (c *ScheduleController) HardDeleteScheduleById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "schedule permentally delete",
 	})
 }

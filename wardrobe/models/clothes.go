@@ -67,6 +67,21 @@ type (
 		ClothesName string     `json:"clothes_name" gorm:"type:varchar(36);not null"`
 		DeletedAt   *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
 	}
+	ClothesDeleted struct {
+		ID           uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey"`
+		ClothesName  string     `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		ClothesImage *string    `json:"clothes_image" gorm:"type:varchar(1000);null"`
+		ClothesQty   int        `json:"clothes_qty" gorm:"type:int;not null"`
+		ClothesColor string     `json:"clothes_color" gorm:"type:varchar(36);not null"`
+		DeletedAt    *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
+		// FK - User
+		CreatedBy uuid.UUID `json:"created_by" gorm:"not null"`
+		// FK - Dictionary
+		ClothesType     string `json:"clothes_type" gorm:"type:varchar(36);not null"`
+		ClothesCategory string `json:"clothes_category" gorm:"type:varchar(36);not null"`
+		ClothesSize     string `json:"clothes_size" gorm:"type:varchar(3);not null"`
+		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
+	}
 )
 
 func (c *ClothesContext) GetClothesShortInfoById(id uuid.UUID) (*ClothesShortInfo, error) {
@@ -124,4 +139,24 @@ func (c *ClothesContext) GetClothesLastDeleted(ctx string, userID uuid.UUID) (*C
 		return nil, result.Error
 	}
 	return &clothes, nil
+}
+
+func (c *ClothesContext) GetDeletedClothes(userID uuid.UUID) ([]ClothesDeleted, error) {
+	var clothes []ClothesDeleted
+
+	result := c.DB.Table("clothes").
+		Select("id, clothes_name, clothes_image, clothes_size, clothes_gender, clothes_color, clothes_category, clothes_type, clothes_qty, deleted_at").
+		Where("created_by = ?", userID).
+		Where("deleted_at IS NOT NULL").
+		Order("deleted_at DESC").
+		Find(&clothes)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return clothes, nil
 }

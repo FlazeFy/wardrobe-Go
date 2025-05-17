@@ -27,7 +27,7 @@ func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
 	result := c.DB.Preload("User").Find(&data)
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"data":    nil,
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -36,8 +36,8 @@ func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
 	// Response
 	if result.RowsAffected == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"data":    nil,
-			"message": "no feedback found",
+			"status":  "failed",
+			"message": "feedback not found",
 		})
 		return
 	}
@@ -65,6 +65,7 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
 			"message": err.Error(),
 		})
 		return
@@ -79,6 +80,7 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 	}
 	if err := c.DB.Create(&feedback).Error; err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "failed",
 			"message": "failed to create feedback",
 		})
 		return
@@ -86,6 +88,7 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusCreated, gin.H{
+		"status":  "success",
 		"data":    feedback,
 		"message": "feedback created",
 	})
@@ -102,6 +105,7 @@ func (c *FeedbackController) HardDeleteFeedbackById(ctx *gin.Context) {
 	result := c.DB.Unscoped().First(&feedback, "id = ?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "feedback not found",
 		})
 		return
@@ -110,6 +114,7 @@ func (c *FeedbackController) HardDeleteFeedbackById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "feedback permanentally deleted",
 	})
 }

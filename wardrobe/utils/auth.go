@@ -33,7 +33,7 @@ func GetUserID(ctx *gin.Context) (*uuid.UUID, error) {
 	case uuid.UUID:
 		return &v, nil
 	default:
-		return nil, errors.New("invalid user id type")
+		return nil, errors.New("invalid user id")
 	}
 }
 

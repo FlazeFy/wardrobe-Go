@@ -25,7 +25,7 @@ func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 	result := c.DB.Preload("User").Find(&data)
 	if result.Error != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"data":    nil,
+			"status":  "failed",
 			"message": "something went wrong",
 		})
 		return
@@ -34,13 +34,14 @@ func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 	// Response
 	if result.RowsAffected == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{
-			"data":    nil,
-			"message": "no feedback found",
+			"status":  "failed",
+			"message": "feedback not found",
 		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"data":    data,
 		"message": "history fetched",
 	})
@@ -58,6 +59,7 @@ func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 	result := c.DB.Unscoped().First(&history, "id = ?", id)
 	if result.Error != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
 			"message": "history not found",
 		})
 		return
@@ -66,6 +68,7 @@ func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 
 	// Response
 	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
 		"message": "history permanentally deleted",
 	})
 }

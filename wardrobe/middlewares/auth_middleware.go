@@ -14,7 +14,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "authorization is required",
+				"message": "authorization is required",
 			})
 			c.Abort()
 			return
@@ -25,7 +25,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "invalid token",
+				"message": "invalid token",
 			})
 			c.Abort()
 			return
