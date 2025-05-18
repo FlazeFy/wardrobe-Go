@@ -57,6 +57,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 			clothes.POST("/", clothesController.CreateClothes)
 			clothes.GET("/last_history", clothesController.GetClothesLastHistory)
 			clothes.GET("/trash", clothesController.GetDeletedClothes)
+			clothes.GET("/history/:clothes_id/:order", clothesController.GetClothesUsedHistory)
 			clothes.PUT("/recover/:id", clothesController.RecoverDeletedClothesById)
 			clothes.DELETE("/:id", clothesController.SoftDeleteClothesById)
 			clothes.DELETE("/destroy/:id", clothesController.HardDeleteClothesById)

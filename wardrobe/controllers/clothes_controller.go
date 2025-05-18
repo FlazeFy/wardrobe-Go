@@ -655,3 +655,53 @@ func (c *ClothesController) HardDeleteClothesUsedById(ctx *gin.Context) {
 		"message": "clothes used permanentally deleted",
 	})
 }
+
+func (c *ClothesController) GetClothesUsedHistory(ctx *gin.Context) {
+	// Params
+	clothes_id_param := ctx.Param("clothes_id")
+	order := ctx.Param("order")
+
+	// Get User ID
+	userId, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Clothes Id
+	var clothes_id uuid.UUID
+	if clothes_id_param == "all" {
+		clothes_id = uuid.Nil
+	} else {
+		clothes_id, err = uuid.Parse(clothes_id_param)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"status":  "failed",
+				"message": "invalid clothes id",
+			})
+			return
+		}
+	}
+
+	// Query : Get Clothes Used History
+	clothesContext := models.NewClothesUsedContext(c.DB)
+	res, err := clothesContext.GetClothesUsedHistory(*userId, clothes_id, order)
+
+	// Response
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "clothes fetched",
+		"data":    res,
+	})
+}
