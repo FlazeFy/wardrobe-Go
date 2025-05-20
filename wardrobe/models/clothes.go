@@ -51,6 +51,23 @@ type (
 		ClothesGender      string     `json:"clothes_gender" gorm:"type:varchar(6);not null"`
 		DictionaryGender   Dictionary `json:"-" gorm:"foreignKey:ClothesGender;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
+	ClothesHeader struct {
+		ID           uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
+		ClothesName  string    `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		ClothesColor string    `json:"clothes_color" gorm:"type:varchar(36);not null"`
+		ClothesQty   int       `json:"clothes_qty" gorm:"type:int;not null"`
+		ClothesImage *string   `json:"clothes_image" gorm:"type:varchar(1000);null"`
+		IsFaded      bool      `json:"is_faded" gorm:"type:boolean;not null"`
+		HasWashed    bool      `json:"has_washed" gorm:"type:boolean;not null"`
+		HasIroned    bool      `json:"has_ironed" gorm:"type:boolean;not null"`
+		IsFavorite   bool      `json:"is_favorite" gorm:"type:boolean;not null"`
+		IsScheduled  bool      `json:"is_scheduled" gorm:"type:boolean;not null"`
+		// FK - Dictionary
+		ClothesType     string `json:"clothes_type" gorm:"type:varchar(36);not null"`
+		ClothesCategory string `json:"clothes_category" gorm:"type:varchar(36);not null"`
+		ClothesSize     string `json:"clothes_size" gorm:"type:varchar(3);not null"`
+		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
+	}
 	ClothesShortInfo struct {
 		ClothesName string `json:"clothes_name" gorm:"type:varchar(36);not null"`
 		// FK - Dictionary
@@ -84,25 +101,73 @@ type (
 	}
 )
 
+func (c *ClothesContext) GetAllClothesHeader(category, order string, userID uuid.UUID) ([]ClothesHeader, error) {
+	// Model
+	var clothes []ClothesHeader
+
+	// Ordering Prep
+	is_desc := true
+	if order == "asc" {
+		is_desc = false
+	}
+
+	// Model
+	query := c.DB.Table("clothes").
+		Select("id,clothes_name,clothes_image,clothes_size,clothes_gender,clothes_color,clothes_category,clothes_type,clothes_qty,is_faded,has_washed,has_ironed,is_favorite,is_scheduled").
+		Where("created_by = ?", userID).
+		Where("deleted_at is null")
+
+	if category != "all" {
+		query = query.Where("clothes_category = ?", category)
+	}
+
+	query = query.Order(clause.OrderBy{
+		Columns: []clause.OrderByColumn{
+			{Column: clause.Column{Name: "is_favorite"}, Desc: true},
+			{Column: clause.Column{Name: "clothes_name"}, Desc: is_desc},
+			{Column: clause.Column{Name: "created_at"}, Desc: is_desc},
+		},
+	})
+
+	result := query.Find(&clothes)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
+		return nil, errors.New("clothes used history not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return clothes, nil
+}
+
 func (c *ClothesContext) GetClothesShortInfoById(id uuid.UUID) (*ClothesShortInfo, error) {
+	// Model
 	var clothes ClothesShortInfo
+
+	// Query
 	result := c.DB.Table("clothes").
 		Select("clothes_name,clothes_type,clothes_category").
 		Where("id = ?", id).
 		First(&clothes)
 
+	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, errors.New("clothes not found")
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return &clothes, nil
 }
 
 func (c *ClothesContext) GetClothesLastCreated(ctx string, userID uuid.UUID) (*ClothesLastCreated, error) {
+	// Model
 	var clothes ClothesLastCreated
 
+	// Query
 	result := c.DB.Table("clothes").
 		Select("clothes_name, "+ctx).
 		Where("created_by = ?", userID).
@@ -111,18 +176,22 @@ func (c *ClothesContext) GetClothesLastCreated(ctx string, userID uuid.UUID) (*C
 			Desc:   true,
 		}).First(&clothes)
 
+	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, errors.New("clothes not found")
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return &clothes, nil
 }
 
 func (c *ClothesContext) GetClothesLastDeleted(ctx string, userID uuid.UUID) (*ClothesLastDeleted, error) {
+	// Model
 	var clothes ClothesLastDeleted
 
+	// Query
 	result := c.DB.Table("clothes").
 		Select("clothes_name, "+ctx).
 		Where("created_by = ?", userID).
@@ -132,18 +201,22 @@ func (c *ClothesContext) GetClothesLastDeleted(ctx string, userID uuid.UUID) (*C
 			Desc:   true,
 		}).First(&clothes)
 
+	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, errors.New("clothes not found")
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return &clothes, nil
 }
 
 func (c *ClothesContext) GetDeletedClothes(userID uuid.UUID) ([]ClothesDeleted, error) {
+	// Model
 	var clothes []ClothesDeleted
 
+	// Query
 	result := c.DB.Table("clothes").
 		Select("id, clothes_name, clothes_image, clothes_size, clothes_gender, clothes_color, clothes_category, clothes_type, clothes_qty, deleted_at").
 		Where("created_by = ?", userID).
@@ -151,6 +224,7 @@ func (c *ClothesContext) GetDeletedClothes(userID uuid.UUID) ([]ClothesDeleted, 
 		Order("deleted_at DESC").
 		Find(&clothes)
 
+	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
 		return nil, errors.New("clothes not found")
 	}

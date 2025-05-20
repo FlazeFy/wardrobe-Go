@@ -43,18 +43,21 @@ type (
 )
 
 func (c *ScheduleContext) GetScheduleByDay(day string, userId uuid.UUID) ([]ScheduleByDay, error) {
+	// Model
 	var data []ScheduleByDay
+
+	// Query
 	result := c.DB.
 		Table("schedules").
-		Select(`
-			clothes_name,day,schedule_note,clothes_image,clothes_type,clothes_category,clothes.id AS clothes_id
-		`).
+		Select("clothes_name,day,schedule_note,clothes_image,clothes_type,clothes_category,clothes.id AS clothes_id").
 		Joins("JOIN clothes ON clothes.id = schedules.clothes_id").
 		Where("day = ? AND schedules.created_by = ?", day, userId).
 		Scan(&data)
 
+	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return data, nil
 }

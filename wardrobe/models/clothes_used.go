@@ -44,13 +44,16 @@ type (
 )
 
 func (c *ClothesUsedContext) GetClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]ClothesUsedHistory, error) {
+	// Model
 	var clothes []ClothesUsedHistory
 
+	// Ordering Prep
 	is_desc := true
 	if order == "asc" {
 		is_desc = false
 	}
 
+	// Query
 	query := c.DB.Table("clothes_useds").
 		Select("clothes_useds.id, clothes_name, clothes_type, clothes_note, used_context, clothes.created_at").
 		Joins("JOIN clothes ON clothes.id = clothes_useds.clothes_id").
@@ -69,6 +72,7 @@ func (c *ClothesUsedContext) GetClothesUsedHistory(userID uuid.UUID, clothesID u
 
 	result := query.Find(&clothes)
 
+	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
 		return nil, errors.New("clothes used history not found")
 	}

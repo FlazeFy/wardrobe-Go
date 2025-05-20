@@ -111,6 +111,48 @@ func (c *ClothesController) GetDeletedClothes(ctx *gin.Context) {
 	})
 }
 
+func (c *ClothesController) GetAllClothesHeader(ctx *gin.Context) {
+	// Param
+	category := ctx.Param("category")
+	order := ctx.Param("order")
+
+	// Get User ID
+	userIdStr, err := utils.GetUserID(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"status":  "failed",
+			"message": "invalid user id",
+		})
+		return
+	}
+
+	userId := *userIdStr
+
+	// Query : Get All Clothes
+	clothesContext := models.NewClothesContext(c.DB)
+	res, err := clothesContext.GetAllClothesHeader(category, order, userId)
+	if err != nil {
+		if err.Error() != "clothes not found" {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "failed",
+				"message": "something went wrong",
+			})
+			return
+		}
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"status":  "failed",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "clothes fetched",
+		"data":    res,
+	})
+}
+
 // Command
 func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	// Mandatory Field
