@@ -61,3 +61,19 @@ func (c *ScheduleContext) GetScheduleByDay(day string, userId uuid.UUID) ([]Sche
 
 	return data, nil
 }
+
+// Command Scheduler
+func (c *ScheduleContext) SchedulerDeleteSchedulehById(id uuid.UUID) (int64, error) {
+	// Model
+	var schedule Schedule
+
+	// Query
+	result := c.DB.Unscoped().Where("clothes_id", id).Delete(&schedule)
+
+	// Response
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}

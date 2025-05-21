@@ -93,6 +93,13 @@ type (
 		ClothesSize     string `json:"clothes_size" gorm:"type:varchar(3);not null"`
 		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
 	}
+	ClothesPlanDestroy struct {
+		ID              uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
+		ClothesName     string    `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		Username        string    `json:"username" gorm:"type:varchar(36);not null"`
+		TelegramUserId  *string   `json:"telegram_user_id" gorm:"type:varchar(36);null"`
+		TelegramIsValid bool      `json:"telegram_is_valid"`
+	}
 	ClothesShortInfo struct {
 		ClothesName string `json:"clothes_name" gorm:"type:varchar(36);not null"`
 		// FK - Dictionary
@@ -298,4 +305,60 @@ func (c *ClothesContext) GetDeletedClothes(userID uuid.UUID) ([]ClothesDeleted, 
 	}
 
 	return clothes, nil
+}
+
+func (c *ClothesContext) GetClothesPlanDestroy(days int) ([]ClothesPlanDestroy, error) {
+	cutoffDate := time.Now().AddDate(0, 0, -days)
+
+	// Model
+	var clothes []ClothesPlanDestroy
+
+	// Query
+	result := c.DB.Table("clothes").
+		Select("clothes.id,clothes_name,username,telegram_user_id,telegram_is_valid").
+		Joins("JOIN users ON users.id = clothes.created_by").
+		Where("deleted_at IS NOT NULL AND deleted_at < ?", cutoffDate).
+		Order("username ASC").
+		Find(&clothes)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return clothes, nil
+}
+
+// Command Scheduler
+func (c *ClothesContext) SchedulerHardDeleteClothesById(id uuid.UUID) (int64, error) {
+	// Model
+	var clothes Clothes
+
+	// Query
+	result := c.DB.Unscoped().Where("id", id).Delete(&clothes)
+
+	// Response
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}
+
+func (c *ClothesContext) SchedulerDeleteClothesUsedByClothesId(id uuid.UUID) (int64, error) {
+	// Model
+	var clothes ClothesUsed
+
+	// Query
+	result := c.DB.Unscoped().Where("clothes_id", id).Delete(&clothes)
+
+	// Response
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
 }

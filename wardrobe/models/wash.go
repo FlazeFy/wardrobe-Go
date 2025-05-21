@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type (
@@ -25,3 +26,27 @@ type (
 		Dictionary Dictionary `json:"-" gorm:"foreignKey:WashType;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
 )
+
+type WashContext struct {
+	DB *gorm.DB
+}
+
+func NewWashContext(db *gorm.DB) *WashContext {
+	return &WashContext{DB: db}
+}
+
+// Command Scheduler
+func (c *WashContext) SchedulerDeleteWashById(id uuid.UUID) (int64, error) {
+	// Model
+	var wash Wash
+
+	// Query
+	result := c.DB.Unscoped().Where("clothes_id", id).Delete(&wash)
+
+	// Response
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}
