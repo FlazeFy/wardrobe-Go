@@ -1,4 +1,4 @@
-package tests
+package unittest
 
 import (
 	"testing"

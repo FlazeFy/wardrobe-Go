@@ -45,6 +45,7 @@ func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"data":    data,
 		"message": "feedback fetched",
+		"status":  "success",
 	})
 }
 

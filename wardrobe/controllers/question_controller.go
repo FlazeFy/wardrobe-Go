@@ -35,7 +35,7 @@ func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "failed",
+		"status":  "success",
 		"data":    data,
 		"message": "question fetched",
 	})
