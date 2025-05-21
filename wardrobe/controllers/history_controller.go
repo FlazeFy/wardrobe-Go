@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 	"wardrobe/models"
 
 	"github.com/gin-gonic/gin"
@@ -71,4 +72,19 @@ func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 		"status":  "success",
 		"message": "history permanentally deleted",
 	})
+}
+
+// Command Scheduler
+func (c *HistoryController) DeleteHistoryForLastNDays(days int) (int64, error) {
+	// Cutoff Days
+	cutoff := time.Now().AddDate(0, 0, -days)
+
+	// Query
+	result := c.DB.Unscoped().Where("created_at < ?", cutoff).Delete(&models.History{})
+
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
 }

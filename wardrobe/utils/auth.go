@@ -38,17 +38,42 @@ func GetUserID(ctx *gin.Context) (*uuid.UUID, error) {
 }
 
 func (c *UserContext) GetUserContact(id uuid.UUID) (*models.UserContact, error) {
+	// Model
 	var contact models.UserContact
+
+	// Query
 	result := c.DB.Table("users").
 		Select("username, email, telegram_user_id, telegram_is_valid").
 		Where("id = ?", id).
 		First(&contact)
 
+	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, errors.New("user contact not found")
 	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return &contact, nil
+}
+
+func (c *UserContext) GetAdminContact() ([]models.UserContact, error) {
+	// Model
+	var contact []models.UserContact
+
+	// Query
+	result := c.DB.Table("admins").
+		Select("username, email, telegram_user_id, telegram_is_valid").
+		Find(&contact)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(contact) == 0 {
+		return nil, errors.New("admin contact not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return contact, nil
 }

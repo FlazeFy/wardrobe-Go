@@ -1,30 +1,55 @@
 package main
 
 import (
+	"time"
 	"wardrobe/config"
 	"wardrobe/models"
 	"wardrobe/routes"
+	"wardrobe/schedulers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/robfig/cron"
 	"gorm.io/gorm"
 )
 
 func main() {
 	// Load Env
 	err := godotenv.Load()
-
 	if err != nil {
 		panic("Error loading ENV")
 	}
 
+	// Connect DB
 	db := config.ConnectDatabase()
 	MigrateAll(db)
 
+	// Setup Gin
 	router := gin.Default()
-	MigrateAll(db)
 	routes.SetUpRoutes(router, db)
+
+	// Task Scheduler
+	c := cron.New()
+	Scheduler(c)
+	c.Start()
+	defer c.Stop()
+
+	// Run server
 	router.Run(":9000")
+}
+
+func Scheduler(c *cron.Cron) {
+	// For Production
+	// Clean Scheduler
+	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanHistory)
+
+	// For Development
+	go func() {
+		time.Sleep(5 * time.Second)
+
+		// Clean Scheduler
+		// schedulers.SchedulerCleanHistory()
+	}()
 }
 
 func MigrateAll(db *gorm.DB) {
