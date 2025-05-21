@@ -64,7 +64,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 			clothes.DELETE("/:id", clothesController.SoftDeleteClothesById)
 			clothes.DELETE("/destroy/:id", clothesController.HardDeleteClothesById)
 			clothes.POST("/history", clothesController.CreateClothesUsed)
-			clothes.DELETE("/history/:id", clothesController.HardDeleteClothesUsedById)
+			clothes.DELETE("/destroy_used/:id", clothesController.HardDeleteClothesUsedById)
 		}
 		schedule := protected.Group("/schedule")
 		{

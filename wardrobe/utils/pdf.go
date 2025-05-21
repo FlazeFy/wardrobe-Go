@@ -71,11 +71,11 @@ func GeneratePDF(c models.Clothes, filename string) error {
 			return "-"
 		}()},
 		{"Quantity", fmt.Sprintf("%d", c.ClothesQty)},
-		{"Is Faded", boolToYesNo(c.IsFaded)},
-		{"Has Been Washed", boolToYesNo(c.HasWashed)},
-		{"Has Been Ironed", boolToYesNo(c.HasIroned)},
-		{"Is Favorite", boolToYesNo(c.IsFavorite)},
-		{"Is Scheduled", boolToYesNo(c.IsScheduled)},
+		{"Is Faded", BoolToYesNo(c.IsFaded)},
+		{"Has Been Washed", BoolToYesNo(c.HasWashed)},
+		{"Has Been Ironed", BoolToYesNo(c.HasIroned)},
+		{"Is Favorite", BoolToYesNo(c.IsFavorite)},
+		{"Is Scheduled", BoolToYesNo(c.IsScheduled)},
 	}
 
 	// Table Format
@@ -87,11 +87,4 @@ func GeneratePDF(c models.Clothes, filename string) error {
 	}
 
 	return pdf.OutputFileAndClose(filename)
-}
-
-func boolToYesNo(val bool) string {
-	if val {
-		return "Yes"
-	}
-	return "No"
 }
