@@ -45,16 +45,16 @@ func TestGetAllDictionary(t *testing.T) {
 	assert.Equal(t, "dictionary fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
-	for _, item := range res.Data {
+	for _, dt := range res.Data {
 		// Check Object
-		assert.NotEqual(t, uuid.Nil, item.ID)
-		assert.NotEmpty(t, item.DictionaryType)
-		assert.NotEmpty(t, item.DictionaryName)
-		assert.NotEmpty(t, item.CreatedAt)
+		assert.NotEqual(t, uuid.Nil, dt.ID)
+		assert.NotEmpty(t, dt.DictionaryType)
+		assert.NotEmpty(t, dt.DictionaryName)
+		assert.NotEmpty(t, dt.CreatedAt)
 
 		// Check Data Type
-		assert.IsType(t, "", item.DictionaryName)
-		assert.IsType(t, "", item.DictionaryType)
-		assert.IsType(t, time.Time{}, item.CreatedAt)
+		assert.IsType(t, "", dt.DictionaryName)
+		assert.IsType(t, "", dt.DictionaryType)
+		assert.IsType(t, time.Time{}, dt.CreatedAt)
 	}
 }
