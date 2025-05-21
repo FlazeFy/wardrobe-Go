@@ -68,6 +68,31 @@ type (
 		ClothesSize     string `json:"clothes_size" gorm:"type:varchar(3);not null"`
 		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
 	}
+	ClothesDetail struct {
+		ID           uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey"`
+		ClothesName  string     `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		ClothesDesc  *string    `json:"clothes_desc" gorm:"type:varchar(500);null"`
+		ClothesMerk  *string    `json:"clothes_merk" gorm:"type:varchar(75);null"`
+		ClothesColor string     `json:"clothes_color" gorm:"type:varchar(36);not null"`
+		ClothesPrice *int       `json:"clothes_price" gorm:"type:int;null"`
+		ClothesBuyAt *time.Time `json:"clothes_buy_at" gorm:"null"`
+		ClothesQty   int        `json:"clothes_qty" gorm:"type:int;not null"`
+		ClothesImage *string    `json:"clothes_image" gorm:"type:varchar(1000);null"`
+		IsFaded      bool       `json:"is_faded" gorm:"type:boolean;not null"`
+		HasWashed    bool       `json:"has_washed" gorm:"type:boolean;not null"`
+		HasIroned    bool       `json:"has_ironed" gorm:"type:boolean;not null"`
+		IsFavorite   bool       `json:"is_favorite" gorm:"type:boolean;not null"`
+		IsScheduled  bool       `json:"is_scheduled" gorm:"type:boolean;not null"`
+		CreatedAt    time.Time  `json:"created_at" gorm:"type:timestamp;not null"`
+		UpdatedAt    *time.Time `json:"updated_at" gorm:"type:timestamp;null"`
+		DeletedAt    *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
+		// FK - Dictionary
+		ClothesMadeFrom string `json:"clothes_made_from" gorm:"type:varchar(36);not null"`
+		ClothesType     string `json:"clothes_type" gorm:"type:varchar(36);not null"`
+		ClothesCategory string `json:"clothes_category" gorm:"type:varchar(36);not null"`
+		ClothesSize     string `json:"clothes_size" gorm:"type:varchar(3);not null"`
+		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
+	}
 	ClothesShortInfo struct {
 		ClothesName string `json:"clothes_name" gorm:"type:varchar(36);not null"`
 		// FK - Dictionary
@@ -114,6 +139,46 @@ func (c *ClothesContext) GetAllClothesHeader(category, order string, userID uuid
 	// Model
 	query := c.DB.Table("clothes").
 		Select("id,clothes_name,clothes_image,clothes_size,clothes_gender,clothes_color,clothes_category,clothes_type,clothes_qty,is_faded,has_washed,has_ironed,is_favorite,is_scheduled").
+		Where("created_by = ?", userID).
+		Where("deleted_at is null")
+
+	if category != "all" {
+		query = query.Where("clothes_category = ?", category)
+	}
+
+	query = query.Order(clause.OrderBy{
+		Columns: []clause.OrderByColumn{
+			{Column: clause.Column{Name: "is_favorite"}, Desc: true},
+			{Column: clause.Column{Name: "clothes_name"}, Desc: is_desc},
+			{Column: clause.Column{Name: "created_at"}, Desc: is_desc},
+		},
+	})
+
+	result := query.Find(&clothes)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return clothes, nil
+}
+
+func (c *ClothesContext) GetAllClothesDetail(category, order string, userID uuid.UUID) ([]Clothes, error) {
+	// Model
+	var clothes []Clothes
+
+	// Ordering Prep
+	is_desc := true
+	if order == "asc" {
+		is_desc = false
+	}
+
+	// Model
+	query := c.DB.Table("clothes").
 		Where("created_by = ?", userID).
 		Where("deleted_at is null")
 

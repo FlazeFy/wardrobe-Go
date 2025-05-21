@@ -56,6 +56,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		{
 			clothes.POST("/", clothesController.CreateClothes)
 			clothes.GET("/header/:category/:order", clothesController.GetAllClothesHeader)
+			clothes.GET("/detail/:category/:order", clothesController.GetAllClothesDetail)
 			clothes.GET("/last_history", clothesController.GetClothesLastHistory)
 			clothes.GET("/trash", clothesController.GetDeletedClothes)
 			clothes.GET("/history/:clothes_id/:order", clothesController.GetClothesUsedHistory)
