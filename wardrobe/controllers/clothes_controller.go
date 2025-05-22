@@ -407,7 +407,7 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	// Send to Telegram
 	if contact.TelegramUserId != nil && contact.TelegramIsValid {
 		filename := fmt.Sprintf("clothes-%s.pdf", clothes.ID)
-		err = utils.GeneratePDF(clothes, filename)
+		err = utils.GeneratePDFCreateClothes(clothes, filename)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "failed",

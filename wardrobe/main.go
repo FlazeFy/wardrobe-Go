@@ -43,6 +43,7 @@ func Scheduler(c *cron.Cron) {
 	// Clean Scheduler
 	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanHistory)
 	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanDeletedClothes)
+	c.AddFunc("0 1 * * 1", schedulers.SchedulerAuditError)
 
 	// For Development
 	go func() {
@@ -51,6 +52,7 @@ func Scheduler(c *cron.Cron) {
 		// Clean Scheduler
 		// schedulers.SchedulerCleanHistory()
 		// schedulers.SchedulerCleanDeletedClothes()
+		// schedulers.SchedulerAuditError()
 	}()
 }
 

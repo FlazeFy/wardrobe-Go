@@ -15,17 +15,17 @@ func GetStringNoData(s *string) string {
 	return "-"
 }
 
-func GeneratePDF(c models.Clothes, filename string) error {
+func GeneratePDFCreateClothes(c models.Clothes, filename string) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("Wardrobe", false)
 	pdf.AddPage()
 
 	// Set Header
 	pdf.SetFont("Arial", "B", 20)
-	pdf.SetTextColor(0, 102, 204) // Blue color
+	pdf.SetTextColor(0, 102, 204)
 	pdf.CellFormat(0, 12, "Wardrobe", "", 1, "C", false, 0, "")
 	pdf.SetFont("Arial", "I", 12)
-	pdf.SetTextColor(0, 0, 0) // Reset to black
+	pdf.SetTextColor(0, 0, 0)
 	pdf.CellFormat(0, 10, "Effortless style decision and Organize", "", 1, "C", false, 0, "")
 	pdf.Ln(4)
 
@@ -84,6 +84,43 @@ func GeneratePDF(c models.Clothes, filename string) error {
 		pdf.CellFormat(50, 8, row.Label, "1", 0, "C", true, 0, "")
 		pdf.CellFormat(130, 8, row.Value, "1", 0, "L", false, 0, "")
 		pdf.Ln(-1)
+	}
+
+	return pdf.OutputFileAndClose(filename)
+}
+
+func GeneratePDFErrorAudit(c []models.ErrorAudit, filename string) error {
+	pdf := gofpdf.New("L", "mm", "A4", "")
+	pdf.SetTitle("Wardrobe", false)
+	pdf.AddPage()
+
+	// Set Header
+	pdf.SetFont("Arial", "B", 20)
+	pdf.SetTextColor(0, 102, 204)
+	pdf.CellFormat(0, 12, "Wardrobe", "", 1, "C", false, 0, "")
+	pdf.SetFont("Arial", "I", 12)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.CellFormat(0, 10, "Effortless style decision and Organize", "", 1, "C", false, 0, "")
+	pdf.Ln(4)
+
+	// Set Letterhead
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(0, 10, "Audit - Error")
+	pdf.Ln(8)
+
+	// Set header
+	pdf.SetFillColor(200, 200, 200)
+	pdf.CellFormat(175, 10, "Error Message", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(60, 10, "Datetime", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(30, 10, "Total", "1", 1, "C", true, 0, "")
+
+	// Set body
+	pdf.SetFont("Arial", "", 10)
+	pdf.SetFillColor(255, 255, 255)
+	for _, err := range c {
+		pdf.CellFormat(175, 8, err.Message, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(60, 8, err.CreatedAt, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(30, 8, fmt.Sprintf("%d", err.Total), "1", 1, "C", false, 0, "")
 	}
 
 	return pdf.OutputFileAndClose(filename)

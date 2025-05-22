@@ -17,7 +17,7 @@ func SchedulerCleanHistory() {
 	days := 30
 	db := config.ConnectDatabase()
 
-	// Get User Contact
+	// Get Admin Contact
 	userContext := utils.NewUserContext(db)
 	contact, err := userContext.GetAdminContact()
 	if err != nil {
