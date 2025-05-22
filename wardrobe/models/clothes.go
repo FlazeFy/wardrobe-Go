@@ -117,14 +117,12 @@ type (
 		DeletedAt   *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
 	}
 	ClothesDeleted struct {
-		ID           uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey"`
-		ClothesName  string     `json:"clothes_name" gorm:"type:varchar(36);not null"`
-		ClothesImage *string    `json:"clothes_image" gorm:"type:varchar(1000);null"`
-		ClothesQty   int        `json:"clothes_qty" gorm:"type:int;not null"`
-		ClothesColor string     `json:"clothes_color" gorm:"type:varchar(36);not null"`
-		DeletedAt    *time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
-		// FK - User
-		CreatedBy uuid.UUID `json:"created_by" gorm:"not null"`
+		ID           uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
+		ClothesName  string    `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		ClothesImage *string   `json:"clothes_image" gorm:"type:varchar(1000);null"`
+		ClothesQty   int       `json:"clothes_qty" gorm:"type:int;not null"`
+		ClothesColor string    `json:"clothes_color" gorm:"type:varchar(36);not null"`
+		DeletedAt    time.Time `json:"deleted_at" gorm:"type:timestamp;null"`
 		// FK - Dictionary
 		ClothesType     string `json:"clothes_type" gorm:"type:varchar(36);not null"`
 		ClothesCategory string `json:"clothes_category" gorm:"type:varchar(36);not null"`
