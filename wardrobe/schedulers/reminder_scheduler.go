@@ -12,7 +12,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func SchedulerAuditError() {
+func SchedulerReminderUnansweredQuestion() {
 	db := config.ConnectDatabase()
 
 	// Get Admin Contact
@@ -23,9 +23,9 @@ func SchedulerAuditError() {
 		return
 	}
 
-	// Get All Error
-	errorContext := models.NewErrorContext(db)
-	errors, err := errorContext.GetAllErrorAudit()
+	// Get Unanswered Question
+	questionContext := models.NewQuestionContext(db)
+	questions, err := questionContext.GetUnansweredQuestion()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -33,12 +33,17 @@ func SchedulerAuditError() {
 
 	// Send to Telegram
 	datetime := time.Now()
-	if len(contact) > 0 && len(errors) > 0 {
-		filename := fmt.Sprintf("audit_error_%s.pdf", datetime)
-		err = utils.GeneratePDFErrorAudit(errors, filename)
+	if len(contact) > 0 && len(questions) > 0 {
+		filename := fmt.Sprintf("reminder_unanswered_question_%s.pdf", datetime)
+		err = utils.GeneratePDFReminderUnansweredQuestion(questions, filename)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
+		}
+
+		var list_question = ""
+		for _, dt := range questions {
+			list_question += fmt.Sprintf("- %s\nNotes: <i>ask at %s</i>\n\n", dt.Question, dt.CreatedAt)
 		}
 
 		for _, dt := range contact {
@@ -57,7 +62,7 @@ func SchedulerAuditError() {
 
 				doc := tgbotapi.NewDocumentUpload(telegramID, filename)
 				doc.ParseMode = "html"
-				doc.Caption = fmt.Sprintf("[ADMIN] Hello %s, the system just run an audit error, with result of %d error found. Here's the document", dt.Username, len(errors))
+				doc.Caption = fmt.Sprintf("[ADMIN] Hello %s, We're here to remind you. You have some unanswered question that needed to be answer. Here are the details:\n\n%s", dt.Username, list_question)
 
 				_, err = bot.Send(doc)
 				if err != nil {

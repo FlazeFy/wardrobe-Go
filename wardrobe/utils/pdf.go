@@ -117,10 +117,47 @@ func GeneratePDFErrorAudit(c []models.ErrorAudit, filename string) error {
 	// Set body
 	pdf.SetFont("Arial", "", 10)
 	pdf.SetFillColor(255, 255, 255)
-	for _, err := range c {
-		pdf.CellFormat(175, 8, err.Message, "1", 0, "L", false, 0, "")
-		pdf.CellFormat(60, 8, err.CreatedAt, "1", 0, "L", false, 0, "")
-		pdf.CellFormat(30, 8, fmt.Sprintf("%d", err.Total), "1", 1, "C", false, 0, "")
+	for _, dt := range c {
+		pdf.CellFormat(175, 8, dt.Message, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(60, 8, dt.CreatedAt, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(30, 8, fmt.Sprintf("%d", dt.Total), "1", 1, "C", false, 0, "")
+	}
+
+	return pdf.OutputFileAndClose(filename)
+}
+
+func GeneratePDFReminderUnansweredQuestion(c []models.UnansweredQuestion, filename string) error {
+	pdf := gofpdf.New("L", "mm", "A4", "")
+	pdf.SetTitle("Wardrobe", false)
+	pdf.AddPage()
+
+	// Set Header
+	pdf.SetFont("Arial", "B", 20)
+	pdf.SetTextColor(0, 102, 204)
+	pdf.CellFormat(0, 12, "Wardrobe", "", 1, "C", false, 0, "")
+	pdf.SetFont("Arial", "I", 12)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.CellFormat(0, 10, "Effortless style decision and Organize", "", 1, "C", false, 0, "")
+	pdf.Ln(4)
+
+	// Set Letterhead
+	pdf.SetFont("Arial", "B", 12)
+	pdf.Cell(0, 10, "Reminder - Unanswered Question")
+	pdf.Ln(8)
+
+	// Set header
+	pdf.SetFillColor(200, 200, 200)
+	pdf.CellFormat(40, 10, "Date", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(150, 10, "Question", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(150, 10, "Answer", "1", 1, "C", true, 0, "")
+
+	// Set body
+	pdf.SetFont("Arial", "", 10)
+	pdf.SetFillColor(255, 255, 255)
+	for _, dt := range c {
+		pdf.CellFormat(40, 8, dt.CreatedAt.Format("2006-01-02 15:04:05"), "1", 0, "L", false, 0, "")
+		pdf.CellFormat(150, 8, dt.Question, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(150, 8, "", "1", 1, "C", false, 0, "")
 	}
 
 	return pdf.OutputFileAndClose(filename)
