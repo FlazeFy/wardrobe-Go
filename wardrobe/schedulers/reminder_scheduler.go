@@ -76,3 +76,74 @@ func SchedulerReminderUnansweredQuestion() {
 		os.Remove(filename)
 	}
 }
+
+func SchedulerReminderUnusedClothes() {
+	db := config.ConnectDatabase()
+
+	// Get Unused Clothes
+	days := 60
+	clothesContext := models.NewClothesContext(db)
+	clothes, err := clothesContext.SchedulerGetUnusedClothes(days)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Send to Telegram
+	if len(clothes) > 0 {
+		var user_before = ""
+		var list_clothes = ""
+
+		for idx, dt := range clothes {
+			if user_before == "" || user_before == dt.Username {
+
+				var extra_desc = ""
+				if dt.TotalUsed > 0 {
+					extra_desc = fmt.Sprintf("Last used at %s", dt.LastUsed.Format("Y-m-d"))
+				} else {
+					extra_desc = "Never been used"
+				}
+
+				var extra_space = ""
+				if idx < len(clothes)-1 {
+					extra_space = "\n\n"
+				}
+				list_clothes += fmt.Sprintf("- %s (%s)\nNotes: <i>%s</i>%s", dt.ClothesName, dt.ClothesType, extra_desc, extra_space)
+			}
+
+			is_last := idx == len(clothes)-1
+			is_different_user := !is_last && clothes[idx+1].Username != dt.Username
+
+			if is_different_user || is_last {
+				message := fmt.Sprintf("Hello %s, We're here to remind you. You have some clothes that has never been used since %d days after washed or being added to Wardrobe. Here are the details:\n\n%s\n\nUse and wash it again to keep your clothes at good quality and not smell musty", dt.Username, days, list_clothes)
+
+				if dt.TelegramUserId != nil && dt.TelegramIsValid {
+					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+					if err != nil {
+						fmt.Println("Failed to connect to Telegram bot")
+						return
+					}
+
+					telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
+					if err != nil {
+						fmt.Println("Invalid Telegram User Id")
+						return
+					}
+
+					doc := tgbotapi.NewMessage(telegramID, message)
+					doc.ParseMode = "html"
+
+					_, err = bot.Send(doc)
+					if err != nil {
+						fmt.Println(err.Error())
+						return
+					}
+				}
+
+				list_clothes = ""
+			}
+
+			user_before = dt.Username
+		}
+	}
+}

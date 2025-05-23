@@ -45,6 +45,7 @@ func Scheduler(c *cron.Cron) {
 	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanDeletedClothes)
 	c.AddFunc("0 1 * * 1", schedulers.SchedulerAuditError)
 	c.AddFunc("20 2 * * 1,3,6", schedulers.SchedulerReminderUnansweredQuestion)
+	c.AddFunc("20 2 * * 0,2,5", schedulers.SchedulerReminderUnusedClothes)
 
 	// For Development
 	go func() {
@@ -55,6 +56,7 @@ func Scheduler(c *cron.Cron) {
 		// schedulers.SchedulerCleanDeletedClothes()
 		// schedulers.SchedulerAuditError()
 		// schedulers.SchedulerReminderUnansweredQuestion()
+		schedulers.SchedulerReminderUnusedClothes()
 	}()
 }
 

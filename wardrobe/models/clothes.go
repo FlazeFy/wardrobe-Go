@@ -129,6 +129,17 @@ type (
 		ClothesSize     string `json:"clothes_size" gorm:"type:varchar(3);not null"`
 		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
 	}
+	SchedulerClothesUnused struct {
+		ID              uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
+		ClothesName     string    `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		TotalUsed       int       `json:"total_used" gorm:"type:int;not null"`
+		LastUsed        time.Time `json:"last_used" gorm:"type:timestamp;null"`
+		Username        string    `json:"username" gorm:"type:varchar(36);not null"`
+		TelegramUserId  *string   `json:"telegram_user_id" gorm:"type:varchar(36);null"`
+		TelegramIsValid bool      `json:"telegram_is_valid"`
+		// FK - Dictionary
+		ClothesType string `json:"clothes_type" gorm:"type:varchar(36);not null"`
+	}
 )
 
 func (c *ClothesContext) GetAllClothesHeader(category, order string, userID uuid.UUID) ([]ClothesHeader, error) {
@@ -359,4 +370,48 @@ func (c *ClothesContext) SchedulerDeleteClothesUsedByClothesId(id uuid.UUID) (in
 	}
 
 	return result.RowsAffected, nil
+}
+
+func (c *ClothesContext) SchedulerGetUnusedClothes(days int) ([]SchedulerClothesUnused, error) {
+	cutoffDate := time.Now().AddDate(0, 0, -days)
+
+	// Model
+	var clothes []SchedulerClothesUnused
+
+	// Query
+	result := c.DB.Table("clothes").
+		Select(`
+		clothes.id,
+		MAX(clothes_name) AS clothes_name,
+		MAX(clothes_type) AS clothes_type,
+		CASE 
+			WHEN MAX(clothes_useds.created_at) IS NOT NULL THEN MAX(clothes_useds.created_at) 
+			ELSE MAX(clothes.created_at) 
+		END AS last_used,
+		COUNT(clothes_useds.id) AS total_used,
+		MAX(users.username) AS username,
+		MAX(users.telegram_user_id) AS telegram_user_id,
+		users.telegram_is_valid AS telegram_is_valid
+	`).
+		Joins("JOIN users ON users.id = clothes.created_by").
+		Joins("LEFT JOIN clothes_useds ON clothes.id = clothes_useds.clothes_id").
+		Group("clothes.id,telegram_is_valid").
+		Having(`
+		CASE 
+			WHEN MAX(clothes_useds.created_at) IS NOT NULL THEN MAX(clothes_useds.created_at)
+			ELSE MAX(clothes.created_at)
+		END < ?
+	`, cutoffDate).
+		Order("MAX(users.username) ASC").
+		Find(&clothes)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return clothes, nil
 }
