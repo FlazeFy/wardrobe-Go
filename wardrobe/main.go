@@ -48,6 +48,7 @@ func Scheduler(c *cron.Cron) {
 	c.AddFunc("20 2 * * 1,3,6", schedulers.SchedulerReminderUnansweredQuestion)
 	c.AddFunc("20 2 * * 0,2,5", schedulers.SchedulerReminderUnusedClothes)
 	c.AddFunc("20 3 * * *", schedulers.SchedulerReminderUnironedClothes)
+	c.AddFunc("0 3 * * *", schedulers.SchedulerReminderWashUsedClothes)
 
 	// For Development
 	go func() {
@@ -64,9 +65,10 @@ func Scheduler(c *cron.Cron) {
 		// schedulers.SchedulerReminderUnansweredQuestion()
 		// schedulers.SchedulerReminderUnusedClothes()
 		// schedulers.SchedulerReminderUnironedClothes()
+		// schedulers.SchedulerReminderWashUsedClothes()
 
 		// Weather Scheduler
-		schedulers.SchedulerWeatherRoutineFetch()
+		// schedulers.SchedulerWeatherRoutineFetch()
 	}()
 }
 

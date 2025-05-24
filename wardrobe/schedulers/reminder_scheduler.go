@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	"wardrobe/config"
 	"wardrobe/models"
@@ -159,7 +160,6 @@ func SchedulerReminderUnironedClothes() {
 		return
 	}
 
-	// Send to Telegram
 	if len(clothes) > 0 {
 		var user_before = ""
 		var list_clothes = ""
@@ -197,6 +197,82 @@ func SchedulerReminderUnironedClothes() {
 			if is_different_user || is_last {
 				message := fmt.Sprintf("Hello %s, We're here to remind you. You have some clothes that has not been ironed yet. We only suggest the clothes that is made from cotton, linen, silk, or rayon. Here are the details:\n\n%s", dt.Username, list_clothes)
 
+				// Send to Telegram
+				if dt.TelegramUserId != nil && dt.TelegramIsValid {
+					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+					if err != nil {
+						fmt.Println("Failed to connect to Telegram bot")
+						return
+					}
+
+					telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
+					if err != nil {
+						fmt.Println("Invalid Telegram User Id")
+						return
+					}
+
+					doc := tgbotapi.NewMessage(telegramID, message)
+					doc.ParseMode = "html"
+
+					_, err = bot.Send(doc)
+					if err != nil {
+						fmt.Println(err.Error())
+						return
+					}
+				}
+
+				list_clothes = ""
+			}
+
+			user_before = dt.Username
+		}
+	}
+}
+
+func SchedulerReminderWashUsedClothes() {
+	db := config.ConnectDatabase()
+	days := 7
+
+	// Get Unwashed Clothes
+	clothesUsedContext := models.NewClothesUsedContext(db)
+	clothes, err := clothesUsedContext.SchedulerGetUsedClothesReadyToWash(days)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	if len(clothes) > 0 {
+		var user_before = ""
+		var list_clothes = ""
+
+		for idx, dt := range clothes {
+			if user_before == "" || user_before == dt.Username {
+				var extra_desc = ""
+
+				if dt.IsScheduled {
+					extra_desc += "is on scheduled!"
+				}
+				if dt.IsFaded {
+					if dt.IsScheduled {
+						extra_desc += ", "
+					}
+					extra_desc += "is faded!"
+				}
+
+				if dt.IsScheduled || dt.IsFaded {
+					extra_desc = fmt.Sprintf(", %s", extra_desc)
+				}
+
+				list_clothes += fmt.Sprintf("- <b>%s</b> (%s - %s)\n<i>Used Context: %s\nNotes: Last used at %s%s</i>\n\n", strings.Title(dt.ClothesName), strings.Title(dt.ClothesType), strings.Title(dt.ClothesMadeFrom), dt.UsedContext, dt.CreatedAt.Format("2006-01-02 15:04"), extra_desc)
+			}
+
+			is_last := idx == len(clothes)-1
+			is_different_user := !is_last && clothes[idx+1].Username != dt.Username
+
+			if is_different_user || is_last {
+				message := fmt.Sprintf("Hello %s, We've noticed that some of your clothes are not washed after being used after %d days from now. Don't forget to wash your used clothes, here's the detail:\n\n%s", dt.Username, days, list_clothes)
+
+				// Send to Telegram
 				if dt.TelegramUserId != nil && dt.TelegramIsValid {
 					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 					if err != nil {
