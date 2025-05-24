@@ -41,6 +41,7 @@ func main() {
 func Scheduler(c *cron.Cron) {
 	// For Production
 	// Clean Scheduler
+	c.AddFunc("10 0 * * *", schedulers.SchedulerWeatherRoutineFetch)
 	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanHistory)
 	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanDeletedClothes)
 	c.AddFunc("0 1 * * 1", schedulers.SchedulerAuditError)
@@ -63,6 +64,9 @@ func Scheduler(c *cron.Cron) {
 		// schedulers.SchedulerReminderUnansweredQuestion()
 		// schedulers.SchedulerReminderUnusedClothes()
 		// schedulers.SchedulerReminderUnironedClothes()
+
+		// Weather Scheduler
+		schedulers.SchedulerWeatherRoutineFetch()
 	}()
 }
 
