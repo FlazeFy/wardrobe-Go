@@ -147,3 +147,83 @@ func SchedulerReminderUnusedClothes() {
 		}
 	}
 }
+
+func SchedulerReminderUnironedClothes() {
+	db := config.ConnectDatabase()
+
+	// Get Unironed Clothes
+	clothesContext := models.NewClothesContext(db)
+	clothes, err := clothesContext.SchedulerGetUnironedClothes()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	// Send to Telegram
+	if len(clothes) > 0 {
+		var user_before = ""
+		var list_clothes = ""
+
+		for idx, dt := range clothes {
+			if user_before == "" || user_before == dt.Username {
+				var extra_desc = " ("
+
+				if dt.IsFavorite {
+					extra_desc += "is your favorited"
+				}
+				if dt.IsScheduled {
+					if dt.IsFavorite {
+						extra_desc += ", "
+					}
+					extra_desc += "attached to schedule"
+				}
+
+				if dt.IsFavorite || dt.IsScheduled {
+					extra_desc += ", "
+				}
+				if dt.HasWashed {
+					extra_desc += "has"
+				} else {
+					extra_desc += "has'nt"
+				}
+				extra_desc += " been washed)"
+
+				list_clothes += fmt.Sprintf("- %s%s\n<i>Notes: made from %s</i>\n", dt.ClothesName, extra_desc, dt.ClothesMadeFrom)
+			}
+
+			is_last := idx == len(clothes)-1
+			is_different_user := !is_last && clothes[idx+1].Username != dt.Username
+
+			if is_different_user || is_last {
+				message := fmt.Sprintf("Hello %s, We're here to remind you. You have some clothes that has not been ironed yet. We only suggest the clothes that is made from cotton, linen, silk, or rayon. Here are the details:\n\n%s", dt.Username, list_clothes)
+
+				if dt.TelegramUserId != nil && dt.TelegramIsValid {
+					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
+					if err != nil {
+						fmt.Println("Failed to connect to Telegram bot")
+						return
+					}
+
+					telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
+					if err != nil {
+						fmt.Println("Invalid Telegram User Id")
+						return
+					}
+
+					doc := tgbotapi.NewMessage(telegramID, message)
+					doc.ParseMode = "html"
+
+					_, err = bot.Send(doc)
+					if err != nil {
+						fmt.Println(err.Error())
+						return
+					}
+				}
+
+				list_clothes = ""
+			}
+
+			user_before = dt.Username
+		}
+	}
+}

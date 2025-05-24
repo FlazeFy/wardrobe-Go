@@ -130,7 +130,6 @@ type (
 		ClothesGender   string `json:"clothes_gender" gorm:"type:varchar(6);not null"`
 	}
 	SchedulerClothesUnused struct {
-		ID              uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
 		ClothesName     string    `json:"clothes_name" gorm:"type:varchar(36);not null"`
 		TotalUsed       int       `json:"total_used" gorm:"type:int;not null"`
 		LastUsed        time.Time `json:"last_used" gorm:"type:timestamp;null"`
@@ -139,6 +138,18 @@ type (
 		TelegramIsValid bool      `json:"telegram_is_valid"`
 		// FK - Dictionary
 		ClothesType string `json:"clothes_type" gorm:"type:varchar(36);not null"`
+	}
+	SchedulerClothesUnironed struct {
+		ClothesName     string  `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		HasWashed       bool    `json:"has_washed" gorm:"type:boolean;not null"`
+		IsFavorite      bool    `json:"is_favorite" gorm:"type:boolean;not null"`
+		IsScheduled     bool    `json:"is_scheduled" gorm:"type:boolean;not null"`
+		Username        string  `json:"username" gorm:"type:varchar(36);not null"`
+		TelegramUserId  *string `json:"telegram_user_id" gorm:"type:varchar(36);null"`
+		TelegramIsValid bool    `json:"telegram_is_valid"`
+		// FK - Dictionary
+		ClothesMadeFrom string `json:"clothes_made_from" gorm:"type:varchar(36);not null"`
+		ClothesType     string `json:"clothes_type" gorm:"type:varchar(36);not null"`
 	}
 )
 
@@ -381,28 +392,44 @@ func (c *ClothesContext) SchedulerGetUnusedClothes(days int) ([]SchedulerClothes
 	// Query
 	result := c.DB.Table("clothes").
 		Select(`
-		clothes.id,
-		MAX(clothes_name) AS clothes_name,
-		MAX(clothes_type) AS clothes_type,
-		CASE 
-			WHEN MAX(clothes_useds.created_at) IS NOT NULL THEN MAX(clothes_useds.created_at) 
-			ELSE MAX(clothes.created_at) 
-		END AS last_used,
-		COUNT(clothes_useds.id) AS total_used,
-		MAX(users.username) AS username,
-		MAX(users.telegram_user_id) AS telegram_user_id,
-		users.telegram_is_valid AS telegram_is_valid
-	`).
+			clothes.clothes_name,clothes.clothes_type,
+			COALESCE(MAX(clothes_useds.created_at), clothes.created_at) AS last_used,
+			COUNT(clothes_useds.id) AS total_used,
+			users.username,users.telegram_user_id,users.telegram_is_valid
+		`).
 		Joins("JOIN users ON users.id = clothes.created_by").
 		Joins("LEFT JOIN clothes_useds ON clothes.id = clothes_useds.clothes_id").
-		Group("clothes.id,telegram_is_valid").
-		Having(`
-		CASE 
-			WHEN MAX(clothes_useds.created_at) IS NOT NULL THEN MAX(clothes_useds.created_at)
-			ELSE MAX(clothes.created_at)
-		END < ?
-	`, cutoffDate).
-		Order("MAX(users.username) ASC").
+		Group("clothes.id,clothes.clothes_name,clothes.clothes_type,clothes.created_at,users.username,users.telegram_user_id,users.telegram_is_valid").
+		Having("COALESCE(MAX(clothes_useds.created_at), clothes.created_at) < ?", cutoffDate).
+		Order("username ASC").
+		Find(&clothes)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
+		return nil, errors.New("clothes not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return clothes, nil
+}
+
+func (c *ClothesContext) SchedulerGetUnironedClothes() ([]SchedulerClothesUnironed, error) {
+	ironable_clothes_made_from := []string{"cotton", "linen", "silk", "rayon"}
+	ironable_clothes_type := []string{"pants", "shirt", "jacket", "shorts", "skirt", "dress", "blouse", "sweater", "hoodie", "tie", "coat", "vest", "t-shirt", "jeans", "leggings", "cardigan"}
+
+	// Model
+	var clothes []SchedulerClothesUnironed
+
+	// Query
+	result := c.DB.Table("clothes").
+		Select("clothes_name,clothes_made_from,has_washed,is_favorite,is_scheduled,username,telegram_user_id,telegram_is_valid").
+		Joins("JOIN users ON users.id = clothes.created_by").
+		Where("has_ironed = ?", false).
+		Where("clothes_made_from IN (?)", ironable_clothes_made_from).
+		Where("clothes_type IN (?)", ironable_clothes_type).
+		Order("username ASC").
 		Find(&clothes)
 
 	// Response
