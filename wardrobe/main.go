@@ -91,5 +91,6 @@ func MigrateAll(db *gorm.DB) {
 		&models.UserTrack{},
 		&models.UserWeather{},
 		&models.Wash{},
+		&models.AuditTrail{}
 	)
 }

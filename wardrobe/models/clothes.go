@@ -153,14 +153,26 @@ type (
 	}
 )
 
-func (c *ClothesContext) GetAllClothesHeader(category, order string, userID uuid.UUID) ([]ClothesHeader, error) {
+func (c *ClothesContext) GetAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]ClothesHeader, int64, error) {
 	// Model
+	var total int64
 	var clothes []ClothesHeader
 
 	// Ordering Prep
 	is_desc := true
 	if order == "asc" {
 		is_desc = false
+	}
+
+	// Pagination
+	offset := (pagination.Page - 1) * pagination.Limit
+	r.db.Model({&entity.AuditTrailTeam}).
+		Where("created_by = ?", userID).
+		Where("deleted_at is null").
+		Count(&total)
+
+	if category != "all" {
+		query = query.Where("clothes_catege type m", category)
 	}
 
 	// Model
@@ -185,13 +197,13 @@ func (c *ClothesContext) GetAllClothesHeader(category, order string, userID uuid
 
 	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
-		return nil, errors.New("clothes not found")
+		return nil, 0, errors.New("clothes not found")
 	}
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, 0, result.Error
 	}
 
-	return clothes, nil
+	return clothes, total, nil
 }
 
 func (c *ClothesContext) GetAllClothesDetail(category, order string, userID uuid.UUID) ([]Clothes, error) {
