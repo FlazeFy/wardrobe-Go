@@ -126,3 +126,43 @@ func (ac *AuthController) Login(c *gin.Context) {
 		"token":   token,
 	})
 }
+
+
+func (ac *AuthController) SignOut(c *gin.Context) {
+	// Header
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "missing authorization header",
+			"status":  "failed",
+		})
+		return
+	}
+
+	// Clean Bearer
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	token = strings.TrimSpace(token)
+	if token == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "invalid authorization header",
+			"status":  "failed",
+		})
+		return
+	}
+
+	// Reset Token By Adding Blacklist Redis
+	err := ac.AuthService.SignOut(token)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+			"status":  "failed",
+		})
+		return
+	}
+
+	// Response
+	c.JSON(http.StatusOK, gin.H{
+		"message": "user signout successfully",
+		"status":  "success",
+	})
+}

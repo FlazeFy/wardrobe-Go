@@ -24,6 +24,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 		{
 			auth.POST("/register", authController.Register)
 			auth.POST("/login", authController.Login)
+			auth.POST("/signout", authController.SignOut)
 		}
 		question := api.Group("/question")
 		{
