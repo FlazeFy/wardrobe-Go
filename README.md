@@ -2,7 +2,7 @@
 
 > **Wardrobe Web** is a **web-based clothing management** application that helps users organize their **daily wardrobe**, **automate outfit selection**, and **schedule laundry routines**. Users can input **detailed data** for each clothing item such as name, type, brand, material, size, and price and track when each piece is worn. The system also allows users to set reminders, enabling **automatic notifications** when an outfit is scheduled to be used the next day. The platform integrates with **Wardrobe Mobile**, **Wardrobe Telegram Bot**, **Wardrobe Line Bot**, and **Wardrobe Desktop**, offering a cross-platform experience through a **single account**. Users can manage and view their wardrobe, schedules, and laundry history across devices. Data export features in **PDF** and **Excel** formats are also available for greater flexibility in wardrobe management. While the application is accessible on both desktop and mobile browsers, administrative access is reserved for the **Wardrobe Desktop Admin** on desktop devices.
 
-> This repository is the **backend codebase** for the **next version** of the Wardrobe app, built using **Golang** with the **Gin framework**. The **primary backend** of the application is still powered by **Laravel** and can be accessed at:
+> This repository is the **backend codebase** for the **next backend version** of the Wardrobe app, built using **Golang** with the **Gin framework**. The **primary backend** of the application is still powered by **Laravel** and can be accessed at:
 https://github.com/FlazeFy/wardrobe-BE
 
 ## 📋 Basic Information
@@ -177,7 +177,7 @@ To set up the environment variables, just create the `.env` file in the root lev
 
 - **Daily Limitation** for data transaction in Firebase Storage
 - Not all **utils (helpers)** can be tested in **automation testing**
-- Feature that return the **output in Telegram Chat or Exported File** must be **tested manually** 
+- Feature that return the **output in Telegram / Line Chat or Exported File** must be **tested manually** 
 
 ---
 
@@ -191,6 +191,7 @@ To set up the environment variables, just create the `.env` file in the root lev
 - Basic knowledge of Golang, Software Testing, Firebase Service,  and SQL Databases
 - Code Editor
 - Telegram Account
+- Line Account
 - Postman
 
 #### 🧠 Backend
@@ -212,10 +213,10 @@ To set up the environment variables, just create the `.env` file in the root lev
 1. Download this Codebase as ZIP or Clone to your Git
 2. Set Up Environment Variables `.env` at the root level directory. You can see all the variable name to prepare at the **Project Structure** before or `.env.example`
 3. Install Dependencies using `go mod tidy`
-4. DB Migration will be running everytime your start the app. If you want to disabled it, just commented the code `MigrateAll(db)` that labelled with `Connect DB`, you can find the file at `main.go`. 
-5. Seeder also will be running everytime your start the app. If you want to disabled it, just commented the code that labelled with `Seeder & Factories`, you can find the file at `routes/dependency.go`. 
-6. Same like Task Scheduler. If you want to disabled it, just commented the code that labelled with `Task Scheduler`, you can find the file at `routes/dependency.go`. 
-7. Run the Go Gin using `go run main.go`
+4. **DB Migration** will be running everytime your start the app. If you want to disabled it, just commented the code `MigrateAll(db)` that labelled with `Connect DB`, you can find the file at `main.go`. 
+5. **Seeder** also will be running everytime your start the app. If you want to disabled it, just commented the code that labelled with `Seeder & Factories`, you can find the file at `routes/dependency.go`. 
+6. Same like **Task Scheduler**. If you want to disabled it, just commented the code that labelled with `Task Scheduler`, you can find the file at `routes/dependency.go`. 
+7. **Run the Go Gin** using `go run main.go`
 
 **CPanel Deployment**
 1. Source code uploaded to CPanel

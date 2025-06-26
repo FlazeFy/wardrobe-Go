@@ -11,3 +11,6 @@ var ResponseMessages = map[string]string{
 	"sign out":    "signed out",
 	"empty":       "not found",
 }
+var DictionaryTypes = []string{
+	"wash_type", "clothes_type", "clothes_category", "used_context", "clothes_gender", "clothes_made_from", "clothes_size",
+}
