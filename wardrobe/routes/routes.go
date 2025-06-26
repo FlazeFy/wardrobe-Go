@@ -5,10 +5,11 @@ import (
 	middleware "wardrobe/middlewares"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
-func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
+func SetUpRoutes(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	authController := controllers.NewAuthController(db)
 	questionController := controllers.NewQuestionController(db)
 	feedbackController := controllers.NewFeedbackController(db)
@@ -34,33 +35,33 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB) {
 
 		// Protected Routes
 		protected := api.Group("/")
-		protected.Use(middleware.AuthMiddleware())
+		protected.Use(middleware.AuthMiddleware(redisClient))
 
 		feedback := protected.Group("/feedback")
 		{
-			feedback.GET("/", feedbackController.GetAllFeedback, middleware.AuditTrailMiddleware(db, "get_all_feedback"))
+			feedback.GET("/", feedbackController.GetAllFeedback)
 			feedback.POST("/", feedbackController.CreateFeedback, middleware.AuditTrailMiddleware(db, "post_crete_feedback"))
 			feedback.DELETE("/destroy/:id", feedbackController.HardDeleteFeedbackById, middleware.AuditTrailMiddleware(db, "hard_delete_feedback_by_id"))
 		}
 		dictionary := protected.Group("/dictionary")
 		{
-			dictionary.GET("/", dictionaryController.GetAllDictionary, middleware.AuditTrailMiddleware(db, "get_all_dictionary"))
-			dictionary.GET("/:dictionary_type", dictionaryController.GetDictionaryByType, middleware.AuditTrailMiddleware(db, "get_dictionary_by_type"))
+			dictionary.GET("/", dictionaryController.GetAllDictionary)
+			dictionary.GET("/:dictionary_type", dictionaryController.GetDictionaryByType)
 			dictionary.POST("/", dictionaryController.CreateDictionary, middleware.AuditTrailMiddleware(db, "post_create_dictionary"))
 		}
 		history := protected.Group("/history")
 		{
-			history.GET("/", historyController.GetAllHistory, middleware.AuditTrailMiddleware(db, "get_all_history"))
+			history.GET("/", historyController.GetAllHistory)
 			history.DELETE("/destroy/:id", historyController.HardDeleteHistoryById, middleware.AuditTrailMiddleware(db, "hard_delete_history_by_id"))
 		}
 		clothes := protected.Group("/clothes")
 		{
 			clothes.POST("/", clothesController.CreateClothes, middleware.AuditTrailMiddleware(db, "post_create_history"))
-			clothes.GET("/header/:category/:order", clothesController.GetAllClothesHeader, middleware.AuditTrailMiddleware(db, "get_all_clothes_header"))
-			clothes.GET("/detail/:category/:order", clothesController.GetAllClothesDetail, middleware.AuditTrailMiddleware(db, "get_all_clothes_detail"))
-			clothes.GET("/last_history", clothesController.GetClothesLastHistory, middleware.AuditTrailMiddleware(db, "get_clothes_last_history"))
-			clothes.GET("/trash", clothesController.GetDeletedClothes, middleware.AuditTrailMiddleware(db, "get_deleted_clothes"))
-			clothes.GET("/history/:clothes_id/:order", clothesController.GetClothesUsedHistory, middleware.AuditTrailMiddleware(db, "get_clothes_used_history"))
+			clothes.GET("/header/:category/:order", clothesController.GetAllClothesHeader)
+			clothes.GET("/detail/:category/:order", clothesController.GetAllClothesDetail)
+			clothes.GET("/last_history", clothesController.GetClothesLastHistory)
+			clothes.GET("/trash", clothesController.GetDeletedClothes)
+			clothes.GET("/history/:clothes_id/:order", clothesController.GetClothesUsedHistory)
 			clothes.PUT("/recover/:id", clothesController.RecoverDeletedClothesById, middleware.AuditTrailMiddleware(db, "put_recover_deleted_clothes_by_id"))
 			clothes.DELETE("/:id", clothesController.SoftDeleteClothesById, middleware.AuditTrailMiddleware(db, "soft_delete_clothes_by_id"))
 			clothes.DELETE("/destroy/:id", clothesController.HardDeleteClothesById, middleware.AuditTrailMiddleware(db, "hard_delete_clothes_by_id"))

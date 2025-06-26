@@ -1,20 +1,10 @@
 package models
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
-
-type UserContext struct {
-	DB *gorm.DB
-}
-
-func NewUserContext(db *gorm.DB) *UserContext {
-	return &UserContext{DB: db}
-}
 
 type (
 	User struct {
@@ -42,35 +32,3 @@ type (
 		TelegramIsValid bool      `json:"telegram_is_valid"`
 	}
 )
-
-func (c *UserContext) SchedulerGetUserReadyFetchWeather() ([]UserReadyFetchWeather, error) {
-	// Model
-	var users []UserReadyFetchWeather
-
-	// Query
-	result := c.DB.Table("users").
-		Select(`
-			user_tracks.track_lat,user_tracks.track_long,user_tracks.created_at,users.id as user_id,
-			users.username,users.telegram_user_id,users.telegram_is_valid
-		`).
-		Joins(`
-			JOIN (
-				SELECT DISTINCT ON (created_by) *
-				FROM user_tracks
-				ORDER BY created_by, created_at DESC
-			) AS user_tracks ON user_tracks.created_by = users.id
-		`).
-		Where("user_tracks.track_lat IS NOT NULL AND user_tracks.track_long IS NOT NULL").
-		Order("users.username ASC").
-		Find(&users)
-
-	// Response
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	if len(users) == 0 {
-		return nil, errors.New("no user track found")
-	}
-
-	return users, nil
-}

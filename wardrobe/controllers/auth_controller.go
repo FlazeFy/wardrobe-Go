@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 	"wardrobe/models"
 	"wardrobe/models/others"
 	"wardrobe/utils"
@@ -127,7 +128,6 @@ func (ac *AuthController) Login(c *gin.Context) {
 	})
 }
 
-
 func (ac *AuthController) SignOut(c *gin.Context) {
 	// Header
 	authHeader := c.GetHeader("Authorization")
@@ -151,7 +151,7 @@ func (ac *AuthController) SignOut(c *gin.Context) {
 	}
 
 	// Reset Token By Adding Blacklist Redis
-	err := ac.AuthService.SignOut(token)
+	err := ac.authService.SignOut(token)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),

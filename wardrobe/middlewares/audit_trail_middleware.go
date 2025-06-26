@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"log"
-	"pelita/entity"
-	"pelita/utils"
 	"time"
+	"wardrobe/models"
+	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,38 +14,18 @@ import (
 func AuditTrailMiddleware(db *gorm.DB, activityName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get Context User Id
-		userID, err := utils.GetCurrentUserID(c)
+		userID, err := utils.GetUserID(c)
 		if err != nil {
 			log.Println("Failed to get user ID from context:", err)
 			c.Next()
 			return
 		}
 
-		// Get Context Role
-		userType, err := utils.GetCurrentRole(c)
-		if err != nil {
-			log.Println("Failed to get user role from context:", err)
-			c.Next()
-			return
-		}
-
-		history := entity.AuditTrail{
-			ID:          uuid.New(),
-			TypeUser:    userType,
+		history := models.AuditTrail{
+			ID:             uuid.New(),
+			UserID:         userID,
 			TypeAuditTrail: activityName,
-			CreatedAt:   time.Now(),
-		}
-
-		// Fill ID Based Role
-		switch userType {
-		case "admin":
-			history.AdminID = &userID
-		case "user":
-			history.UserID = &userID
-		default:
-			log.Println("unknown user type:")
-			c.Next()
-			return
+			CreatedAt:      time.Now(),
 		}
 
 		err = db.Create(&history).Error

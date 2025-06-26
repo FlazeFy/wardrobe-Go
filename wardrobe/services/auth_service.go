@@ -6,12 +6,9 @@ import (
 	"time"
 
 	"wardrobe/config"
-	"wardrobe/entity"
-	"wardrobe/repository"
-	"wardrobe/utils"
+	"wardrobe/repositories"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -20,16 +17,16 @@ type AuthService interface {
 }
 
 type authService struct {
-	userRepo       repository.UserRepository
-	adminRepo      repository.AdminRepository
-	redisClient    *redis.Client
+	userRepo    repositories.UserRepository
+	adminRepo   repositories.AdminRepository
+	redisClient *redis.Client
 }
 
-func NewAuthService(userRepo repository.UserRepository, adminRepo repository.AdminRepository,redisClient *redis.Client) AuthService {
+func NewAuthService(userRepo repositories.UserRepository, adminRepo repositories.AdminRepository, redisClient *redis.Client) AuthService {
 	return &authService{
-		userRepo:       userRepo,
-		adminRepo:      adminRepo,
-		redisClient:    redisClient,
+		userRepo:    userRepo,
+		adminRepo:   adminRepo,
+		redisClient: redisClient,
 	}
 }
 

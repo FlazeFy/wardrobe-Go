@@ -4,16 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
-
-type ScheduleContext struct {
-	DB *gorm.DB
-}
-
-func NewScheduleContext(db *gorm.DB) *ScheduleContext {
-	return &ScheduleContext{DB: db}
-}
 
 type (
 	Schedule struct {
@@ -41,39 +32,3 @@ type (
 		ClothesId       uuid.UUID `json:"clothes_id"`
 	}
 )
-
-func (c *ScheduleContext) GetScheduleByDay(day string, userId uuid.UUID) ([]ScheduleByDay, error) {
-	// Model
-	var data []ScheduleByDay
-
-	// Query
-	result := c.DB.
-		Table("schedules").
-		Select("clothes_name,day,schedule_note,clothes_image,clothes_type,clothes_category,clothes.id AS clothes_id").
-		Joins("JOIN clothes ON clothes.id = schedules.clothes_id").
-		Where("day = ? AND schedules.created_by = ?", day, userId).
-		Scan(&data)
-
-	// Response
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	return data, nil
-}
-
-// Command Scheduler
-func (c *ScheduleContext) SchedulerDeleteSchedulehById(id uuid.UUID) (int64, error) {
-	// Model
-	var schedule Schedule
-
-	// Query
-	result := c.DB.Unscoped().Where("clothes_id", id).Delete(&schedule)
-
-	// Response
-	if result.Error != nil {
-		return 0, result.Error
-	}
-
-	return result.RowsAffected, nil
-}

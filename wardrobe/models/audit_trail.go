@@ -1,4 +1,4 @@
-package entity
+package models
 
 import (
 	"time"
@@ -8,11 +8,9 @@ import (
 
 type (
 	AuditTrail struct {
-		ID           uuid.UUID  `json:"id" gorm:"type:varchar(36);primaryKey"`
-		AdminID      *uuid.UUID `json:"admin_id" gorm:"type:varchar(36);null"`
-		UserID       *uuid.UUID `json:"user_id" gorm:"type:varchar(36);null"`
-		TypeUser     string     `json:"type_user" gorm:"type:varchar(36);not null"`
-		TypeHistory  string     `json:"type_history" gorm:"type:varchar(255);not null"`
-		CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
+		ID             uuid.UUID  `json:"id" gorm:"type:varchar(36);primaryKey"`
+		UserID         *uuid.UUID `json:"user_id" gorm:"type:varchar(36);null"`
+		TypeAuditTrail string     `json:"type_history" gorm:"type:varchar(255);not null"`
+		CreatedAt      time.Time  `json:"created_at" gorm:"autoCreateTime"`
 	}
 )

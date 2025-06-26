@@ -1,11 +1,14 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"strings"
-	"wardrobe/utils"
+	"wardrobe/config"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
+	"github.com/redis/go-redis/v9"
 )
 
 func AuthMiddleware(redisClient *redis.Client, allowedRoles ...string) gin.HandlerFunc {

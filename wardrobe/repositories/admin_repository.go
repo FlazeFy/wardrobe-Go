@@ -1,0 +1,56 @@
+package repositories
+
+import (
+	"errors"
+	"wardrobe/models"
+
+	"gorm.io/gorm"
+)
+
+// Admin Interface
+type AdminRepository interface {
+	FindByEmail(email string) (*models.Admin, error)
+	FindAllContact() ([]models.AdminContact, error)
+}
+
+// Admin Struct
+type adminRepository struct {
+	db *gorm.DB
+}
+
+// Admin Constructor
+func NewAdminRepository(db *gorm.DB) AdminRepository {
+	return &adminRepository{db: db}
+}
+
+func (r *adminRepository) FindAllContact() ([]models.AdminContact, error) {
+	// Models
+	var admin []models.AdminContact
+
+	// Query
+	err := r.db.Table("admins").
+		Select("username, email, telegram_is_valid, telegram_user_id").
+		Where("telegram_is_valid = ?", true).
+		Where("telegram_user_id IS NOT NULL").
+		Order("username ASC").
+		Find(&admin).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return admin, err
+}
+
+func (r *adminRepository) FindByEmail(email string) (*models.Admin, error) {
+	// Models
+	var admin models.Admin
+
+	// Query
+	err := r.db.Where("email = ?", email).First(&admin).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
+	return &admin, err
+}

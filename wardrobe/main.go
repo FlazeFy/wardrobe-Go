@@ -26,7 +26,9 @@ func main() {
 
 	// Setup Gin
 	router := gin.Default()
-	routes.SetUpRoutes(router, db)
+	redisClient := config.InitRedis()
+
+	routes.SetUpRoutes(router, db, redisClient)
 
 	// Task Scheduler
 	c := cron.New()
@@ -91,6 +93,6 @@ func MigrateAll(db *gorm.DB) {
 		&models.UserTrack{},
 		&models.UserWeather{},
 		&models.Wash{},
-		&models.AuditTrail{}
+		&models.AuditTrail{},
 	)
 }
