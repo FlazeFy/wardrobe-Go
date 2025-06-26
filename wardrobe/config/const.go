@@ -9,4 +9,5 @@ var ResponseMessages = map[string]string{
 	"get":         "fetched",
 	"login":       "login",
 	"sign out":    "signed out",
+	"empty":       "not found",
 }

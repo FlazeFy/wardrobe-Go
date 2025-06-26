@@ -1,50 +1,40 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"wardrobe/models"
+	"wardrobe/services"
+	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type HistoryController struct {
-	DB *gorm.DB
+	HistoryService services.HistoryService
 }
 
-func NewHistoryController(db *gorm.DB) *HistoryController {
-	return &HistoryController{DB: db}
+func NewHistoryController(historyService services.HistoryService) *HistoryController {
+	return &HistoryController{HistoryService: historyService}
 }
 
 // Queries
 func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
-	// Models
-	var data []models.History
+	// Service : Get All History
+	history, err := c.HistoryService.GetAllHistory()
 
-	// Query
-	result := c.DB.Preload("User").Find(&data)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": "something went wrong",
-		})
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			utils.BuildResponseMessage(ctx, "failed", "history", "get", http.StatusNotFound, nil, nil)
+		default:
+			utils.BuildErrorMessage(ctx, err.Error())
+		}
 		return
 	}
 
-	// Response
-	if result.RowsAffected == 0 {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "feedback not found",
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"data":    data,
-		"message": "history fetched",
-	})
+	utils.BuildResponseMessage(ctx, "success", "history", "get", http.StatusOK, history, nil)
 }
 
 // Command
@@ -52,23 +42,31 @@ func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 	// Params
 	id := ctx.Param("id")
 
-	// Models
-	var history models.History
-
-	// Query
-	result := c.DB.Unscoped().First(&history, "id = ?", id)
-	if result.Error != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "history not found",
-		})
+	// Parse Param UUID
+	historyID, err := uuid.Parse(id)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "history", "invalid id", http.StatusBadRequest, nil, nil)
 		return
 	}
-	c.DB.Unscoped().Delete(&history)
+
+	// Get User ID
+	userID, err := utils.GetUserID(ctx)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "history", err.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Query : Hard Delete History By ID
+	err = c.HistoryService.HardDeleteHistoryByID(historyID, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "history", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
 
 	// Response
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "history permanentally deleted",
-	})
+	utils.BuildResponseMessage(ctx, "success", "history", "hard delete", http.StatusOK, nil, nil)
 }

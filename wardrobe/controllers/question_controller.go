@@ -21,12 +21,13 @@ func NewQuestionController(questionService services.QuestionService) *QuestionCo
 
 // Queries
 func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
+	// Service : Get All Question
 	questions, err := c.QuestionService.GetAllQuestion()
 
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			utils.BuildResponseMessage(ctx, "failed", "question", "get", http.StatusNotFound, nil, nil)
+			utils.BuildResponseMessage(ctx, "failed", "question", "empty", http.StatusNotFound, nil, nil)
 		default:
 			utils.BuildErrorMessage(ctx, err.Error())
 		}

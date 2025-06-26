@@ -4,11 +4,14 @@ import (
 	"time"
 	"wardrobe/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // History Interface
 type HistoryRepository interface {
+	FindAllHistory() ([]models.History, error)
+	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
 	// Task Scheduler
 	DeleteHistoryForLastNDays(days int) (int64, error)
 }
@@ -21,6 +24,35 @@ type historyRepository struct {
 // History Constructor
 func NewHistoryRepository(db *gorm.DB) HistoryRepository {
 	return &historyRepository{db: db}
+}
+
+func (r *historyRepository) FindAllHistory() ([]models.History, error) {
+	// Model
+	var histories []models.History
+
+	// Query
+	if err := r.db.Preload("User").Find(&histories).Error; err != nil {
+		return nil, err
+	}
+	if len(histories) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return histories, nil
+}
+
+func (r *historyRepository) HardDeleteHistoryByID(ID, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("id = ?", ID).Where("created_by = ?", createdBy).Delete(&models.History{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
 
 // Task Scheduler

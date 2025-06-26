@@ -1,11 +1,18 @@
 package services
 
 import (
+	"wardrobe/models"
 	"wardrobe/repositories"
+
+	"github.com/google/uuid"
 )
 
 // History Interface
 type HistoryService interface {
+	GetAllHistory() ([]models.History, error)
+	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
+
+	// Task Scheduler
 	DeleteHistoryForLastNDays(days int) (int64, error)
 }
 
@@ -19,6 +26,14 @@ func NewHistoryService(historyRepo repositories.HistoryRepository) HistoryServic
 	return &historyService{
 		historyRepo: historyRepo,
 	}
+}
+
+func (r *historyService) GetAllHistory() ([]models.History, error) {
+	return r.historyRepo.FindAllHistory()
+}
+
+func (r *historyService) HardDeleteHistoryByID(ID, createdBy uuid.UUID) error {
+	return r.historyRepo.HardDeleteHistoryByID(ID, createdBy)
 }
 
 // For Task Scheduler
