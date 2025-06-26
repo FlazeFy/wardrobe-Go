@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"wardrobe/models"
+	"wardrobe/services"
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
@@ -11,42 +13,29 @@ import (
 )
 
 type FeedbackController struct {
-	DB *gorm.DB
+	FeedbackService services.FeedbackService
 }
 
-func NewFeedbackController(db *gorm.DB) *FeedbackController {
-	return &FeedbackController{DB: db}
+func NewFeedbackController(feedbackService services.FeedbackService) *FeedbackController {
+	return &FeedbackController{FeedbackService: feedbackService}
 }
 
 // Queries
 func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
-	// Models
-	var data []models.Feedback
+	// Service : Get All Feedback
+	feedback, err := c.FeedbackService.GetAllFeedback()
 
-	// Query
-	result := c.DB.Preload("User").Find(&data)
-	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": "something went wrong",
-		})
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			utils.BuildResponseMessage(ctx, "failed", "feedback", "get", http.StatusNotFound, nil, nil)
+		default:
+			utils.BuildErrorMessage(ctx, err.Error())
+		}
 		return
 	}
 
-	// Response
-	if result.RowsAffected == 0 {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "feedback not found",
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"data":    data,
-		"message": "feedback fetched",
-		"status":  "success",
-	})
+	utils.BuildResponseMessage(ctx, "success", "feedback", "get", http.StatusOK, feedback, nil)
 }
 
 // Command
@@ -56,66 +45,52 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid request body",
-		})
+		utils.BuildResponseMessage(ctx, "failed", "feedback", "invalid request body", http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	// Get User ID
-	userId, err := utils.GetUserID(ctx)
+	userID, err := utils.GetUserID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+		utils.BuildResponseMessage(ctx, "failed", "feedback", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Query : Add Feedback
+	// Service : Add Feedback
 	feedback := models.Feedback{
-		ID:           uuid.New(),
 		FeedbackRate: req.FeedbackRate,
 		FeedbackBody: req.FeedbackBody,
-		CreatedBy:    *userId,
 	}
-	if err := c.DB.Create(&feedback).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": "failed to create feedback",
-		})
+	err = c.FeedbackService.CreateFeedback(&feedback, *userID)
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
-	// Response
-	ctx.JSON(http.StatusCreated, gin.H{
-		"status":  "success",
-		"data":    feedback,
-		"message": "feedback created",
-	})
+	utils.BuildResponseMessage(ctx, "success", "feedback", "post", http.StatusCreated, nil, nil)
 }
 
 func (c *FeedbackController) HardDeleteFeedbackById(ctx *gin.Context) {
 	// Params
 	id := ctx.Param("id")
 
-	// Models
-	var feedback models.Feedback
-
-	// Query
-	result := c.DB.Unscoped().First(&feedback, "id = ?", id)
-	if result.Error != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "feedback not found",
-		})
+	// Parse Param UUID
+	feedbackID, err := uuid.Parse(id)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "feedback", "invalid id", http.StatusBadRequest, nil, nil)
 		return
 	}
-	c.DB.Unscoped().Delete(&feedback)
 
-	// Response
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "feedback permanentally deleted",
-	})
+	// Service : Hard Delete Feedback By ID
+	err = c.FeedbackService.HardDeleteFeedbackByID(feedbackID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "feedback", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	utils.BuildResponseMessage(ctx, "success", "feedback", "hard delete", http.StatusOK, nil, nil)
 }

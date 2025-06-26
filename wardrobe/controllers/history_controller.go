@@ -56,7 +56,7 @@ func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 		return
 	}
 
-	// Query : Hard Delete History By ID
+	// Service : Hard Delete History By ID
 	err = c.HistoryService.HardDeleteHistoryByID(historyID, *userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.BuildResponseMessage(ctx, "failed", "history", "empty", http.StatusNotFound, nil, nil)
@@ -67,6 +67,5 @@ func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "history", "hard delete", http.StatusOK, nil, nil)
 }

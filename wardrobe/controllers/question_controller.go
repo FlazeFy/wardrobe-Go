@@ -48,7 +48,7 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 		return
 	}
 
-	// Query : Add Question
+	// Service : Create Question
 	question := models.Question{
 		Question: req.Question,
 	}
@@ -58,6 +58,5 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "question", "post", http.StatusCreated, nil, nil)
 }
