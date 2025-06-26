@@ -13,19 +13,18 @@ import (
 
 // Clothes Interface
 type ClothesRepository interface {
-	GetAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.ClothesHeader, int64, error)
-	GetAllClothesDetail(category, order string, userID uuid.UUID) ([]models.Clothes, error)
-	GetClothesShortInfoById(id uuid.UUID) (*models.ClothesShortInfo, error)
-	GetClothesLastCreated(ctx string, userID uuid.UUID) (*models.ClothesLastCreated, error)
-	GetClothesLastDeleted(ctx string, userID uuid.UUID) (*models.ClothesLastDeleted, error)
-	GetDeletedClothes(userID uuid.UUID) ([]models.ClothesDeleted, error)
-	GetClothesPlanDestroy(days int) ([]models.ClothesPlanDestroy, error)
+	FindAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.ClothesHeader, int64, error)
+	FindAllClothesDetail(category, order string, userID uuid.UUID) ([]models.Clothes, error)
+	FindClothesShortInfoById(id uuid.UUID) (*models.ClothesShortInfo, error)
+	FindClothesLastCreated(ctx string, userID uuid.UUID) (*models.ClothesLastCreated, error)
+	FindClothesLastDeleted(ctx string, userID uuid.UUID) (*models.ClothesLastDeleted, error)
+	FindDeletedClothes(userID uuid.UUID) ([]models.ClothesDeleted, error)
+	FindClothesPlanDestroy(days int) ([]models.ClothesPlanDestroy, error)
+	HardDeleteClothesById(id uuid.UUID) (int64, error)
 
 	// Task Scheduler
-	SchedulerHardDeleteClothesById(id uuid.UUID) (int64, error)
-	SchedulerDeleteClothesUsedByClothesId(id uuid.UUID) (int64, error)
-	SchedulerGetUnusedClothes(days int) ([]models.SchedulerClothesUnused, error)
-	SchedulerGetUnironedClothes() ([]models.SchedulerClothesUnironed, error)
+	SchedulerFindUnusedClothes(days int) ([]models.SchedulerClothesUnused, error)
+	SchedulerFindUnironedClothes() ([]models.SchedulerClothesUnironed, error)
 }
 
 // Clothes Struct
@@ -38,7 +37,7 @@ func NewClothesRepository(db *gorm.DB) ClothesRepository {
 	return &clothesRepository{db: db}
 }
 
-func (r *clothesRepository) GetAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.ClothesHeader, int64, error) {
+func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.ClothesHeader, int64, error) {
 	// Model
 	var total int64
 	var clothes []models.ClothesHeader
@@ -96,7 +95,7 @@ func (r *clothesRepository) GetAllClothesHeader(pagination utils.Pagination, cat
 	return clothes, total, nil
 }
 
-func (r *clothesRepository) GetAllClothesDetail(category, order string, userID uuid.UUID) ([]models.Clothes, error) {
+func (r *clothesRepository) FindAllClothesDetail(category, order string, userID uuid.UUID) ([]models.Clothes, error) {
 	// Model
 	var clothes []models.Clothes
 
@@ -136,7 +135,7 @@ func (r *clothesRepository) GetAllClothesDetail(category, order string, userID u
 	return clothes, nil
 }
 
-func (r *clothesRepository) GetClothesShortInfoById(id uuid.UUID) (*models.ClothesShortInfo, error) {
+func (r *clothesRepository) FindClothesShortInfoById(id uuid.UUID) (*models.ClothesShortInfo, error) {
 	// Model
 	var clothes models.ClothesShortInfo
 
@@ -157,7 +156,7 @@ func (r *clothesRepository) GetClothesShortInfoById(id uuid.UUID) (*models.Cloth
 	return &clothes, nil
 }
 
-func (r *clothesRepository) GetClothesLastCreated(ctx string, userID uuid.UUID) (*models.ClothesLastCreated, error) {
+func (r *clothesRepository) FindClothesLastCreated(ctx string, userID uuid.UUID) (*models.ClothesLastCreated, error) {
 	// Model
 	var clothes models.ClothesLastCreated
 
@@ -181,7 +180,7 @@ func (r *clothesRepository) GetClothesLastCreated(ctx string, userID uuid.UUID) 
 	return &clothes, nil
 }
 
-func (r *clothesRepository) GetClothesLastDeleted(ctx string, userID uuid.UUID) (*models.ClothesLastDeleted, error) {
+func (r *clothesRepository) FindClothesLastDeleted(ctx string, userID uuid.UUID) (*models.ClothesLastDeleted, error) {
 	// Model
 	var clothes models.ClothesLastDeleted
 
@@ -206,7 +205,7 @@ func (r *clothesRepository) GetClothesLastDeleted(ctx string, userID uuid.UUID) 
 	return &clothes, nil
 }
 
-func (r *clothesRepository) GetDeletedClothes(userID uuid.UUID) ([]models.ClothesDeleted, error) {
+func (r *clothesRepository) FindDeletedClothes(userID uuid.UUID) ([]models.ClothesDeleted, error) {
 	// Model
 	var clothes []models.ClothesDeleted
 
@@ -229,7 +228,7 @@ func (r *clothesRepository) GetDeletedClothes(userID uuid.UUID) ([]models.Clothe
 	return clothes, nil
 }
 
-func (r *clothesRepository) GetClothesPlanDestroy(days int) ([]models.ClothesPlanDestroy, error) {
+func (r *clothesRepository) FindClothesPlanDestroy(days int) ([]models.ClothesPlanDestroy, error) {
 	cutoffDate := time.Now().AddDate(0, 0, -days)
 
 	// Model
@@ -254,8 +253,7 @@ func (r *clothesRepository) GetClothesPlanDestroy(days int) ([]models.ClothesPla
 	return clothes, nil
 }
 
-// Command Scheduler
-func (r *clothesRepository) SchedulerHardDeleteClothesById(id uuid.UUID) (int64, error) {
+func (r *clothesRepository) HardDeleteClothesById(id uuid.UUID) (int64, error) {
 	// Model
 	var clothes models.Clothes
 
@@ -270,22 +268,8 @@ func (r *clothesRepository) SchedulerHardDeleteClothesById(id uuid.UUID) (int64,
 	return result.RowsAffected, nil
 }
 
-func (r *clothesRepository) SchedulerDeleteClothesUsedByClothesId(id uuid.UUID) (int64, error) {
-	// Model
-	var clothes models.ClothesUsed
-
-	// Query
-	result := r.db.Unscoped().Where("clothes_id", id).Delete(&clothes)
-
-	// Response
-	if result.Error != nil {
-		return 0, result.Error
-	}
-
-	return result.RowsAffected, nil
-}
-
-func (r *clothesRepository) SchedulerGetUnusedClothes(days int) ([]models.SchedulerClothesUnused, error) {
+// Command Scheduler
+func (r *clothesRepository) SchedulerFindUnusedClothes(days int) ([]models.SchedulerClothesUnused, error) {
 	cutoffDate := time.Now().AddDate(0, 0, -days)
 
 	// Model
@@ -317,7 +301,7 @@ func (r *clothesRepository) SchedulerGetUnusedClothes(days int) ([]models.Schedu
 	return clothes, nil
 }
 
-func (r *clothesRepository) SchedulerGetUnironedClothes() ([]models.SchedulerClothesUnironed, error) {
+func (r *clothesRepository) SchedulerFindUnironedClothes() ([]models.SchedulerClothesUnironed, error) {
 	ironable_clothes_made_from := []string{"cotton", "linen", "silk", "rayon"}
 	ironable_clothes_type := []string{"pants", "shirt", "jacket", "shorts", "skirt", "dress", "blouse", "sweater", "hoodie", "tie", "coat", "vest", "t-shirt", "jeans", "leggings", "cardigan"}
 

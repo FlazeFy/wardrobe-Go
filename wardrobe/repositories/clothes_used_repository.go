@@ -12,8 +12,11 @@ import (
 
 // Clothes Used Interface
 type ClothesUsedRepository interface {
-	GetClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error)
-	SchedulerGetUsedClothesReadyToWash(days int) ([]models.SchedulerUsedClothesReadyToWash, error)
+	FindClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error)
+	DeleteClothesUsedByClothesId(id uuid.UUID) (int64, error)
+
+	// Task Scheduler
+	SchedulerFindUsedClothesReadyToWash(days int) ([]models.SchedulerUsedClothesReadyToWash, error)
 }
 
 // Clothes Used Struct
@@ -26,7 +29,7 @@ func NewClothesUsedRepository(db *gorm.DB) ClothesUsedRepository {
 	return &clothesUsedRepository{db: db}
 }
 
-func (r *clothesUsedRepository) GetClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error) {
+func (r *clothesUsedRepository) FindClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error) {
 	// Model
 	var clothes []models.ClothesUsedHistory
 
@@ -66,7 +69,23 @@ func (r *clothesUsedRepository) GetClothesUsedHistory(userID uuid.UUID, clothesI
 	return clothes, nil
 }
 
-func (r *clothesUsedRepository) SchedulerGetUsedClothesReadyToWash(days int) ([]models.SchedulerUsedClothesReadyToWash, error) {
+func (r *clothesUsedRepository) DeleteClothesUsedByClothesId(id uuid.UUID) (int64, error) {
+	// Model
+	var clothes models.ClothesUsed
+
+	// Query
+	result := r.db.Unscoped().Where("clothes_id", id).Delete(&clothes)
+
+	// Response
+	if result.Error != nil {
+		return 0, result.Error
+	}
+
+	return result.RowsAffected, nil
+}
+
+// Task Scheduler
+func (r *clothesUsedRepository) SchedulerFindUsedClothesReadyToWash(days int) ([]models.SchedulerUsedClothesReadyToWash, error) {
 	cutoffDate := time.Now().AddDate(0, 0, -days)
 
 	// Model

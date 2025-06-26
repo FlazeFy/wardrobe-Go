@@ -5,27 +5,27 @@ import (
 	"os"
 	"strconv"
 	"time"
-	"wardrobe/config"
-	"wardrobe/models"
+	"wardrobe/services"
 	"wardrobe/utils"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func SchedulerAuditError() {
-	db := config.ConnectDatabase()
+type AuditScheduler struct {
+	ErrorService services.ErrorService
+	AdminService services.AdminService
+}
 
-	// Get Admin Contact
-	userContext := utils.NewUserContext(db)
-	contact, err := userContext.GetAdminContact()
+func (s *AuditScheduler) SchedulerAuditError() {
+	// Service : Find All Admin Contact
+	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	// Get All Error
-	errorContext := models.NewErrorContext(db)
-	errors, err := errorContext.GetAllErrorAudit()
+	// Service : Find All Error
+	errors_list, err := s.ErrorService.GetAllErrorAudit()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -33,9 +33,9 @@ func SchedulerAuditError() {
 
 	// Send to Telegram
 	datetime := time.Now()
-	if len(contact) > 0 && len(errors) > 0 {
+	if len(contact) > 0 && len(errors_list) > 0 {
 		filename := fmt.Sprintf("audit_error_%s.pdf", datetime)
-		err = utils.GeneratePDFErrorAudit(errors, filename)
+		err = utils.GeneratePDFErrorAudit(errors_list, filename)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -57,7 +57,7 @@ func SchedulerAuditError() {
 
 				doc := tgbotapi.NewDocumentUpload(telegramID, filename)
 				doc.ParseMode = "html"
-				doc.Caption = fmt.Sprintf("[ADMIN] Hello %s, the system just run an audit error, with result of %d error found. Here's the document", dt.Username, len(errors))
+				doc.Caption = fmt.Sprintf("[ADMIN] Hello %s, the system just run an audit error, with result of %d error found. Here's the document", dt.Username, len(errors_list))
 
 				_, err = bot.Send(doc)
 				if err != nil {

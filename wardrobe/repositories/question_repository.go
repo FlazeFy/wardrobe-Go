@@ -9,7 +9,7 @@ import (
 
 // Question Interface
 type QuestionRepository interface {
-	GetUnansweredQuestion() ([]models.UnansweredQuestion, error)
+	FindUnansweredQuestion() ([]models.UnansweredQuestion, error)
 }
 
 // Question Struct
@@ -22,7 +22,7 @@ func NewQuestionRepository(db *gorm.DB) QuestionRepository {
 	return &questionRepository{db: db}
 }
 
-func (r *questionRepository) GetUnansweredQuestion() ([]models.UnansweredQuestion, error) {
+func (r *questionRepository) FindUnansweredQuestion() ([]models.UnansweredQuestion, error) {
 	// Model
 	var question []models.UnansweredQuestion
 

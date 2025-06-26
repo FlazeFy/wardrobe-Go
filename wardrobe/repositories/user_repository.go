@@ -18,7 +18,7 @@ type UserRepository interface {
 	Create(user *models.User) error
 
 	// For Task Scheduler
-	SchedulerGetUserReadyFetchWeather() ([]models.UserReadyFetchWeather, error)
+	FindUserReadyFetchWeather() ([]models.UserReadyFetchWeather, error)
 }
 
 // User Struct
@@ -85,7 +85,7 @@ func (r *userRepository) Create(user *models.User) error {
 }
 
 // For Task Scheduler
-func (r *userRepository) SchedulerGetUserReadyFetchWeather() ([]models.UserReadyFetchWeather, error) {
+func (r *userRepository) FindUserReadyFetchWeather() ([]models.UserReadyFetchWeather, error) {
 	// Model
 	var users []models.UserReadyFetchWeather
 

@@ -9,8 +9,8 @@ import (
 
 // Schedule Interface
 type ScheduleRepository interface {
-	GetScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error)
-	SchedulerDeleteSchedulehById(id uuid.UUID) (int64, error)
+	FindScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error)
+	DeleteScheduleByClothesId(id uuid.UUID) (int64, error)
 }
 
 // Schedule Struct
@@ -23,7 +23,7 @@ func NewScheduleRepository(db *gorm.DB) ScheduleRepository {
 	return &scheduleRepository{db: db}
 }
 
-func (r *scheduleRepository) GetScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error) {
+func (r *scheduleRepository) FindScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error) {
 	// Model
 	var data []models.ScheduleByDay
 
@@ -42,8 +42,7 @@ func (r *scheduleRepository) GetScheduleByDay(day string, userId uuid.UUID) ([]m
 	return data, nil
 }
 
-// Command Scheduler
-func (r *scheduleRepository) SchedulerDeleteSchedulehById(id uuid.UUID) (int64, error) {
+func (r *scheduleRepository) DeleteScheduleByClothesId(id uuid.UUID) (int64, error) {
 	// Model
 	var schedule models.Schedule
 

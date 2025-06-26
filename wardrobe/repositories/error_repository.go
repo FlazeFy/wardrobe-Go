@@ -10,7 +10,7 @@ import (
 
 // Error Interface
 type ErrorRepository interface {
-	GetAllErrorAudit() ([]models.ErrorAudit, error)
+	FindAllErrorAudit() ([]models.ErrorAudit, error)
 }
 
 // Error Struct
@@ -23,7 +23,7 @@ func NewErrorRepository(db *gorm.DB) ErrorRepository {
 	return &errorRepository{db: db}
 }
 
-func (r *errorRepository) GetAllErrorAudit() ([]models.ErrorAudit, error) {
+func (r *errorRepository) FindAllErrorAudit() ([]models.ErrorAudit, error) {
 	// Model
 	var errors_list []models.ErrorAudit
 

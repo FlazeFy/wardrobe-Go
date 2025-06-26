@@ -5,29 +5,33 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"wardrobe/config"
-	"wardrobe/controllers"
 	"wardrobe/models"
-	"wardrobe/utils"
+	"wardrobe/services"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func SchedulerCleanHistory() {
-	days := 30
-	db := config.ConnectDatabase()
+type CleanScheduler struct {
+	AdminService       services.AdminService
+	HistoryService     services.HistoryService
+	ClothesService     services.ClothesService
+	ClothesUsedService services.ClothesUsedService
+	ScheduleService    services.ScheduleService
+	WashService        services.WashService
+}
 
-	// Get Admin Contact
-	userContext := utils.NewUserContext(db)
-	contact, err := userContext.GetAdminContact()
+func (s *CleanScheduler) SchedulerCleanHistory() {
+	days := 30
+
+	// Service : Get All Admin Contact
+	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	// Delete History
-	historyContext := controllers.NewHistoryController(db)
-	total, err := historyContext.DeleteHistoryForLastNDays(days)
+	// Service : Delete History
+	total, err := s.HistoryService.DeleteHistoryForLastNDays(days)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -62,21 +66,18 @@ func SchedulerCleanHistory() {
 	}
 }
 
-func SchedulerCleanDeletedClothes() {
+func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 	days := 30
-	db := config.ConnectDatabase()
 
-	// Get User Contact
-	userContext := utils.NewUserContext(db)
-	contact, err := userContext.GetAdminContact()
+	// Service : Get All Admin Contact
+	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
 	// Get Clothes Plan Destroy
-	clothesContext := models.NewClothesContext(db)
-	plans, err := clothesContext.GetClothesPlanDestroy(days)
+	plans, err := s.ClothesService.GetClothesPlanDestroy(days)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -90,26 +91,23 @@ func SchedulerCleanDeletedClothes() {
 		totalClothes := 0
 		var next *models.ClothesPlanDestroy
 
-		scheduleContext := models.NewScheduleContext(db)
-		washContext := models.NewWashContext(db)
-
 		for idx, dt := range plans {
-			_, err = clothesContext.SchedulerHardDeleteClothesById(dt.ID)
+			_, err = s.ClothesService.SchedulerHardDeleteClothesById(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
-			_, err = clothesContext.SchedulerDeleteClothesUsedByClothesId(dt.ID)
+			_, err = s.ClothesUsedService.DeleteClothesUsedByClothesId(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
-			_, err = scheduleContext.SchedulerDeleteSchedulehById(dt.ID)
+			_, err = s.ScheduleService.DeleteScheduleByClothesId(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
-			_, err = washContext.SchedulerDeleteWashById(dt.ID)
+			_, err = s.WashService.DeleteWashByClothesId(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return

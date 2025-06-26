@@ -9,7 +9,7 @@ import (
 
 // Wash Interface
 type WashRepository interface {
-	SchedulerDeleteWashById(id uuid.UUID) (int64, error)
+	DeleteWashByClothesId(id uuid.UUID) (int64, error)
 }
 
 // Wash Struct
@@ -23,7 +23,7 @@ func NewWashRepository(db *gorm.DB) WashRepository {
 }
 
 // Command Scheduler
-func (r *washRepository) SchedulerDeleteWashById(id uuid.UUID) (int64, error) {
+func (r *washRepository) DeleteWashByClothesId(id uuid.UUID) (int64, error) {
 	// Model
 	var wash models.Wash
 

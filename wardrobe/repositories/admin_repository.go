@@ -11,6 +11,7 @@ import (
 type AdminRepository interface {
 	FindByEmail(email string) (*models.Admin, error)
 	FindAllContact() ([]models.AdminContact, error)
+	FindAllAdminContact() ([]models.UserContact, error)
 }
 
 // Admin Struct
@@ -53,4 +54,25 @@ func (r *adminRepository) FindByEmail(email string) (*models.Admin, error) {
 	}
 
 	return &admin, err
+}
+
+// For Task Scheduler
+func (r *adminRepository) FindAllAdminContact() ([]models.UserContact, error) {
+	// Model
+	var contact []models.UserContact
+
+	// Query
+	result := r.db.Table("admins").
+		Select("username, email, telegram_user_id, telegram_is_valid").
+		Find(&contact)
+
+	// Response
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(contact) == 0 {
+		return nil, errors.New("admin contact not found")
+	}
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return contact, nil
 }

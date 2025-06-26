@@ -6,27 +6,29 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"wardrobe/config"
-	"wardrobe/models"
+	"wardrobe/services"
 	"wardrobe/utils"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-func SchedulerReminderUnansweredQuestion() {
-	db := config.ConnectDatabase()
+type ReminderScheduler struct {
+	AdminService       services.AdminService
+	ClothesService     services.ClothesService
+	ClothesUsedService services.ClothesUsedService
+	QuestionService    services.QuestionService
+}
 
-	// Get Admin Contact
-	userContext := utils.NewUserContext(db)
-	contact, err := userContext.GetAdminContact()
+func (s *ReminderScheduler) SchedulerReminderUnansweredQuestion() {
+	// Service : Get All Admin Contact
+	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
 	// Get Unanswered Question
-	questionContext := models.NewQuestionContext(db)
-	questions, err := questionContext.GetUnansweredQuestion()
+	questions, err := s.QuestionService.GetUnansweredQuestion()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -78,13 +80,10 @@ func SchedulerReminderUnansweredQuestion() {
 	}
 }
 
-func SchedulerReminderUnusedClothes() {
-	db := config.ConnectDatabase()
-
-	// Get Unused Clothes
+func (s *ReminderScheduler) SchedulerReminderUnusedClothes() {
+	// Service : Get Unused Clothes
 	days := 60
-	clothesContext := models.NewClothesContext(db)
-	clothes, err := clothesContext.SchedulerGetUnusedClothes(days)
+	clothes, err := s.ClothesService.SchedulerGetUnusedClothes(days)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -149,12 +148,9 @@ func SchedulerReminderUnusedClothes() {
 	}
 }
 
-func SchedulerReminderUnironedClothes() {
-	db := config.ConnectDatabase()
-
-	// Get Unironed Clothes
-	clothesContext := models.NewClothesContext(db)
-	clothes, err := clothesContext.SchedulerGetUnironedClothes()
+func (s *ReminderScheduler) SchedulerReminderUnironedClothes() {
+	// Service : Get Unironed Clothes
+	clothes, err := s.ClothesService.SchedulerGetUnironedClothes()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -229,13 +225,11 @@ func SchedulerReminderUnironedClothes() {
 	}
 }
 
-func SchedulerReminderWashUsedClothes() {
-	db := config.ConnectDatabase()
+func (s *ReminderScheduler) SchedulerReminderWashUsedClothes() {
 	days := 7
 
-	// Get Unwashed Clothes
-	clothesUsedContext := models.NewClothesUsedContext(db)
-	clothes, err := clothesUsedContext.SchedulerGetUsedClothesReadyToWash(days)
+	// Service : Get Unwashed Clothes
+	clothes, err := s.ClothesUsedService.SchedulerGetUsedClothesReadyToWash(days)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
