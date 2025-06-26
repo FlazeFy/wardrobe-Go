@@ -1,44 +1,39 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"wardrobe/models"
+	"wardrobe/services"
+	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type QuestionController struct {
-	DB *gorm.DB
+	QuestionService services.QuestionService
 }
 
-func NewQuestionController(db *gorm.DB) *QuestionController {
-	return &QuestionController{DB: db}
+func NewQuestionController(questionService services.QuestionService) *QuestionController {
+	return &QuestionController{QuestionService: questionService}
 }
 
 // Queries
 func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
-	// Models
-	var data []models.Question
+	questions, err := c.QuestionService.GetAllQuestion()
 
-	// Query
-	result := c.DB.Find(&data)
-
-	// Response
-	if result.RowsAffected == 0 {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "question not found",
-		})
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			utils.BuildResponseMessage(ctx, "failed", "question", "get", http.StatusNotFound, nil, nil)
+		default:
+			utils.BuildErrorMessage(ctx, err.Error())
+		}
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"data":    data,
-		"message": "question fetched",
-	})
+	utils.BuildResponseMessage(ctx, "success", "question", "get", http.StatusOK, questions, nil)
 }
 
 // Command
@@ -48,32 +43,20 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": "invalid request body",
-		})
+		utils.BuildResponseMessage(ctx, "failed", "question", "invalid request body", http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	// Query : Add Question
 	question := models.Question{
-		ID:       uuid.New(),
 		Question: req.Question,
-		Answer:   nil,
-		IsShow:   false,
 	}
-	if err := c.DB.Create(&question).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": "failed to create question",
-		})
+	err := c.QuestionService.CreateQuestion(&question)
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
 	// Response
-	ctx.JSON(http.StatusCreated, gin.H{
-		"status":  "success",
-		"data":    question,
-		"message": "question created",
-	})
+	utils.BuildResponseMessage(ctx, "success", "question", "post", http.StatusCreated, nil, nil)
 }

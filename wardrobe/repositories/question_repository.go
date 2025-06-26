@@ -4,11 +4,14 @@ import (
 	"errors"
 	"wardrobe/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // Question Interface
 type QuestionRepository interface {
+	CreateQuestion(question *models.Question) error
+	FindAllQuestion() ([]models.Question, error)
 	FindUnansweredQuestion() ([]models.UnansweredQuestion, error)
 }
 
@@ -22,6 +25,31 @@ func NewQuestionRepository(db *gorm.DB) QuestionRepository {
 	return &questionRepository{db: db}
 }
 
+func (r *questionRepository) CreateQuestion(question *models.Question) error {
+	// Default
+	question.ID = uuid.New()
+	question.IsShow = false
+	question.Answer = nil
+
+	// Query
+	return r.db.Create(question).Error
+}
+
+func (r *questionRepository) FindAllQuestion() ([]models.Question, error) {
+	// Model
+	var questions []models.Question
+
+	// Query
+	if err := r.db.Find(&questions).Error; err != nil {
+		return nil, err
+	}
+	if len(questions) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return questions, nil
+}
+
 func (r *questionRepository) FindUnansweredQuestion() ([]models.UnansweredQuestion, error) {
 	// Model
 	var question []models.UnansweredQuestion
@@ -33,7 +61,6 @@ func (r *questionRepository) FindUnansweredQuestion() ([]models.UnansweredQuesti
 		Order("created_at DESC").
 		Find(&question)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(question) == 0 {
 		return nil, errors.New("unanswered question not found")
 	}

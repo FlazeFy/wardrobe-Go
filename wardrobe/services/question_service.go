@@ -7,6 +7,8 @@ import (
 
 // Question Interface
 type QuestionService interface {
+	CreateQuestion(question *models.Question) error
+	GetAllQuestion() ([]models.Question, error)
 	GetUnansweredQuestion() ([]models.UnansweredQuestion, error)
 }
 
@@ -20,6 +22,14 @@ func NewQuestionService(questionRepo repositories.QuestionRepository) QuestionSe
 	return &questionService{
 		questionRepo: questionRepo,
 	}
+}
+
+func (r *questionService) GetAllQuestion() ([]models.Question, error) {
+	return r.questionRepo.FindAllQuestion()
+}
+
+func (r *questionService) CreateQuestion(question *models.Question) error {
+	return r.questionRepo.CreateQuestion(question)
 }
 
 // For Task Scheduler
