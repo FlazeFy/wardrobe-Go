@@ -1,27 +1,24 @@
 package controllers
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
-	"os"
-	"strconv"
-	"strings"
-	"time"
+	"wardrobe/config"
 	"wardrobe/models"
+	"wardrobe/services"
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type ScheduleController struct {
-	DB *gorm.DB
+	ScheduleService services.ScheduleService
 }
 
-func NewScheduleController(db *gorm.DB) *ScheduleController {
-	return &ScheduleController{DB: db}
+func NewScheduleController(scheduleService services.ScheduleService) *ScheduleController {
+	return &ScheduleController{ScheduleService: scheduleService}
 }
 
 // Query
@@ -30,40 +27,24 @@ func (c *ScheduleController) GetScheduleByDay(ctx *gin.Context) {
 	day := ctx.Param("day")
 
 	// Get User ID
-	userId, err := utils.GetUserID(ctx)
+	userID, err := utils.GetUserID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+		utils.BuildResponseMessage(ctx, "failed", "feedback", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Query
-	scheduleContext := models.NewScheduleContext(c.DB)
-	res, err := scheduleContext.GetScheduleByDay(day, *userId)
+	// Service : Get Schedule By Day
+	data, err := c.ScheduleService.GetScheduleByDay(day, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
-	// Response
-	if len(res) == 0 {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "schedule not found",
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"data":    res,
-		"message": "schedule fetched",
-	})
+	utils.BuildResponseMessage(ctx, "success", "schedule", "get", http.StatusOK, data, nil)
 }
 
 func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
@@ -71,12 +52,9 @@ func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
 	day := ctx.Param("day")
 
 	// Get User ID
-	userId, err := utils.GetUserID(ctx)
+	userID, err := utils.GetUserID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+		utils.BuildResponseMessage(ctx, "failed", "feedback", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
@@ -84,35 +62,25 @@ func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
 	tomorrow := utils.GetNextDay(day, 1)
 	twoDaysLater := utils.GetNextDay(day, 2)
 
-	// Query : Get Schedule
-	scheduleContext := models.NewScheduleContext(c.DB)
-	resTomorrow, err := scheduleContext.GetScheduleByDay(tomorrow, *userId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+	// Service : Get Schedule By Day
+	dataTommorow, errTomorrow := c.ScheduleService.GetScheduleByDay(tomorrow, *userID)
+	if errTomorrow != nil && !errors.Is(errTomorrow, gorm.ErrRecordNotFound) {
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
-	resTwoDaysLater, err := scheduleContext.GetScheduleByDay(twoDaysLater, *userId)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+	dataTwoDayLater, errTwoDayLater := c.ScheduleService.GetScheduleByDay(tomorrow, *userID)
+	if errTwoDayLater != nil && !errors.Is(errTwoDayLater, gorm.ErrRecordNotFound) {
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
 	// Response
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "success",
-		"data": gin.H{
-			"tomorrow":           utils.CheckIfEmpty(resTomorrow),
-			"tomorrow_day":       tomorrow,
-			"two_days_later":     utils.CheckIfEmpty(resTwoDaysLater),
-			"two_days_later_day": twoDaysLater,
-		},
-	})
+	utils.BuildResponseMessage(ctx, "success", "schedule", "get", http.StatusOK, gin.H{
+		"tomorrow":           utils.CheckIfEmpty(dataTommorow),
+		"tomorrow_day":       tomorrow,
+		"two_days_later":     utils.CheckIfEmpty(dataTwoDayLater),
+		"two_days_later_day": twoDaysLater,
+	}, nil)
 }
 
 // Command
@@ -120,152 +88,82 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	// Models
 	var req models.Schedule
 
-	// Validate
+	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": "invalid request body",
-		})
+		utils.BuildResponseMessage(ctx, "failed", "feedback", "invalid request body", http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	day := req.Day
-	// Validate : Day Rules
-	allowedDays := []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
-	ok := false
-	for _, v := range allowedDays {
-		if day == v {
-			ok = true
-			break
-		}
+	// Validate Field
+	if req.Day == "" {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "day is required", http.StatusBadRequest, nil, nil)
+		return
 	}
-	if !ok {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": "day must be one of: " + strings.Join(allowedDays, ","),
-		})
+	if req.ClothesId == uuid.Nil {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "clothes_id is not valid", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Validator Contain : Day
+	if !utils.Contains(config.DictionaryTypes, req.Day) {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "day is not valid", http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	// Get User ID
-	userId, err := utils.GetUserID(ctx)
+	userID, err := utils.GetUserID(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
+		utils.BuildResponseMessage(ctx, "failed", "feedback", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Query : Check Schedule
-	clothes_id := req.ClothesId
-	var existing models.Schedule
-	if err := c.DB.Where("day = ? AND created_by = ? AND clothes_id = ?", day, userId, clothes_id).First(&existing).Error; err == nil {
-		ctx.JSON(http.StatusConflict, gin.H{"message": "schedule with the same name already exists"})
-		return
-	}
-
-	schedule := models.Schedule{
-		ID:           uuid.New(),
-		ClothesId:    clothes_id,
-		Day:          day,
-		ScheduleNote: req.ScheduleNote,
-		IsRemind:     req.IsRemind,
-		CreatedAt:    time.Now(),
-		CreatedBy:    *userId,
-	}
-
-	// Query : Create Schedule
-	if err := c.DB.Create(&schedule).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": "something went wrong",
-		})
-		return
-	}
-
-	// Get User Contact
-	userContext := utils.NewUserContext(c.DB)
-	contact, err := userContext.GetUserContact(*userId)
+	// Service : Create Schedule
+	err = c.ScheduleService.CreateSchedule(req, *userID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
-		return
-	}
-
-	// Get Clothes
-	clothesContext := models.NewClothesContext(c.DB)
-	clothes, err := clothesContext.GetClothesShortInfoById(clothes_id)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "failed",
-			"message": err.Error(),
-		})
-		return
-	}
-
-	// Send to Telegram
-	if contact.TelegramUserId != nil && contact.TelegramIsValid {
-		bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  "failed",
-				"message": "Failed to connect to Telegram bot",
-			})
+		if err.Error() == "schedule with same day already exist" {
+			utils.BuildResponseMessage(ctx, "failed", "schedule", err.Error(), http.StatusConflict, nil, nil)
+			return
+		}
+		if err.Error() == "user contact not found" || err.Error() == "clothes not found" {
+			utils.BuildResponseMessage(ctx, "failed", "schedule", err.Error(), http.StatusNotFound, nil, nil)
 			return
 		}
 
-		telegramID, err := strconv.ParseInt(*contact.TelegramUserId, 10, 64)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status":  "failed",
-				"message": "Invalid Telegram User Id",
-			})
-			return
-		}
-		message := fmt.Sprintf("Your clothes called '%s' has been added to weekly schedule and set to wear on every %s", clothes.ClothesName, day)
-		doc := tgbotapi.NewMessage(telegramID, message)
-
-		_, err = bot.Send(doc)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  "failed",
-				"message": "Failed to send message to Telegram",
-			})
-			return
-		}
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"status":  "success",
-		"data":    schedule,
-		"message": "schedule created",
-	})
+	utils.BuildResponseMessage(ctx, "success", "schedule", "post", http.StatusCreated, nil, nil)
 }
 
 func (c *ScheduleController) HardDeleteScheduleById(ctx *gin.Context) {
-	// Param
+	// Params
 	id := ctx.Param("id")
 
-	// Models
-	var schedule models.Schedule
-
-	// Query : Delete Schedule
-	result := c.DB.Unscoped().First(&schedule, "id = ?", id)
-	if result.Error != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{
-			"status":  "failed",
-			"message": "schedule not found",
-		})
+	// Parse Param UUID
+	scheduleID, err := uuid.Parse(id)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "invalid id", http.StatusBadRequest, nil, nil)
 		return
 	}
-	c.DB.Unscoped().Delete(&schedule)
 
-	// Response
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "schedule permentally delete",
-	})
+	// Get User ID
+	userID, err := utils.GetUserID(ctx)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", err.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service : Hard Delete History By ID
+	err = c.ScheduleService.HardDeleteScheduleById(scheduleID, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	utils.BuildResponseMessage(ctx, "success", "schedule", "hard delete", http.StatusOK, nil, nil)
 }

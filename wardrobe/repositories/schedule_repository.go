@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"time"
 	"wardrobe/models"
 
 	"github.com/google/uuid"
@@ -9,8 +10,11 @@ import (
 
 // Schedule Interface
 type ScheduleRepository interface {
+	CheckScheduleByDayAndClothesID(day string, userId, clothesID uuid.UUID) (bool, error)
+	CreateSchedule(schedule *models.Schedule, userID uuid.UUID) error
 	FindScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error)
 	DeleteScheduleByClothesId(id uuid.UUID) (int64, error)
+	HardDeleteScheduleById(id, createdBy uuid.UUID) error
 }
 
 // Schedule Struct
@@ -38,8 +42,41 @@ func (r *scheduleRepository) FindScheduleByDay(day string, userId uuid.UUID) ([]
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	if len(data) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
 
 	return data, nil
+}
+
+func (r *scheduleRepository) CheckScheduleByDayAndClothesID(day string, userID, clothesID uuid.UUID) (bool, error) {
+	// Model
+	var data []models.ScheduleByDay
+
+	// Query
+	result := r.db.Table("schedules").
+		Where("day = ? AND created_by = ? AND clothes_id = ?", day, userID, clothesID).
+		First(&data)
+
+	// Response
+	if result.Error != nil {
+		return true, result.Error
+	}
+	if len(data) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (r *scheduleRepository) CreateSchedule(schedule *models.Schedule, userID uuid.UUID) error {
+	// Default
+	schedule.ID = uuid.New()
+	schedule.CreatedAt = time.Now()
+	schedule.CreatedBy = userID
+
+	// Query
+	return r.db.Create(schedule).Error
 }
 
 func (r *scheduleRepository) DeleteScheduleByClothesId(id uuid.UUID) (int64, error) {
@@ -55,4 +92,18 @@ func (r *scheduleRepository) DeleteScheduleByClothesId(id uuid.UUID) (int64, err
 	}
 
 	return result.RowsAffected, nil
+}
+
+func (r *scheduleRepository) HardDeleteScheduleById(id, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("id", id).Where("created_by", createdBy).Delete(&models.Schedule{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }

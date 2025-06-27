@@ -13,6 +13,7 @@ import (
 // User Interface
 type UserRepository interface {
 	FindByUsernameOrEmail(username, email string) (*models.User, error)
+	FindUserContactByID(id uuid.UUID) (*models.UserContact, error)
 	FindByEmail(email string) (*models.User, error)
 	FindById(id string) (*others.MyProfile, error)
 	Create(user *models.User) error
@@ -115,4 +116,22 @@ func (r *userRepository) FindUserReadyFetchWeather() ([]models.UserReadyFetchWea
 	}
 
 	return users, nil
+}
+
+func (r *userRepository) FindUserContactByID(id uuid.UUID) (*models.UserContact, error) {
+	// Model
+	var contact models.UserContact
+
+	// Query
+	result := r.db.Table("users").
+		Select("username, email, telegram_user_id, telegram_is_valid").
+		Where("id = ?", id).
+		First(&contact)
+
+	// Response
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &contact, nil
 }

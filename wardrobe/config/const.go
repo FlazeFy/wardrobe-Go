@@ -14,3 +14,4 @@ var ResponseMessages = map[string]string{
 var DictionaryTypes = []string{
 	"wash_type", "clothes_type", "clothes_category", "used_context", "clothes_gender", "clothes_made_from", "clothes_size",
 }
+var Days = []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}

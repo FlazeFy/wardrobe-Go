@@ -146,9 +146,6 @@ func (r *clothesRepository) FindClothesShortInfoById(id uuid.UUID) (*models.Clot
 		First(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, errors.New("clothes not found")
-	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
