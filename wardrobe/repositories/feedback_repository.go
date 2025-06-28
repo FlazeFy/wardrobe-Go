@@ -13,6 +13,9 @@ type FeedbackRepository interface {
 	CreateFeedback(feedback *models.Feedback, userID uuid.UUID) error
 	FindAllFeedback() ([]models.Feedback, error)
 	HardDeleteFeedbackByID(ID uuid.UUID) error
+
+	// For Feedback
+	DeleteAll() error
 }
 
 // Feedback Struct
@@ -62,4 +65,9 @@ func (r *feedbackRepository) HardDeleteFeedbackByID(ID uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// For Seeder
+func (r *feedbackRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Feedback{}).Error
 }

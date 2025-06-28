@@ -23,6 +23,7 @@ type UserRepository interface {
 
 	// For Seeder
 	DeleteAll() error
+	FindOneRandom() (*models.User, error)
 }
 
 // User Struct
@@ -144,4 +145,14 @@ func (r *userRepository) FindUserContactByID(id uuid.UUID) (*models.UserContact,
 // For Seeder
 func (r *userRepository) DeleteAll() error {
 	return r.db.Where("1 = 1").Delete(&models.User{}).Error
+}
+func (r *userRepository) FindOneRandom() (*models.User, error) {
+	var user models.User
+
+	err := r.db.Order("RANDOM()").Limit(1).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
