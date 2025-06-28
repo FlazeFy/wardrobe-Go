@@ -12,8 +12,11 @@ import (
 type HistoryRepository interface {
 	FindAllHistory() ([]models.History, error)
 	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
+	CreateHistory(history *models.History, userID uuid.UUID) error
 	// Task Scheduler
 	DeleteHistoryForLastNDays(days int) (int64, error)
+	// For Seeder
+	DeleteAll() error
 }
 
 // History Struct
@@ -39,6 +42,16 @@ func (r *historyRepository) FindAllHistory() ([]models.History, error) {
 	}
 
 	return histories, nil
+}
+
+func (r *historyRepository) CreateHistory(history *models.History, userID uuid.UUID) error {
+	// Default
+	history.ID = uuid.New()
+	history.CreatedAt = time.Now()
+	history.CreatedBy = userID
+
+	// Query
+	return r.db.Create(history).Error
 }
 
 func (r *historyRepository) HardDeleteHistoryByID(ID, createdBy uuid.UUID) error {
@@ -68,4 +81,9 @@ func (r *historyRepository) DeleteHistoryForLastNDays(days int) (int64, error) {
 	}
 
 	return result.RowsAffected, nil
+}
+
+// For Seeder
+func (r *historyRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.History{}).Error
 }
