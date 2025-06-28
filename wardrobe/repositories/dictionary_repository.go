@@ -15,6 +15,9 @@ type DictionaryRepository interface {
 	FindAllDictionary() ([]models.Dictionary, error)
 	FindDictionaryByType(dictionaryType string) ([]models.Dictionary, error)
 	FindOneDictionaryByName(dictionaryName string) (*models.Dictionary, error)
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Dictionary Struct
@@ -87,4 +90,9 @@ func (r *dictionaryRepository) CreateDictionary(dictionary *models.Dictionary) e
 
 	// Query
 	return r.db.Create(dictionary).Error
+}
+
+// For Seeder
+func (r *dictionaryRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Dictionary{}).Error
 }

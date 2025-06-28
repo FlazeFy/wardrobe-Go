@@ -143,5 +143,5 @@ func (r *userRepository) FindUserContactByID(id uuid.UUID) (*models.UserContact,
 
 // For Seeder
 func (r *userRepository) DeleteAll() error {
-	return r.db.Where("1 = 1").Delete(&models.Admin{}).Error
+	return r.db.Where("1 = 1").Delete(&models.User{}).Error
 }
