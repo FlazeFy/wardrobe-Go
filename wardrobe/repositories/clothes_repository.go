@@ -13,14 +13,19 @@ import (
 
 // Clothes Interface
 type ClothesRepository interface {
+	CreateClothes(clothes *models.Clothes, userID uuid.UUID) (*models.Clothes, error)
+	FindClothesById(ID uuid.UUID) (*models.Clothes, error)
+	CheckClothesByName(clothesName string, userID uuid.UUID) (bool, error)
 	FindAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.ClothesHeader, int64, error)
-	FindAllClothesDetail(category, order string, userID uuid.UUID) ([]models.Clothes, error)
+	FindAllClothesDetail(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.Clothes, int64, error)
 	FindClothesShortInfoById(id uuid.UUID) (*models.ClothesShortInfo, error)
 	FindClothesLastCreated(ctx string, userID uuid.UUID) (*models.ClothesLastCreated, error)
 	FindClothesLastDeleted(ctx string, userID uuid.UUID) (*models.ClothesLastDeleted, error)
 	FindDeletedClothes(userID uuid.UUID) ([]models.ClothesDeleted, error)
 	FindClothesPlanDestroy(days int) ([]models.ClothesPlanDestroy, error)
-	HardDeleteClothesById(id uuid.UUID) (int64, error)
+	UpdateClothesById(clothes *models.Clothes, ID uuid.UUID) error
+	HardDeleteClothesById(id, createdBy uuid.UUID) error
+	HardDeleteClothesById2(id uuid.UUID) (int64, error)
 
 	// Task Scheduler
 	SchedulerFindUnusedClothes(days int) ([]models.SchedulerClothesUnused, error)
@@ -37,6 +42,39 @@ func NewClothesRepository(db *gorm.DB) ClothesRepository {
 	return &clothesRepository{db: db}
 }
 
+func (r *clothesRepository) FindClothesById(ID uuid.UUID) (*models.Clothes, error) {
+	// Model
+	var clothes models.Clothes
+
+	// Query
+	result := r.db.Unscoped().Where("id = ?", ID).First(&clothes)
+
+	// Response
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &clothes, nil
+}
+
+func (r *clothesRepository) CheckClothesByName(clothesName string, userID uuid.UUID) (bool, error) {
+	// Model
+	var clothes models.Clothes
+
+	// Query
+	result := r.db.Unscoped().Where("LOWER(clothes_name) = LOWER(?) AND created_by = ?", clothesName, userID).First(&clothes)
+
+	// Response
+	if result.Error != nil {
+		return true, result.Error
+	}
+	if clothes.ID == uuid.Nil {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.ClothesHeader, int64, error) {
 	// Model
 	var total int64
@@ -48,16 +86,14 @@ func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, ca
 		is_desc = false
 	}
 
-	// Pagination
+	// Pagination Count
 	offset := (pagination.Page - 1) * pagination.Limit
 	countQuery := r.db.Model(&models.ClothesHeader{}).
 		Where("created_by = ?", userID).
 		Where("deleted_at IS NULL")
-
 	if category != "all" {
 		countQuery = countQuery.Where("clothes_category = ?", category)
 	}
-
 	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -85,9 +121,6 @@ func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, ca
 	result := query.Find(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
-		return nil, 0, errors.New("clothes not found")
-	}
 	if result.Error != nil {
 		return nil, 0, result.Error
 	}
@@ -95,8 +128,37 @@ func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, ca
 	return clothes, total, nil
 }
 
-func (r *clothesRepository) FindAllClothesDetail(category, order string, userID uuid.UUID) ([]models.Clothes, error) {
+func (r *clothesRepository) CreateClothes(clothes *models.Clothes, userID uuid.UUID) (*models.Clothes, error) {
+	// Default
+	clothes.ID = uuid.New()
+	clothes.CreatedAt = time.Now()
+	clothes.CreatedBy = userID
+	clothes.UpdatedAt = nil
+	clothes.DeletedAt = nil
+
+	// Query
+	if err := r.db.Create(clothes).Error; err != nil {
+		return nil, err
+	}
+
+	return clothes, nil
+}
+
+func (r *clothesRepository) UpdateClothesById(clothes *models.Clothes, ID uuid.UUID) error {
+	now := time.Now()
+	clothes.ID = ID
+	clothes.UpdatedAt = &now
+
+	if err := r.db.Save(clothes).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *clothesRepository) FindAllClothesDetail(pagination utils.Pagination, category, order string, userID uuid.UUID) ([]models.Clothes, int64, error) {
 	// Model
+	var total int64
 	var clothes []models.Clothes
 
 	// Ordering Prep
@@ -105,10 +167,24 @@ func (r *clothesRepository) FindAllClothesDetail(category, order string, userID 
 		is_desc = false
 	}
 
+	// Pagination Count
+	offset := (pagination.Page - 1) * pagination.Limit
+	countQuery := r.db.Model(&models.ClothesHeader{}).
+		Where("created_by = ?", userID).
+		Where("deleted_at IS NULL")
+	if category != "all" {
+		countQuery = countQuery.Where("clothes_category = ?", category)
+	}
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
 	// Model
 	query := r.db.Table("clothes").
 		Where("created_by = ?", userID).
-		Where("deleted_at is null")
+		Where("deleted_at is null").
+		Limit(pagination.Limit).
+		Offset(offset)
 
 	if category != "all" {
 		query = query.Where("clothes_category = ?", category)
@@ -125,14 +201,11 @@ func (r *clothesRepository) FindAllClothesDetail(category, order string, userID 
 	result := query.Find(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
-		return nil, errors.New("clothes used history not found")
-	}
 	if result.Error != nil {
-		return nil, result.Error
+		return nil, 0, result.Error
 	}
 
-	return clothes, nil
+	return clothes, total, nil
 }
 
 func (r *clothesRepository) FindClothesShortInfoById(id uuid.UUID) (*models.ClothesShortInfo, error) {
@@ -167,9 +240,6 @@ func (r *clothesRepository) FindClothesLastCreated(ctx string, userID uuid.UUID)
 		}).First(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, errors.New("clothes not found")
-	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -192,9 +262,6 @@ func (r *clothesRepository) FindClothesLastDeleted(ctx string, userID uuid.UUID)
 		}).First(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, errors.New("clothes not found")
-	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -215,9 +282,6 @@ func (r *clothesRepository) FindDeletedClothes(userID uuid.UUID) ([]models.Cloth
 		Find(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
-		return nil, errors.New("clothes not found")
-	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -250,7 +314,22 @@ func (r *clothesRepository) FindClothesPlanDestroy(days int) ([]models.ClothesPl
 	return clothes, nil
 }
 
-func (r *clothesRepository) HardDeleteClothesById(id uuid.UUID) (int64, error) {
+func (r *clothesRepository) HardDeleteClothesById(id, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("id = ? AND created_by = ? AND deleted_at IS NOT NULL", id, createdBy).Delete(&models.Clothes{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+// fix this to use user id
+func (r *clothesRepository) HardDeleteClothesById2(id uuid.UUID) (int64, error) {
 	// Model
 	var clothes models.Clothes
 

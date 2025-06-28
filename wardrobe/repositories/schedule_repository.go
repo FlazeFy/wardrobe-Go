@@ -15,6 +15,7 @@ type ScheduleRepository interface {
 	FindScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error)
 	DeleteScheduleByClothesId(id uuid.UUID) (int64, error)
 	HardDeleteScheduleById(id, createdBy uuid.UUID) error
+	HardDeleteScheduleByClothesID(clothesID, createdBy uuid.UUID) error
 }
 
 // Schedule Struct
@@ -79,6 +80,21 @@ func (r *scheduleRepository) CreateSchedule(schedule *models.Schedule, userID uu
 	return r.db.Create(schedule).Error
 }
 
+func (r *scheduleRepository) HardDeleteScheduleByClothesID(clothesID, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("clothes_id = ? AND created_by = ?", clothesID, createdBy).Delete(&models.Schedule{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+// fix this to used user id also.
 func (r *scheduleRepository) DeleteScheduleByClothesId(id uuid.UUID) (int64, error) {
 	// Model
 	var schedule models.Schedule

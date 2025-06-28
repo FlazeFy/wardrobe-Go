@@ -78,7 +78,7 @@ func (s *scheduleService) CreateSchedule(req models.Schedule, userID uuid.UUID) 
 	// Utils : Send to Telegram
 	if contact.TelegramUserId != nil && contact.TelegramIsValid {
 		message := fmt.Sprintf("Your clothes called '%s' has been added to weekly schedule and set to wear on every %s", clothes.ClothesName, req.Day)
-		utils.SendTelegramTextMessage(*contact.TelegramUserId, message)
+		utils.SendTelegramTextMessage(*contact.TelegramUserId, message, "text", nil)
 	}
 
 	return nil

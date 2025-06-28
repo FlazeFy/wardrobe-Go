@@ -9,6 +9,9 @@ import (
 
 // Clothes Used Interface
 type ClothesUsedService interface {
+	CreateClothesUsed(clothesUsed *models.ClothesUsed, userID uuid.UUID) error
+	GetClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error)
+	HardDeleteClothesUsedByID(ID, createdBy uuid.UUID) error
 	DeleteClothesUsedByClothesId(id uuid.UUID) (int64, error)
 
 	// Task Scheduler
@@ -25,6 +28,18 @@ func NewClothesUsedService(clothesUsedRepo repositories.ClothesUsedRepository) C
 	return &clothesUsedService{
 		clothesUsedRepo: clothesUsedRepo,
 	}
+}
+
+func (r *clothesUsedService) GetClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error) {
+	return r.clothesUsedRepo.FindClothesUsedHistory(userID, clothesID, order)
+}
+
+func (r *clothesUsedService) CreateClothesUsed(clothesUsed *models.ClothesUsed, userID uuid.UUID) error {
+	return r.clothesUsedRepo.CreateClothesUsed(clothesUsed, userID)
+}
+
+func (r *clothesUsedService) HardDeleteClothesUsedByID(ID, createdBy uuid.UUID) error {
+	return r.clothesUsedRepo.HardDeleteClothesUsedByID(ID, createdBy)
 }
 
 func (s *clothesUsedService) DeleteClothesUsedByClothesId(id uuid.UUID) (int64, error) {

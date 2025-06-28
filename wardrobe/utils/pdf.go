@@ -15,7 +15,7 @@ func GetStringNoData(s *string) string {
 	return "-"
 }
 
-func GeneratePDFCreateClothes(c models.Clothes, filename string) error {
+func GeneratePDFCreateClothes(c *models.Clothes, filename string) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("Wardrobe", false)
 	pdf.AddPage()

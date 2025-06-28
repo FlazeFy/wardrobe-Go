@@ -12,7 +12,10 @@ import (
 
 // Clothes Used Interface
 type ClothesUsedRepository interface {
+	CreateClothesUsed(clothesUsed *models.ClothesUsed, userID uuid.UUID) error
 	FindClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error)
+	HardDeleteClothesUsedByID(ID, createdBy uuid.UUID) error
+	HardDeleteClothesUsedByClothesID(clothesID, createdBy uuid.UUID) error
 	DeleteClothesUsedByClothesId(id uuid.UUID) (int64, error)
 
 	// Task Scheduler
@@ -27,6 +30,16 @@ type clothesUsedRepository struct {
 // Clothes Used Constructor
 func NewClothesUsedRepository(db *gorm.DB) ClothesUsedRepository {
 	return &clothesUsedRepository{db: db}
+}
+
+func (r *clothesUsedRepository) CreateClothesUsed(clothesUsed *models.ClothesUsed, userID uuid.UUID) error {
+	// Default
+	clothesUsed.ID = uuid.New()
+	clothesUsed.CreatedAt = time.Now()
+	clothesUsed.CreatedBy = userID
+
+	// Query
+	return r.db.Create(clothesUsed).Error
 }
 
 func (r *clothesUsedRepository) FindClothesUsedHistory(userID uuid.UUID, clothesID uuid.UUID, order string) ([]models.ClothesUsedHistory, error) {
@@ -59,14 +72,39 @@ func (r *clothesUsedRepository) FindClothesUsedHistory(userID uuid.UUID, clothes
 	result := query.Find(&clothes)
 
 	// Response
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
-		return nil, errors.New("clothes used history not found")
-	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
 
 	return clothes, nil
+}
+
+func (r *clothesUsedRepository) HardDeleteClothesUsedByID(ID, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("id = ?", ID).Where("created_by = ?", createdBy).Delete(&models.ClothesUsed{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
+func (r *clothesUsedRepository) HardDeleteClothesUsedByClothesID(clothesID, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("clothes_id = ? AND created_by = ?", clothesID, createdBy).Delete(&models.ClothesUsed{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
 
 func (r *clothesUsedRepository) DeleteClothesUsedByClothesId(id uuid.UUID) (int64, error) {

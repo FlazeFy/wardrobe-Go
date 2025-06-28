@@ -9,6 +9,7 @@ import (
 
 // Wash Interface
 type WashRepository interface {
+	HardDeleteWashByClothesID(clothesID, createdBy uuid.UUID) error
 	DeleteWashByClothesId(id uuid.UUID) (int64, error)
 }
 
@@ -23,6 +24,20 @@ func NewWashRepository(db *gorm.DB) WashRepository {
 }
 
 // Command Scheduler
+func (r *washRepository) HardDeleteWashByClothesID(clothesID, createdBy uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("clothes_id = ? AND created_by = ?", clothesID, createdBy).Delete(&models.Wash{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}
+
 func (r *washRepository) DeleteWashByClothesId(id uuid.UUID) (int64, error) {
 	// Model
 	var wash models.Wash
