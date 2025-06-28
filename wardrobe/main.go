@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"os"
 	"wardrobe/config"
 	"wardrobe/models"
 	"wardrobe/routes"
@@ -28,7 +30,10 @@ func main() {
 	routes.SetUpDependency(router, db, redisClient)
 
 	// Run server
-	router.Run(":9000")
+	port := os.Getenv("PORT")
+	router.Run(":" + port)
+
+	log.Printf("Pelita is running on port %s\n", port)
 }
 
 func MigrateAll(db *gorm.DB) {
@@ -52,4 +57,5 @@ func MigrateAll(db *gorm.DB) {
 		&models.Wash{},
 		&models.AuditTrail{},
 	)
+	log.Printf("Migration : Success to migrate database")
 }

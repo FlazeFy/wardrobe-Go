@@ -4,6 +4,7 @@ import (
 	"errors"
 	"wardrobe/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +13,10 @@ type AdminRepository interface {
 	FindByEmail(email string) (*models.Admin, error)
 	FindAllContact() ([]models.AdminContact, error)
 	FindAllAdminContact() ([]models.UserContact, error)
+
+	// For Seeder
+	Create(room *models.Admin) error
+	DeleteAll() error
 }
 
 // Admin Struct
@@ -75,4 +80,15 @@ func (r *adminRepository) FindAllAdminContact() ([]models.UserContact, error) {
 	}
 
 	return contact, nil
+}
+
+// For Seeder
+func (r *adminRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Admin{}).Error
+}
+func (r *adminRepository) Create(admin *models.Admin) error {
+	admin.ID = uuid.New()
+
+	// Query
+	return r.db.Create(admin).Error
 }
