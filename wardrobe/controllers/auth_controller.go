@@ -2,167 +2,103 @@ package controllers
 
 import (
 	"net/http"
-	"strings"
 	"wardrobe/models"
 	"wardrobe/models/others"
+	"wardrobe/services"
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type AuthController struct {
-	DB *gorm.DB
+	AuthService services.AuthService
 }
 
-func NewAuthController(db *gorm.DB) *AuthController {
-	return &AuthController{DB: db}
+func NewAuthController(authService services.AuthService) *AuthController {
+	return &AuthController{AuthService: authService}
 }
 
 // Command
-func (ac *AuthController) Register(c *gin.Context) {
+func (c *AuthController) Register(ctx *gin.Context) {
 	// Models
 	var req models.User
 
-	// Validate : Request Body
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
+	// Validate JSON
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "register", "invalid request body", http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Validate : If username or email already been used
-	var existing models.User
-	if err := ac.DB.Where("username = ? OR email = ?", req.Username, req.Email).First(&existing).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "username or email has already been used",
-		})
+	// Validate Field
+	if req.Username == "" {
+		utils.BuildResponseMessage(ctx, "failed", "register", "username is required", http.StatusBadRequest, nil, nil)
+		return
+	}
+	if req.Password == "" {
+		utils.BuildResponseMessage(ctx, "failed", "register", "password is required", http.StatusBadRequest, nil, nil)
+		return
+	}
+	if req.Email == "" {
+		utils.BuildResponseMessage(ctx, "failed", "register", "email is required", http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Hashing
-	if err := utils.HashPassword(&req, req.Password); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-
-	// Query
-	user := models.User{
-		ID:              uuid.New(),
-		Username:        req.Username,
-		Password:        req.Password,
-		Email:           req.Email,
-		TelegramUserId:  req.TelegramUserId,
-		TelegramIsValid: false,
-	}
-	result := ac.DB.Create(&user)
-	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": result.Error,
-		})
-		return
-	}
-
-	// JWT Token Generate
-	token, err := utils.GenerateToken(user.ID)
+	// Service : Basic Register
+	token, err := c.AuthService.BasicRegister(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": result.Error,
-		})
+		if err.Error() == "username or email has already been used" {
+			utils.BuildResponseMessage(ctx, "failed", "register", err.Error(), http.StatusConflict, nil, nil)
+			return
+		}
+
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
 	// Response
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User registered successfully",
-		"token":   token,
-	})
+	utils.BuildResponseMessage(ctx, "success", "user", "register", http.StatusCreated, gin.H{
+		"token": token,
+	}, nil)
 }
 
-func (ac *AuthController) Login(c *gin.Context) {
+func (c *AuthController) Login(ctx *gin.Context) {
 	// Models
-	var loginReq others.LoginRequest
-	var user models.User
+	var req others.LoginRequest
 
-	// Validate : Request Body
-	if err := c.ShouldBindJSON(&loginReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
+	// Validate JSON
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "auth", "invalid request body", http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Query
-	if err := ac.DB.Where("email = ?", loginReq.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid email",
-		})
-		return
-	}
-
-	// Validate : Password
-	if err := utils.CheckPassword(&user, loginReq.Password); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "invalid password",
-		})
-		return
-	}
-
-	// JWT Token Generate
-	token, err := utils.GenerateToken(user.ID)
+	// Service : Basic Login
+	token, err := c.AuthService.BasicLogin(req)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "error generating token",
-		})
+		utils.BuildResponseMessage(ctx, "failed", "auth", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	// Response
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User login successfully",
-		"token":   token,
-	})
+	utils.BuildResponseMessage(ctx, "success", "user", "login", http.StatusOK, gin.H{
+		"token": token,
+	}, nil)
 }
 
-func (ac *AuthController) SignOut(c *gin.Context) {
+func (c *AuthController) BasicSignOut(ctx *gin.Context) {
 	// Header
-	authHeader := c.GetHeader("Authorization")
+	authHeader := ctx.GetHeader("Authorization")
 	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "missing authorization header",
-			"status":  "failed",
-		})
+		utils.BuildResponseMessage(ctx, "failed", "auth", "missing authorization header", http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Clean Bearer
-	token := strings.TrimPrefix(authHeader, "Bearer ")
-	token = strings.TrimSpace(token)
-	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"message": "invalid authorization header",
-			"status":  "failed",
-		})
-		return
-	}
-
-	// Reset Token By Adding Blacklist Redis
-	err := ac.authService.SignOut(token)
+	// Service : Basic Sign Out
+	err := c.AuthService.BasicSignOut(authHeader)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-			"status":  "failed",
-		})
+		utils.BuildResponseMessage(ctx, "failed", "auth", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
 	// Response
-	c.JSON(http.StatusOK, gin.H{
-		"message": "user signout successfully",
-		"status":  "success",
-	})
+	utils.BuildResponseMessage(ctx, "success", "user", "sign out", http.StatusOK, nil, nil)
 }

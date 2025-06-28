@@ -16,7 +16,7 @@ type UserRepository interface {
 	FindUserContactByID(id uuid.UUID) (*models.UserContact, error)
 	FindByEmail(email string) (*models.User, error)
 	FindById(id string) (*others.MyProfile, error)
-	Create(user *models.User) error
+	CreateUser(user *models.User) (*models.User, error)
 
 	// For Task Scheduler
 	FindUserReadyFetchWeather() ([]models.UserReadyFetchWeather, error)
@@ -38,11 +38,11 @@ func (r *userRepository) FindByUsernameOrEmail(username, email string) (*models.
 
 	// Query
 	err := r.db.Where("username = ? OR email = ?", username, email).First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return &user, err
+	return &user, nil
 }
 
 func (r *userRepository) FindByEmail(email string) (*models.User, error) {
@@ -51,11 +51,11 @@ func (r *userRepository) FindByEmail(email string) (*models.User, error) {
 
 	// Query
 	err := r.db.Where("email = ?", email).First(&user).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return &user, err
+	return &user, nil
 }
 
 func (r *userRepository) FindById(id string) (*others.MyProfile, error) {
@@ -67,22 +67,24 @@ func (r *userRepository) FindById(id string) (*others.MyProfile, error) {
 		Select("username, email, telegram_is_valid, telegram_user_id, created_at").
 		Where("id = ?", id).
 		First(&user).Error
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return &user, err
+	return &user, nil
 }
 
-func (r *userRepository) Create(user *models.User) error {
+func (r *userRepository) CreateUser(user *models.User) (*models.User, error) {
 	user.ID = uuid.New()
 	user.CreatedAt = time.Now()
 	user.TelegramIsValid = false
-	user.ID = uuid.New()
 
 	// Query
-	return r.db.Create(user).Error
+	if err := r.db.Create(user).Error; err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // For Task Scheduler

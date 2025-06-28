@@ -44,13 +44,14 @@ func ValidateToken(tokenString string) (uuid.UUID, error) {
 	return uuid.Parse(userIdStr)
 }
 
-func HashPassword(u *models.User, password string) error {
+func HashPassword(user models.User, password string) (*models.User, error) {
 	hashedPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	u.Password = string(hashedPass)
-	return nil
+	user.Password = string(hashedPass)
+
+	return &user, nil
 }
 
 func CheckPassword(u *models.User, password string) error {
