@@ -8,17 +8,17 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserWeather Interface
+// User Weather Interface
 type UserWeatherRepository interface {
 	Create(weather *models.UserWeather, userID uuid.UUID) error
 }
 
-// UserWeather Struct
+// User Weather Struct
 type userWeatherRepository struct {
 	db *gorm.DB
 }
 
-// UserWeather Constructor
+// User Weather Constructor
 func NewUserWeatherRepository(db *gorm.DB) UserWeatherRepository {
 	return &userWeatherRepository{db: db}
 }

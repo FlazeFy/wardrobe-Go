@@ -25,6 +25,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	userRepo := repositories.NewUserRepository(db)
 	userWeatherRepo := repositories.NewUserWeatherRepository(db)
 	washRepo := repositories.NewWashRepository(db)
+	userTrackRepo := repositories.NewUserTrackRepository(db)
 
 	// Dependency Services
 	adminService := services.NewAdminService(adminRepo)
@@ -67,5 +68,5 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	)
 
 	// Seeder & Factories
-	SetUpSeeder(db, adminRepo, userRepo, dictionaryRepo, questionRepo, feedbackRepo, historyRepo)
+	SetUpSeeder(db, adminRepo, userRepo, dictionaryRepo, questionRepo, feedbackRepo, historyRepo, userTrackRepo)
 }
