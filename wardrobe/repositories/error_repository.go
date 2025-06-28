@@ -2,8 +2,10 @@ package repositories
 
 import (
 	"errors"
+	"time"
 	"wardrobe/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -11,6 +13,10 @@ import (
 // Error Interface
 type ErrorRepository interface {
 	FindAllErrorAudit() ([]models.ErrorAudit, error)
+	CreateError(errData *models.Error) error
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Error Struct
@@ -48,4 +54,18 @@ func (r *errorRepository) FindAllErrorAudit() ([]models.ErrorAudit, error) {
 	}
 
 	return errors_list, nil
+}
+func (r *errorRepository) CreateError(errData *models.Error) error {
+	// Default
+	errData.ID = uuid.New()
+	errData.CreatedAt = time.Now()
+	errData.IsFixed = false
+
+	// Query
+	return r.db.Create(errData).Error
+}
+
+// For Seeder
+func (r *errorRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Error{}).Error
 }
