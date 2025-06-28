@@ -20,6 +20,9 @@ type UserRepository interface {
 
 	// For Task Scheduler
 	FindUserReadyFetchWeather() ([]models.UserReadyFetchWeather, error)
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // User Struct
@@ -136,4 +139,9 @@ func (r *userRepository) FindUserContactByID(id uuid.UUID) (*models.UserContact,
 	}
 
 	return &contact, nil
+}
+
+// For Seeder
+func (r *userRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Admin{}).Error
 }

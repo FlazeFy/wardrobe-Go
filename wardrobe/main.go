@@ -33,7 +33,7 @@ func main() {
 	port := os.Getenv("PORT")
 	router.Run(":" + port)
 
-	log.Printf("Pelita is running on port %s\n", port)
+	log.Printf("Wardrobe is running on port %s\n", port)
 }
 
 func MigrateAll(db *gorm.DB) {
