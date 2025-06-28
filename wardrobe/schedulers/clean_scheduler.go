@@ -20,6 +20,24 @@ type CleanScheduler struct {
 	WashService        services.WashService
 }
 
+func NewCleanScheduler(
+	adminService services.AdminService,
+	historyService services.HistoryService,
+	clothesService services.ClothesService,
+	clothesUsedService services.ClothesUsedService,
+	scheduleService services.ScheduleService,
+	washService services.WashService,
+) *CleanScheduler {
+	return &CleanScheduler{
+		AdminService:       adminService,
+		HistoryService:     historyService,
+		ClothesService:     clothesService,
+		ClothesUsedService: clothesUsedService,
+		ScheduleService:    scheduleService,
+		WashService:        washService,
+	}
+}
+
 func (s *CleanScheduler) SchedulerCleanHistory() {
 	days := 30
 

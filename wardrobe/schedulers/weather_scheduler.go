@@ -20,6 +20,18 @@ type WeatherScheduler struct {
 	UserWeatherService services.UserWeatherService
 }
 
+func NewWeatherScheduler(
+	adminService services.AdminService,
+	userService services.UserService,
+	userWeatherService services.UserWeatherService,
+) *WeatherScheduler {
+	return &WeatherScheduler{
+		AdminService:       adminService,
+		UserService:        userService,
+		UserWeatherService: userWeatherService,
+	}
+}
+
 func (s *WeatherScheduler) BroadCastErrorToAdmin() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()

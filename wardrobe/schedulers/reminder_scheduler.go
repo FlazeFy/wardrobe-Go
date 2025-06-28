@@ -19,6 +19,20 @@ type ReminderScheduler struct {
 	QuestionService    services.QuestionService
 }
 
+func NewReminderScheduler(
+	adminService services.AdminService,
+	clothesService services.ClothesService,
+	clothesUsedService services.ClothesUsedService,
+	questionService services.QuestionService,
+) *ReminderScheduler {
+	return &ReminderScheduler{
+		AdminService:       adminService,
+		ClothesService:     clothesService,
+		ClothesUsedService: clothesUsedService,
+		QuestionService:    questionService,
+	}
+}
+
 func (s *ReminderScheduler) SchedulerReminderUnansweredQuestion() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()

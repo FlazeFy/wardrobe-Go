@@ -16,30 +16,30 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	clothesRepo := repositories.NewClothesRepository(db)
 	clothesUsedRepo := repositories.NewClothesUsedRepository(db)
 	dictionaryRepo := repositories.NewDictionaryRepository(db)
-	// errorRepo := repositories.NewErrorRepository(db)
+	errorRepo := repositories.NewErrorRepository(db)
 	feedbackRepo := repositories.NewFeedbackRepository(db)
 	historyRepo := repositories.NewHistoryRepository(db)
 	// outfitRelationRepo := repositories.NewOutfitRelationRepository(db)
 	questionRepo := repositories.NewQuestionRepository(db)
 	scheduleRepo := repositories.NewScheduleRepository(db)
 	userRepo := repositories.NewUserRepository(db)
-	// userWeatherRepo := repositories.NewUserWeatherRepository(db)
-	// washRepo := repositories.NewWashRepository(db)
+	userWeatherRepo := repositories.NewUserWeatherRepository(db)
+	washRepo := repositories.NewWashRepository(db)
 
 	// Dependency Services
-	// adminService := services.NewAdminService(adminRepo)
+	adminService := services.NewAdminService(adminRepo)
 	authService := services.NewAuthService(userRepo, adminRepo, redisClient)
 	clothesService := services.NewClothesService(clothesRepo, userRepo)
 	clothesUsedService := services.NewClothesUsedService(clothesUsedRepo)
 	dictionaryService := services.NewDictionaryService(dictionaryRepo)
-	// errorService := services.NewErrorService(errorRepo)
+	errorService := services.NewErrorService(errorRepo)
 	feedbackService := services.NewFeedbackService(feedbackRepo)
 	historyService := services.NewHistoryService(historyRepo)
 	questionService := services.NewQuestionService(questionRepo)
 	scheduleService := services.NewScheduleService(scheduleRepo, userRepo, clothesRepo)
-	// userService := services.NewUserService(userRepo)
-	// userWeatherService := services.NewUserWeatherService(userWeatherRepo)
-	// washService := services.NewWashService(washRepo)
+	userService := services.NewUserService(userRepo)
+	userWeatherService := services.NewUserWeatherService(userWeatherRepo)
+	washService := services.NewWashService(washRepo)
 
 	// Dependency Controller
 	authController := controllers.NewAuthController(authService)
@@ -53,13 +53,16 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 
 	// Routes Endpoint
 	SetUpRoutes(r, db, redisClient,
-		authController,
-		questionController,
-		feedbackController,
-		dictionaryController,
-		historyController,
-		clothesController,
-		clothesUsedController,
-		scheduleController,
+		authController, questionController, feedbackController,
+		dictionaryController, historyController, clothesController,
+		clothesUsedController, scheduleController,
+	)
+
+	// Task Scheduler
+	SetUpScheduler(
+		adminService, errorService, historyService,
+		clothesService, clothesUsedService, scheduleService,
+		washService, questionService, userService,
+		userWeatherService,
 	)
 }

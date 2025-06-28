@@ -1,15 +1,12 @@
 package main
 
 import (
-	"time"
 	"wardrobe/config"
 	"wardrobe/models"
 	"wardrobe/routes"
-	"wardrobe/schedulers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/robfig/cron"
 	"gorm.io/gorm"
 )
 
@@ -30,48 +27,8 @@ func main() {
 
 	routes.SetUpDependency(router, db, redisClient)
 
-	// Task Scheduler
-	c := cron.New()
-	Scheduler(c)
-	c.Start()
-	defer c.Stop()
-
 	// Run server
 	router.Run(":9000")
-}
-
-func Scheduler(c *cron.Cron) {
-	// For Production
-	// Clean Scheduler
-	c.AddFunc("10 0 * * *", schedulers.SchedulerWeatherRoutineFetch)
-	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanHistory)
-	c.AddFunc("0 2 * * *", schedulers.SchedulerCleanDeletedClothes)
-	c.AddFunc("0 1 * * 1", schedulers.SchedulerAuditError)
-	c.AddFunc("20 2 * * 1,3,6", schedulers.SchedulerReminderUnansweredQuestion)
-	c.AddFunc("20 2 * * 0,2,5", schedulers.SchedulerReminderUnusedClothes)
-	c.AddFunc("20 3 * * *", schedulers.SchedulerReminderUnironedClothes)
-	c.AddFunc("0 3 * * *", schedulers.SchedulerReminderWashUsedClothes)
-
-	// For Development
-	go func() {
-		time.Sleep(5 * time.Second)
-
-		// Clean Scheduler
-		// schedulers.SchedulerCleanHistory()
-		// schedulers.SchedulerCleanDeletedClothes()
-
-		// Audit Scheduler
-		// schedulers.SchedulerAuditError()
-
-		// Reminder Scheduler
-		// schedulers.SchedulerReminderUnansweredQuestion()
-		// schedulers.SchedulerReminderUnusedClothes()
-		// schedulers.SchedulerReminderUnironedClothes()
-		// schedulers.SchedulerReminderWashUsedClothes()
-
-		// Weather Scheduler
-		// schedulers.SchedulerWeatherRoutineFetch()
-	}()
 }
 
 func MigrateAll(db *gorm.DB) {

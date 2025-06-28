@@ -16,6 +16,16 @@ type AuditScheduler struct {
 	AdminService services.AdminService
 }
 
+func NewAuditScheduler(
+	errorService services.ErrorService,
+	adminService services.AdminService,
+) *AuditScheduler {
+	return &AuditScheduler{
+		ErrorService: errorService,
+		AdminService: adminService,
+	}
+}
+
 func (s *AuditScheduler) SchedulerAuditError() {
 	// Service : Find All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
