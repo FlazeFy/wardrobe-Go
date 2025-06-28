@@ -13,6 +13,9 @@ type QuestionRepository interface {
 	CreateQuestion(question *models.Question) error
 	FindAllQuestion() ([]models.Question, error)
 	FindUnansweredQuestion() ([]models.UnansweredQuestion, error)
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Question Struct
@@ -69,4 +72,9 @@ func (r *questionRepository) FindUnansweredQuestion() ([]models.UnansweredQuesti
 	}
 
 	return question, nil
+}
+
+// For Seeder
+func (r *questionRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Question{}).Error
 }

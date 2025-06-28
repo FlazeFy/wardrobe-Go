@@ -1,6 +1,9 @@
 package utils
 
-import "time"
+import (
+	"math/rand"
+	"time"
+)
 
 func GetNextDay(current string, offset int) string {
 	now := time.Now()
@@ -15,4 +18,11 @@ func GetNextDay(current string, offset int) string {
 	}
 
 	return targetDay.Weekday().String()[:3]
+}
+
+func GetRandInt(max, min int) int {
+	rand.Seed(time.Now().UnixNano())
+	res := rand.Intn(max-1) + min
+
+	return res
 }
