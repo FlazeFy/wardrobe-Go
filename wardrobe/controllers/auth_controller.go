@@ -19,7 +19,7 @@ func NewAuthController(authService services.AuthService) *AuthController {
 }
 
 // Command
-func (c *AuthController) Register(ctx *gin.Context) {
+func (c *AuthController) BasicRegister(ctx *gin.Context) {
 	// Models
 	var req models.User
 
@@ -61,7 +61,7 @@ func (c *AuthController) Register(ctx *gin.Context) {
 	}, nil)
 }
 
-func (c *AuthController) Login(ctx *gin.Context) {
+func (c *AuthController) BasicLogin(ctx *gin.Context) {
 	// Models
 	var req others.LoginRequest
 

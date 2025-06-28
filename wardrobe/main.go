@@ -28,7 +28,7 @@ func main() {
 	router := gin.Default()
 	redisClient := config.InitRedis()
 
-	routes.SetUpRoutes(router, db, redisClient)
+	routes.SetUpDependency(router, db, redisClient)
 
 	// Task Scheduler
 	c := cron.New()
