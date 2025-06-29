@@ -16,6 +16,9 @@ type ScheduleRepository interface {
 	DeleteScheduleByClothesId(id uuid.UUID) (int64, error)
 	HardDeleteScheduleById(id, createdBy uuid.UUID) error
 	HardDeleteScheduleByClothesID(clothesID, createdBy uuid.UUID) error
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Schedule Struct
@@ -122,4 +125,9 @@ func (r *scheduleRepository) HardDeleteScheduleById(id, createdBy uuid.UUID) err
 	}
 
 	return nil
+}
+
+// For Seeder
+func (r *scheduleRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Schedule{}).Error
 }

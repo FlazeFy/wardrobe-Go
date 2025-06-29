@@ -71,6 +71,6 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	// Seeder & Factories
 	SetUpSeeder(db, adminRepo, userRepo, dictionaryRepo, questionRepo, feedbackRepo, historyRepo,
 		userTrackRepo, errorRepo, clothesRepo, clothesUsedRepo, userWeatherRepo, outfitRepo,
-		outfitRelationRepo,
+		outfitRelationRepo, scheduleRepo,
 	)
 }
