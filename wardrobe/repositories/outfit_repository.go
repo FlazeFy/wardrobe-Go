@@ -14,6 +14,7 @@ type OutfitRepository interface {
 
 	// For Seeder
 	DeleteAll() error
+	FindOneRandom(userID uuid.UUID) (*models.Outfit, error)
 }
 
 // Outfit Struct
@@ -39,4 +40,15 @@ func (r *outfitRepository) CreateOutfit(outfit *models.Outfit, userID uuid.UUID)
 // For Seeder
 func (r *outfitRepository) DeleteAll() error {
 	return r.db.Where("1 = 1").Delete(&models.Outfit{}).Error
+}
+
+func (r *outfitRepository) FindOneRandom(userID uuid.UUID) (*models.Outfit, error) {
+	var outfit models.Outfit
+
+	err := r.db.Where("created_by", userID).Order("RANDOM()").Limit(1).First(&outfit).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &outfit, nil
 }

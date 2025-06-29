@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"time"
 	"wardrobe/models"
 
 	"github.com/google/uuid"
@@ -9,7 +10,11 @@ import (
 
 // Outfit Relation Interface
 type OutfitRelationRepository interface {
+	CreateOutfitRelation(outfitRel *models.OutfitRelation, userID uuid.UUID) error
 	HardDeleteOutfitRelationByClothesID(clothesID, createdBy uuid.UUID) error
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Outfit Relation Struct
@@ -20,6 +25,16 @@ type outfitRelationRepository struct {
 // Outfit Relation Constructor
 func NewOutfitRelationRepository(db *gorm.DB) OutfitRelationRepository {
 	return &outfitRelationRepository{db: db}
+}
+
+func (r *outfitRelationRepository) CreateOutfitRelation(outfitRel *models.OutfitRelation, userID uuid.UUID) error {
+	// Default Value
+	outfitRel.ID = uuid.New()
+	outfitRel.CreatedAt = time.Now()
+	outfitRel.CreatedBy = userID
+
+	// Query
+	return r.db.Create(outfitRel).Error
 }
 
 func (r *outfitRelationRepository) HardDeleteOutfitRelationByClothesID(clothesID, createdBy uuid.UUID) error {
@@ -34,4 +49,9 @@ func (r *outfitRelationRepository) HardDeleteOutfitRelationByClothesID(clothesID
 	}
 
 	return nil
+}
+
+// For Seeder
+func (r *outfitRelationRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.OutfitRelation{}).Error
 }

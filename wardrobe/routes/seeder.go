@@ -14,6 +14,7 @@ func SetUpSeeder(
 	userTrackRepo repositories.UserTrackRepository, errorRepo repositories.ErrorRepository,
 	clothesRepo repositories.ClothesRepository, clothesUsedRepo repositories.ClothesUsedRepository,
 	userWeatherRepo repositories.UserWeatherRepository, outfitRepo repositories.OutfitRepository,
+	outfitRelationRepo repositories.OutfitRelationRepository,
 ) {
 	seeders.SeedAdmins(adminRepo, 5)
 	seeders.SeedUsers(userRepo, 20)
@@ -24,7 +25,10 @@ func SetUpSeeder(
 	seeders.SeedUserTracks(userTrackRepo, userRepo, 15)
 	seeders.SeedErrors(errorRepo, 10)
 	seeders.SeedClothes(clothesRepo, userRepo, 200)
-	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 600)
 	seeders.SeedUserWeathers(userWeatherRepo, userRepo, 100)
 	seeders.SeedOutfits(outfitRepo, userRepo, 60)
+
+	// This count per User
+	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 20)
+	seeders.SeedOutfitRelations(outfitRelationRepo, userRepo, clothesRepo, outfitRepo, 10)
 }

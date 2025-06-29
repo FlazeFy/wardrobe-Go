@@ -19,7 +19,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	errorRepo := repositories.NewErrorRepository(db)
 	feedbackRepo := repositories.NewFeedbackRepository(db)
 	historyRepo := repositories.NewHistoryRepository(db)
-	// outfitRelationRepo := repositories.NewOutfitRelationRepository(db)
+	outfitRelationRepo := repositories.NewOutfitRelationRepository(db)
 	outfitRepo := repositories.NewOutfitRepository(db)
 	questionRepo := repositories.NewQuestionRepository(db)
 	scheduleRepo := repositories.NewScheduleRepository(db)
@@ -70,5 +70,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 
 	// Seeder & Factories
 	SetUpSeeder(db, adminRepo, userRepo, dictionaryRepo, questionRepo, feedbackRepo, historyRepo,
-		userTrackRepo, errorRepo, clothesRepo, clothesUsedRepo, userWeatherRepo, outfitRepo)
+		userTrackRepo, errorRepo, clothesRepo, clothesUsedRepo, userWeatherRepo, outfitRepo,
+		outfitRelationRepo,
+	)
 }

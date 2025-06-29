@@ -24,6 +24,7 @@ type UserRepository interface {
 	// For Seeder
 	DeleteAll() error
 	FindOneRandom() (*models.User, error)
+	FindOneHasOutfitAndClothesRandom() ([]models.User, error)
 }
 
 // User Struct
@@ -146,6 +147,7 @@ func (r *userRepository) FindUserContactByID(id uuid.UUID) (*models.UserContact,
 func (r *userRepository) DeleteAll() error {
 	return r.db.Where("1 = 1").Delete(&models.User{}).Error
 }
+
 func (r *userRepository) FindOneRandom() (*models.User, error) {
 	var user models.User
 
@@ -155,4 +157,20 @@ func (r *userRepository) FindOneRandom() (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *userRepository) FindOneHasOutfitAndClothesRandom() ([]models.User, error) {
+	var users []models.User
+
+	err := r.db.Select("users.id, users.username, users.password, users.email, users.telegram_user_id, users.telegram_is_valid, users.created_at").
+		Joins("JOIN outfits o ON o.created_by = users.id").
+		Joins("JOIN clothes c ON c.created_by = users.id").
+		Group("users.id").
+		Find(&users).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
