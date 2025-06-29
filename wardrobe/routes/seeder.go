@@ -15,6 +15,7 @@ func SetUpSeeder(
 	clothesRepo repositories.ClothesRepository, clothesUsedRepo repositories.ClothesUsedRepository,
 	userWeatherRepo repositories.UserWeatherRepository, outfitRepo repositories.OutfitRepository,
 	outfitRelationRepo repositories.OutfitRelationRepository, scheduleRepo repositories.ScheduleRepository,
+	outfitUsedRepo repositories.OutfitUsedRepository,
 ) {
 	seeders.SeedAdmins(adminRepo, 5)
 	seeders.SeedUsers(userRepo, 20)
@@ -32,4 +33,5 @@ func SetUpSeeder(
 	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 20)
 	seeders.SeedOutfitRelations(outfitRelationRepo, userRepo, clothesRepo, outfitRepo, 10)
 	seeders.SeedSchedules(scheduleRepo, userRepo, clothesRepo, 7)
+	seeders.SeedOutfitUseds(outfitUsedRepo, userRepo, outfitRepo, 7)
 }
