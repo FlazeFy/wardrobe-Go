@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"time"
 	"wardrobe/models"
 
 	"github.com/google/uuid"
@@ -9,8 +10,12 @@ import (
 
 // Wash Interface
 type WashRepository interface {
+	CreateWash(wash *models.Wash, userID uuid.UUID) error
 	HardDeleteWashByClothesID(clothesID, createdBy uuid.UUID) error
 	DeleteWashByClothesId(id uuid.UUID) (int64, error)
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Wash Struct
@@ -24,6 +29,15 @@ func NewWashRepository(db *gorm.DB) WashRepository {
 }
 
 // Command Scheduler
+func (r *washRepository) CreateWash(wash *models.Wash, userID uuid.UUID) error {
+	wash.ID = uuid.New()
+	wash.CreatedAt = time.Now()
+	wash.CreatedBy = userID
+
+	// Query
+	return r.db.Create(wash).Error
+}
+
 func (r *washRepository) HardDeleteWashByClothesID(clothesID, createdBy uuid.UUID) error {
 	// Query
 	result := r.db.Unscoped().Where("clothes_id = ? AND created_by = ?", clothesID, createdBy).Delete(&models.Wash{})
@@ -51,4 +65,9 @@ func (r *washRepository) DeleteWashByClothesId(id uuid.UUID) (int64, error) {
 	}
 
 	return result.RowsAffected, nil
+}
+
+// For Seeder
+func (r *washRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.Wash{}).Error
 }

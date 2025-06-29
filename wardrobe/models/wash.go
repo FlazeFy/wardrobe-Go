@@ -24,4 +24,8 @@ type (
 		WashType   string     `json:"wash_type" gorm:"not null"`
 		Dictionary Dictionary `json:"-" gorm:"foreignKey:WashType;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
+	WashCheckpoint struct {
+		CheckpointName string `json:"checkpoint_name"`
+		IsFinished     bool   `json:"is_finished"`
+	}
 )

@@ -22,6 +22,7 @@ func SeedDictionaries(repo repositories.DictionaryRepository) {
 		{"clothes_made_from", config.ClothesMadeFroms},
 		{"clothes_size", config.ClothesSizes},
 		{"day", config.Days},
+		{"wash_type", config.WashTypes},
 	}
 
 	// Fill Table
