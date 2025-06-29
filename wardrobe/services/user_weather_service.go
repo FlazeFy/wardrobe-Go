@@ -10,7 +10,7 @@ import (
 // User Weather Interface
 type UserWeatherService interface {
 	// Task Scheduler
-	Create(weather *models.UserWeather, userID uuid.UUID) error
+	CreateUserWeather(weather *models.UserWeather, userID uuid.UUID) error
 }
 
 // User Weather Struct
@@ -25,9 +25,9 @@ func NewUserWeatherService(userWeatherRepo repositories.UserWeatherRepository) U
 	}
 }
 
-func (s *userWeatherService) Create(weather *models.UserWeather, userID uuid.UUID) error {
+func (s *userWeatherService) CreateUserWeather(weather *models.UserWeather, userID uuid.UUID) error {
 	// Repo : Create User Weather
-	if err := s.userWeatherRepo.Create(weather, userID); err != nil {
+	if err := s.userWeatherRepo.CreateUserWeather(weather, userID); err != nil {
 		return err
 	}
 

@@ -1,7 +1,10 @@
 package utils
 
 import (
+	"math"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v6"
 )
 
 func GetNextDay(current string, offset int) string {
@@ -17,4 +20,11 @@ func GetNextDay(current string, offset int) string {
 	}
 
 	return targetDay.Weekday().String()[:3]
+}
+
+func GetRandWeatherTemp(min, max float64) float64 {
+	raw := gofakeit.Float64Range(min, max)
+	temp := math.Round(raw*100) / 100
+
+	return temp
 }

@@ -115,8 +115,8 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 				WeatherHitFrom:   "Task Schedule",
 			}
 
-			// Query : Create Weather
-			err = s.UserWeatherService.Create(weather, dt.UserID)
+			// Query : Create User Weather
+			err = s.UserWeatherService.CreateUserWeather(weather, dt.UserID)
 			if err != nil {
 				fmt.Println("failed to create weather: %w", err)
 				s.BroadCastErrorToAdmin()

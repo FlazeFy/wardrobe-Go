@@ -23,3 +23,5 @@ var ClothesMadeFroms = []string{"cotton", "wool", "silk", "linen", "polyester", 
 var ClothesSizes = []string{"S", "M", "L", "XL", "XXL"}
 var TrackSources = []string{"Web", "Mobile", "Telegram Bot", "Line Bot"}
 var Colors = []string{"red", "blue", "green", "yellow", "purple", "orange", "pink", "brown", "black", "white"}
+var WeatherHitFroms = []string{"Task Schedule", "Manual"}
+var WeatherConditions = []string{"Thunderstorm", "Drizzle", "Rain", "Snow", "Mist", "Smoke", "Haze", "Dust", "Fog", "Sand", "Ash", "Squall", "Tornado", "Clear", "Clouds"}
