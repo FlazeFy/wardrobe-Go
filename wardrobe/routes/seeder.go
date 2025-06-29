@@ -12,7 +12,7 @@ func SetUpSeeder(
 	dictionaryRepo repositories.DictionaryRepository, questionRepo repositories.QuestionRepository,
 	feedbackRepo repositories.FeedbackRepository, historyRepo repositories.HistoryRepository,
 	userTrackRepo repositories.UserTrackRepository, errorRepo repositories.ErrorRepository,
-	clothesRepo repositories.ClothesRepository,
+	clothesRepo repositories.ClothesRepository, clothesUsedRepo repositories.ClothesUsedRepository,
 ) {
 	seeders.SeedAdmins(adminRepo, 5)
 	seeders.SeedUsers(userRepo, 20)
@@ -23,4 +23,5 @@ func SetUpSeeder(
 	seeders.SeedUserTracks(userTrackRepo, userRepo, 15)
 	seeders.SeedErrors(errorRepo, 10)
 	seeders.SeedClothes(clothesRepo, userRepo, 200)
+	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 600)
 }

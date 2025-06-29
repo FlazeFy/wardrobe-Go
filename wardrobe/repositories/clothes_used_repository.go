@@ -20,6 +20,9 @@ type ClothesUsedRepository interface {
 
 	// Task Scheduler
 	SchedulerFindUsedClothesReadyToWash(days int) ([]models.SchedulerUsedClothesReadyToWash, error)
+
+	// For Seeder
+	DeleteAll() error
 }
 
 // Clothes Used Struct
@@ -162,4 +165,9 @@ func (r *clothesUsedRepository) SchedulerFindUsedClothesReadyToWash(days int) ([
 	}
 
 	return clothes, nil
+}
+
+// For Seeder
+func (r *clothesUsedRepository) DeleteAll() error {
+	return r.db.Where("1 = 1").Delete(&models.ClothesUsed{}).Error
 }

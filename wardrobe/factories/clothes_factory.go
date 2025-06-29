@@ -8,18 +8,18 @@ import (
 )
 
 func ClothesFactory() models.Clothes {
-	desc := gofakeit.Sentence(gofakeit.Number(3, 10))
-	merk := gofakeit.Company()
-	price := gofakeit.Number(100000, 2000000)
-	buyAt := gofakeit.Date()
+	clothesDesc := gofakeit.Sentence(gofakeit.Number(3, 10))
+	clothesMerk := gofakeit.Company()
+	clothesPrice := gofakeit.Number(100000, 2000000)
+	clothesBuyAt := gofakeit.Date()
 
 	return models.Clothes{
 		ClothesName:     gofakeit.ProductName(),
-		ClothesDesc:     &desc,
-		ClothesMerk:     &merk,
+		ClothesDesc:     &clothesDesc,
+		ClothesMerk:     &clothesMerk,
 		ClothesColor:    gofakeit.RandomString(config.Colors),
-		ClothesPrice:    &price,
-		ClothesBuyAt:    &buyAt,
+		ClothesPrice:    &clothesPrice,
+		ClothesBuyAt:    &clothesBuyAt,
 		ClothesQty:      gofakeit.Number(1, 20),
 		IsFaded:         gofakeit.Bool(),
 		HasWashed:       gofakeit.Bool(),

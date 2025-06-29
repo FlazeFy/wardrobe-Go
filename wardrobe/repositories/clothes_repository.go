@@ -33,6 +33,7 @@ type ClothesRepository interface {
 
 	// For Seeder
 	DeleteAll() error
+	FindOneRandom() (*models.Clothes, error)
 }
 
 // Clothes Struct
@@ -411,4 +412,15 @@ func (r *clothesRepository) SchedulerFindUnironedClothes() ([]models.SchedulerCl
 // For Seeder
 func (r *clothesRepository) DeleteAll() error {
 	return r.db.Where("1 = 1").Delete(&models.Clothes{}).Error
+}
+
+func (r *clothesRepository) FindOneRandom() (*models.Clothes, error) {
+	var clothes models.Clothes
+
+	err := r.db.Order("RANDOM()").Limit(1).First(&clothes).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &clothes, nil
 }
