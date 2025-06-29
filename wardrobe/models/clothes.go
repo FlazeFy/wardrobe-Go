@@ -9,7 +9,7 @@ import (
 type (
 	Clothes struct {
 		ID           uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey"`
-		ClothesName  string     `json:"clothes_name" gorm:"type:varchar(36);not null"`
+		ClothesName  string     `json:"clothes_name" gorm:"type:varchar(75);not null"`
 		ClothesDesc  *string    `json:"clothes_desc" gorm:"type:varchar(500);null"`
 		ClothesMerk  *string    `json:"clothes_merk" gorm:"type:varchar(75);null"`
 		ClothesColor string     `json:"clothes_color" gorm:"type:varchar(36);not null"`

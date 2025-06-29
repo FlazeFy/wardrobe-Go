@@ -2,13 +2,12 @@ package factories
 
 import (
 	"wardrobe/models"
-	"wardrobe/utils"
 
 	"github.com/brianvoe/gofakeit/v6"
 )
 
 func FeedbackFactory() models.Feedback {
-	rate := utils.GetRandInt(5, 1)
+	rate := gofakeit.Number(1, 5)
 
 	return models.Feedback{
 		FeedbackRate: rate,

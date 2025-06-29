@@ -22,3 +22,4 @@ var ClothesGenders = []string{"male", "female", "unisex"}
 var ClothesMadeFroms = []string{"cotton", "wool", "silk", "linen", "polyester", "denim", "leather", "nylon", "rayon", "synthetic", "cloth"}
 var ClothesSizes = []string{"S", "M", "L", "XL", "XXL"}
 var TrackSources = []string{"Web", "Mobile", "Telegram Bot", "Line Bot"}
+var Colors = []string{"red", "blue", "green", "yellow", "purple", "orange", "pink", "brown", "black", "white"}
