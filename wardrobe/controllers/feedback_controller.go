@@ -57,11 +57,7 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 	}
 
 	// Service : Add Feedback
-	feedback := models.Feedback{
-		FeedbackRate: req.FeedbackRate,
-		FeedbackBody: req.FeedbackBody,
-	}
-	err = c.FeedbackService.CreateFeedback(&feedback, *userID)
+	err = c.FeedbackService.CreateFeedback(&req, *userID)
 	if err != nil {
 		utils.BuildErrorMessage(ctx, err.Error())
 		return

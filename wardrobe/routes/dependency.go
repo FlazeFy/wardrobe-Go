@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"sync"
+	"wardrobe/bots/line"
+	"wardrobe/bots/telegram"
 	"wardrobe/controllers"
 	"wardrobe/repositories"
 	"wardrobe/services"
@@ -74,4 +77,15 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 		userTrackRepo, errorRepo, clothesRepo, clothesUsedRepo, userWeatherRepo, outfitRepo,
 		outfitRelationRepo, scheduleRepo, outfitUsedRepo, washRepo,
 	)
+
+	// Line Bot
+	r.POST("/api/v1/callback/line", line.LineHandler())
+
+	// Telegram Bot
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		telegram.TelegramHandler()
+	}()
 }

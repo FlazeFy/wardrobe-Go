@@ -1,5 +1,6 @@
 package config
 
+// Template Message
 var ResponseMessages = map[string]string{
 	"post":        "created",
 	"put":         "updated",
@@ -11,6 +12,8 @@ var ResponseMessages = map[string]string{
 	"sign out":    "signed out",
 	"empty":       "not found",
 }
+
+// Rules
 var DictionaryTypes = []string{
 	"wash_type", "clothes_type", "clothes_category", "used_context", "clothes_gender", "clothes_made_from", "clothes_size",
 }
@@ -26,3 +29,26 @@ var Colors = []string{"red", "blue", "green", "yellow", "purple", "orange", "pin
 var WeatherHitFroms = []string{"Task Schedule", "Manual"}
 var WeatherConditions = []string{"Thunderstorm", "Drizzle", "Rain", "Snow", "Mist", "Smoke", "Haze", "Dust", "Fog", "Sand", "Ash", "Squall", "Tornado", "Clear", "Clouds"}
 var WashTypes = []string{"Laundry", "Self-Wash"}
+
+// List Menu
+type MenuItem struct {
+	Label string
+	Data  string
+}
+
+var MenuList = []MenuItem{
+	{Label: "All Clothes", Data: "/Show All Clothes"},
+	{Label: "Used History", Data: "/Show Used Clothes History"},
+	{Label: "By Category", Data: "/Show Clothes By Category"},
+	{Label: "Schedule", Data: "/Show Schedule"},
+	{Label: "Wash History", Data: "/Show Wash History"},
+	{Label: "Wishlist", Data: "/Show Wishlist"},
+	{Label: "Apps History", Data: "/Show Apps History"},
+	{Label: "All Outfit", Data: "/Show All Outfit"},
+	{Label: "Use Clothes", Data: "/Used a Clothes"},
+	{Label: "Random Outfit", Data: "/Randomize My Outfit"},
+	{Label: "Most Used", Data: "/Show Most Used Clothes"},
+	{Label: "Most Used Daily", Data: "/Show Most Used Clothes for Daily"},
+	{Label: "Last History", Data: "/Show Last History"},
+	{Label: "Exit Bot", Data: "/Exit Bot"},
+}
