@@ -26,16 +26,18 @@ type AuthService interface {
 }
 
 type authService struct {
-	userRepo    repositories.UserRepository
-	adminRepo   repositories.AdminRepository
-	redisClient *redis.Client
+	userRepo        repositories.UserRepository
+	adminRepo       repositories.AdminRepository
+	googleTokenRepo repositories.GoogleTokenRepository
+	redisClient     *redis.Client
 }
 
-func NewAuthService(userRepo repositories.UserRepository, adminRepo repositories.AdminRepository, redisClient *redis.Client) AuthService {
+func NewAuthService(userRepo repositories.UserRepository, adminRepo repositories.AdminRepository, googleTokenRepo repositories.GoogleTokenRepository, redisClient *redis.Client) AuthService {
 	return &authService{
-		userRepo:    userRepo,
-		adminRepo:   adminRepo,
-		redisClient: redisClient,
+		userRepo:        userRepo,
+		adminRepo:       adminRepo,
+		googleTokenRepo: googleTokenRepo,
+		redisClient:     redisClient,
 	}
 }
 
@@ -103,7 +105,7 @@ func (s *authService) GoogleRegister(code string) (*string, error) {
 		return nil, err
 	}
 
-	// Service : Create User
+	// Repo : Create User
 	user := &models.User{
 		Password:       "GOOGLE_SIGN_IN",
 		Email:          googleUser.Email,
@@ -113,6 +115,17 @@ func (s *authService) GoogleRegister(code string) (*string, error) {
 	user, err = s.userRepo.CreateUser(user)
 	if err != nil {
 		return nil, err
+	}
+
+	// Repo : Create Google Token
+	googleToken := &models.GoogleToken{
+		AccessToken:  tokenGoogle.AccessToken,
+		RefreshToken: tokenGoogle.AccessToken,
+		Expiry:       tokenGoogle.Expiry,
+	}
+	err = s.googleTokenRepo.CreateGoogleToken(googleToken, user.ID)
+	if err != nil {
+		return nil, errors.New("failed generating token")
 	}
 
 	// JWT Token Generate
