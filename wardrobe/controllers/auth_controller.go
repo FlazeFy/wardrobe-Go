@@ -2,12 +2,14 @@ package controllers
 
 import (
 	"net/http"
+	"wardrobe/config"
 	"wardrobe/models"
 	"wardrobe/models/others"
 	"wardrobe/services"
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 )
 
 type AuthController struct {
@@ -45,6 +47,38 @@ func (c *AuthController) BasicRegister(ctx *gin.Context) {
 
 	// Service : Basic Register
 	token, err := c.AuthService.BasicRegister(req)
+	if err != nil {
+		if err.Error() == "username or email has already been used" {
+			utils.BuildResponseMessage(ctx, "failed", "register", err.Error(), http.StatusConflict, nil, nil)
+			return
+		}
+
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	// Response
+	utils.BuildResponseMessage(ctx, "success", "user", "register", http.StatusCreated, gin.H{
+		"token": token,
+	}, nil)
+}
+
+func (c *AuthController) GoogleLogin(ctx *gin.Context) {
+	url := config.GetGoogleOAuthConfig().AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+
+	ctx.Redirect(http.StatusFound, url)
+}
+
+func (c *AuthController) GoogleRegister(ctx *gin.Context) {
+	// Validator
+	code := ctx.Query("code")
+	if code == "" {
+		utils.BuildResponseMessage(ctx, "failed", "register", "cant find code", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service : Google Register
+	token, err := c.AuthService.GoogleRegister(code)
 	if err != nil {
 		if err.Error() == "username or email has already been used" {
 			utils.BuildResponseMessage(ctx, "failed", "register", err.Error(), http.StatusConflict, nil, nil)

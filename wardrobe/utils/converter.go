@@ -1,6 +1,9 @@
 package utils
 
-import "unicode"
+import (
+	"strings"
+	"unicode"
+)
 
 func BoolToYesNo(val bool) string {
 	if val {
@@ -16,4 +19,9 @@ func Capitalize(s string) string {
 	runes := []rune(s)
 	runes[0] = unicode.ToUpper(runes[0])
 	return string(runes)
+}
+
+func EmailToUsername(email string) string {
+	parts := strings.Split(email, "@")
+	return parts[0]
 }

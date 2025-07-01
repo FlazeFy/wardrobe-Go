@@ -40,6 +40,7 @@ func MigrateAll(db *gorm.DB) {
 	db.AutoMigrate(
 		&models.Admin{},
 		&models.User{},
+		&models.GoogleToken{},
 		&models.Dictionary{},
 		&models.Error{},
 		&models.History{},

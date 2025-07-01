@@ -13,5 +13,7 @@ func SetUpRouteAuth(api *gin.RouterGroup, authController *controllers.AuthContro
 		auth.POST("/register", authController.BasicRegister)
 		auth.POST("/login", authController.BasicLogin)
 		auth.POST("/signout", authController.BasicSignOut)
+		auth.GET("/google", authController.GoogleLogin)
+		auth.GET("/google/callback", authController.GoogleRegister)
 	}
 }

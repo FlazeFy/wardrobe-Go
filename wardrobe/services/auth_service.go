@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -21,6 +22,7 @@ type AuthService interface {
 	BasicRegister(userReq models.User) (*string, error)
 	BasicSignOut(token string) error
 	BasicLogin(loginReq others.LoginRequest) (*string, error)
+	GoogleRegister(code string) (*string, error)
 }
 
 type authService struct {
@@ -55,6 +57,59 @@ func (s *authService) BasicRegister(userReq models.User) (*string, error) {
 	}
 
 	// Service : Create User
+	user, err = s.userRepo.CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	// JWT Token Generate
+	token, err := utils.GenerateToken(user.ID)
+	if err != nil {
+		return nil, errors.New("failed generating token")
+	}
+
+	return &token, nil
+}
+
+func (s *authService) GoogleRegister(code string) (*string, error) {
+	// Token Exchange
+	tokenGoogle, err := config.GetGoogleOAuthConfig().Exchange(context.Background(), code)
+	if err != nil {
+		return nil, errors.New("cant exchange token")
+	}
+
+	// Google Client
+	client := config.GetGoogleOAuthConfig().Client(context.Background(), tokenGoogle)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		return nil, errors.New("failed to get user info")
+	}
+	defer resp.Body.Close()
+
+	// Decode Google Response
+	var googleUser others.GoogleUser
+	if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
+		return nil, errors.New("failed to decode user info")
+	}
+
+	// Repo : Find By Email
+	cleanUsername := utils.EmailToUsername(googleUser.Email)
+	userCheck, err := s.userRepo.FindByUsernameOrEmail(cleanUsername, googleUser.Email)
+	if userCheck != nil || err != gorm.ErrRecordNotFound {
+		if userCheck != nil {
+			return nil, errors.New("username or email has already been used")
+		}
+
+		return nil, err
+	}
+
+	// Service : Create User
+	user := &models.User{
+		Password:       "GOOGLE_SIGN_IN",
+		Email:          googleUser.Email,
+		Username:       cleanUsername,
+		TelegramUserId: nil,
+	}
 	user, err = s.userRepo.CreateUser(user)
 	if err != nil {
 		return nil, err
