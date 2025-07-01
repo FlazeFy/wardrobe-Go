@@ -17,6 +17,10 @@ type ScheduleService interface {
 	GetScheduleByDay(day string, userId uuid.UUID) ([]models.ScheduleByDay, error)
 	DeleteScheduleByClothesId(id uuid.UUID) (int64, error)
 	HardDeleteScheduleById(id, createdBy uuid.UUID) error
+
+	// For Task Scheduler
+	FindScheduleReadyToAssignCalendarTaskByDay(day string) ([]models.ScheduleReadyToCalendarTask, error)
+	UpdateRemindByID(scheduleID uuid.UUID, isRemind bool) error
 }
 
 // Schedule Struct
@@ -96,4 +100,12 @@ func (s *scheduleService) DeleteScheduleByClothesId(id uuid.UUID) (int64, error)
 
 func (s *scheduleService) HardDeleteScheduleById(id, createdBy uuid.UUID) error {
 	return s.scheduleRepo.HardDeleteScheduleById(id, createdBy)
+}
+
+func (s *scheduleService) FindScheduleReadyToAssignCalendarTaskByDay(day string) ([]models.ScheduleReadyToCalendarTask, error) {
+	return s.scheduleRepo.FindScheduleReadyToAssignCalendarTaskByDay(day)
+}
+
+func (s *scheduleService) UpdateRemindByID(scheduleID uuid.UUID, isRemind bool) error {
+	return s.scheduleRepo.UpdateRemindByID(scheduleID, isRemind)
 }

@@ -17,6 +17,10 @@ type ScheduleRepository interface {
 	HardDeleteScheduleById(id, createdBy uuid.UUID) error
 	HardDeleteScheduleByClothesID(clothesID, createdBy uuid.UUID) error
 
+	// For Task Scheduler
+	FindScheduleReadyToAssignCalendarTaskByDay(day string) ([]models.ScheduleReadyToCalendarTask, error)
+	UpdateRemindByID(scheduleID uuid.UUID, isRemind bool) error
+
 	// For Seeder
 	DeleteAll() error
 }
@@ -125,6 +129,37 @@ func (r *scheduleRepository) HardDeleteScheduleById(id, createdBy uuid.UUID) err
 	}
 
 	return nil
+}
+
+func (r *scheduleRepository) FindScheduleReadyToAssignCalendarTaskByDay(day string) ([]models.ScheduleReadyToCalendarTask, error) {
+	// Model
+	var schedules []models.ScheduleReadyToCalendarTask
+
+	// Query
+	result := r.db.Table("schedules").
+		Select(`schedules.id, clothes.clothes_name,schedules.day,schedules.schedule_note,users.username,google_tokens.access_token`).
+		Joins("JOIN users ON users.id = schedules.created_by").
+		Joins("JOIN clothes ON clothes.id = schedules.clothes_id").
+		Joins("JOIN google_tokens ON google_tokens.created_by = schedules.created_by").
+		Where("schedules.day", day).
+		Where("is_remind", false).
+		Order("username ASC").
+		Find(&schedules)
+
+	// Response
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return schedules, nil
+}
+
+func (r *scheduleRepository) UpdateRemindByID(scheduleID uuid.UUID, isRemind bool) error {
+	result := r.db.Table("schedules").
+		Where("id = ?", scheduleID).
+		Update("is_remind", isRemind)
+
+	return result.Error
 }
 
 // For Seeder

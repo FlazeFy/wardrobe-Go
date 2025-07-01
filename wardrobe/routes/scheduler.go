@@ -18,15 +18,17 @@ func SetUpScheduler(
 	cleanScheduler := schedulers.NewCleanScheduler(adminService, historyService, clothesService, clothesUsedService, scheduleService, washService)
 	reminderScheduler := schedulers.NewReminderScheduler(adminService, clothesService, clothesUsedService, questionService)
 	weatherScheduler := schedulers.NewWeatherScheduler(adminService, userService, userWeatherService)
+	calendarScheduler := schedulers.NewCalendarScheduler(adminService, scheduleService)
 
 	// Init Scheduler
 	c := cron.New()
-	Scheduler(c, auditScheduler, cleanScheduler, reminderScheduler, weatherScheduler)
+	Scheduler(c, auditScheduler, cleanScheduler, reminderScheduler, weatherScheduler, calendarScheduler)
 	c.Start()
 	defer c.Stop()
 }
 
-func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanScheduler *schedulers.CleanScheduler, reminderScheduler *schedulers.ReminderScheduler, weatherScheduler *schedulers.WeatherScheduler) {
+func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanScheduler *schedulers.CleanScheduler, reminderScheduler *schedulers.ReminderScheduler,
+	weatherScheduler *schedulers.WeatherScheduler, calendarScheduler *schedulers.CalendarScheduler) {
 	// For Production
 	// Clean Scheduler
 	c.AddFunc("10 0 * * *", weatherScheduler.SchedulerWeatherRoutineFetch)
@@ -37,6 +39,7 @@ func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanSch
 	c.AddFunc("20 2 * * 0,2,5", reminderScheduler.SchedulerReminderUnusedClothes)
 	c.AddFunc("20 3 * * *", reminderScheduler.SchedulerReminderUnironedClothes)
 	c.AddFunc("0 3 * * *", reminderScheduler.SchedulerReminderWashUsedClothes)
+	c.AddFunc("45 1 * * *", calendarScheduler.SchedulerCalendarSycnSchedule)
 
 	// For Development
 	go func() {
@@ -57,5 +60,8 @@ func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanSch
 
 		// Weather Scheduler
 		// weatherScheduler.SchedulerWeatherRoutineFetch()
+
+		// Calendar Scheduler
+		calendarScheduler.SchedulerCalendarSycnSchedule()
 	}()
 }

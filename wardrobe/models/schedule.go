@@ -31,4 +31,12 @@ type (
 		ClothesCategory string    `json:"clothes_category"`
 		ClothesId       uuid.UUID `json:"clothes_id"`
 	}
+	ScheduleReadyToCalendarTask struct {
+		ID           uuid.UUID `json:"id"`
+		ClothesName  string    `json:"clothes_name"`
+		Day          string    `json:"day"`
+		ScheduleNote *string   `json:"schedule_note"`
+		Username     string    `json:"username"`
+		AccessToken  string    `json:"access_token"`
+	}
 )

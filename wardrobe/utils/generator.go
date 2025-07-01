@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -27,4 +29,33 @@ func GetRandWeatherTemp(min, max float64) float64 {
 	temp := math.Round(raw*100) / 100
 
 	return temp
+}
+
+func GetTomorrowDayName() string {
+	tomorrow := time.Now().AddDate(0, 0, 1)
+	return tomorrow.Weekday().String()[:3]
+}
+
+func GetThisWeekdayWithHour(dayStr string, hour, min int) (time.Time, error) {
+	dayStr = strings.ToLower(dayStr)
+	dayMap := map[string]time.Weekday{
+		"sun": time.Sunday,
+		"mon": time.Monday,
+		"tue": time.Tuesday,
+		"wed": time.Wednesday,
+		"thu": time.Thursday,
+		"fri": time.Friday,
+		"sat": time.Saturday,
+	}
+
+	targetWeekday, ok := dayMap[dayStr]
+	if !ok {
+		return time.Time{}, fmt.Errorf("invalid weekday string: %s", dayStr)
+	}
+
+	today := time.Now()
+	daysUntil := (int(targetWeekday) - int(today.Weekday()) + 7) % 7
+	targetDate := today.AddDate(0, 0, daysUntil)
+
+	return time.Date(targetDate.Year(), targetDate.Month(), targetDate.Day(), hour, min, 0, 0, time.Local), nil
 }
