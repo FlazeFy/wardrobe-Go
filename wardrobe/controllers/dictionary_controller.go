@@ -9,6 +9,7 @@ import (
 	"wardrobe/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -75,16 +76,6 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 		return
 	}
 
-	// Validator Field
-	if req.DictionaryName == "" {
-		utils.BuildResponseMessage(ctx, "failed", "dictionary", "dictionary_name is required", http.StatusBadRequest, nil, nil)
-		return
-	}
-	if req.DictionaryType == "" {
-		utils.BuildResponseMessage(ctx, "failed", "dictionary", "dictionary_type is required", http.StatusBadRequest, nil, nil)
-		return
-	}
-
 	// Validator Contain : Dictionary Type
 	if !utils.Contains(config.DictionaryTypes, req.DictionaryType) {
 		utils.BuildResponseMessage(ctx, "failed", "dictionary", "dictionary_type is not valid", http.StatusBadRequest, nil, nil)
@@ -109,4 +100,29 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 
 	// Response
 	utils.BuildResponseMessage(ctx, "success", "dictionary", "post", http.StatusCreated, nil, nil)
+}
+
+func (c *DictionaryController) HardDeleteDictionaryById(ctx *gin.Context) {
+	// Params
+	id := ctx.Param("id")
+
+	// Parse Param UUID
+	dictionaryID, err := uuid.Parse(id)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "dictionary", "invalid id", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service : Hard Delete Dictionary By ID
+	err = c.DictionaryService.HardDeleteDictionaryByID(dictionaryID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "dictionary", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	utils.BuildResponseMessage(ctx, "success", "dictionary", "hard delete", http.StatusOK, nil, nil)
 }

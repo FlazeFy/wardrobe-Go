@@ -9,16 +9,16 @@ import (
 type (
 	ClothesUsed struct {
 		ID          uuid.UUID `json:"id" gorm:"type:uuid;primaryKey"`
-		ClothesNote *string   `json:"clothes_note" gorm:"type:varchar(500);null"`
+		ClothesNote *string   `json:"clothes_note" gorm:"type:varchar(500);null" binding:"omitempty,max=500"`
 		CreatedAt   time.Time `json:"created_at" gorm:"type:timestamp;not null"`
 		// FK - User
 		CreatedBy uuid.UUID `json:"created_by" gorm:"not null"`
 		User      User      `json:"-" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 		// FK - Clothes
-		ClothesId uuid.UUID `json:"clothes_id" gorm:"not null"`
+		ClothesId uuid.UUID `json:"clothes_id" gorm:"not null" binding:"required,max=36,min=36"`
 		Clothes   Clothes   `json:"-" gorm:"foreignKey:ClothesId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 		// FK - Used Context
-		UsedContext string     `json:"used_context" gorm:"not null"`
+		UsedContext string     `json:"used_context" gorm:"not null" binding:"required,min=36"`
 		Dictionary  Dictionary `json:"-" gorm:"foreignKey:UsedContext;references:DictionaryName;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
 	ClothesUsedHistory struct {

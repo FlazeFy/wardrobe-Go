@@ -14,10 +14,10 @@ type (
 		CreatedBy uuid.UUID `json:"created_by" gorm:"not null"`
 		User      User      `json:"-" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 		// FK - Outfit
-		OutfitId uuid.UUID `json:"outfit_id" gorm:"not null"`
+		OutfitId uuid.UUID `json:"outfit_id" gorm:"not null" binding:"required,max=36,min=36"`
 		Outfit   Outfit    `json:"-" gorm:"foreignKey:OutfitId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 		// FK - Clothes
-		ClothesId uuid.UUID `json:"clothes_id" gorm:"not null"`
+		ClothesId uuid.UUID `json:"clothes_id" gorm:"not null" binding:"required,max=36,min=36"`
 		Clothes   Clothes   `json:"-" gorm:"foreignKey:ClothesId;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
 )

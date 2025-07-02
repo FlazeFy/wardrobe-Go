@@ -25,5 +25,6 @@ func SetUpRouteDictionary(api *gin.RouterGroup, dictionaryController *controller
 	dictionaryAdmin := protectedAdmin.Group("/dictionaries")
 	{
 		dictionaryAdmin.POST("/", dictionaryController.CreateDictionary, middleware.AuditTrailMiddleware(db, "post_create_dictionary"))
+		dictionaryAdmin.DELETE("/destroy/:id", dictionaryController.HardDeleteDictionaryById, middleware.AuditTrailMiddleware(db, "hard_delete_dictionary_by_id"))
 	}
 }

@@ -31,20 +31,6 @@ func (c *AuthController) BasicRegister(ctx *gin.Context) {
 		return
 	}
 
-	// Validate Field
-	if req.Username == "" {
-		utils.BuildResponseMessage(ctx, "failed", "register", "username is required", http.StatusBadRequest, nil, nil)
-		return
-	}
-	if req.Password == "" {
-		utils.BuildResponseMessage(ctx, "failed", "register", "password is required", http.StatusBadRequest, nil, nil)
-		return
-	}
-	if req.Email == "" {
-		utils.BuildResponseMessage(ctx, "failed", "register", "email is required", http.StatusBadRequest, nil, nil)
-		return
-	}
-
 	// Service : Basic Register
 	token, err := c.AuthService.BasicRegister(req)
 	if err != nil {

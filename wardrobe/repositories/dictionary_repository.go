@@ -15,6 +15,7 @@ type DictionaryRepository interface {
 	FindAllDictionary() ([]models.Dictionary, error)
 	FindDictionaryByType(dictionaryType string) ([]models.Dictionary, error)
 	FindOneDictionaryByName(dictionaryName string) (*models.Dictionary, error)
+	HardDeleteDictionaryByID(ID uuid.UUID) error
 
 	// For Seeder
 	DeleteAll() error
@@ -90,6 +91,20 @@ func (r *dictionaryRepository) CreateDictionary(dictionary *models.Dictionary) e
 
 	// Query
 	return r.db.Create(dictionary).Error
+}
+
+func (r *dictionaryRepository) HardDeleteDictionaryByID(ID uuid.UUID) error {
+	// Query
+	result := r.db.Unscoped().Where("id = ?", ID).Delete(&models.Dictionary{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
 
 // For Seeder
