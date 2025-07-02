@@ -10,13 +10,20 @@ import (
 )
 
 func SetUpRouteDictionary(api *gin.RouterGroup, dictionaryController *controllers.DictionaryController, redisClient *redis.Client, db *gorm.DB) {
-	// Protected Routes
-	protected := api.Group("/")
-	protected.Use(middleware.AuthMiddleware(redisClient))
-	dictionary := protected.Group("/dictionaries")
+	// Protected Routes - All Role
+	protectedAll := api.Group("/")
+	protectedAll.Use(middleware.AuthMiddleware(redisClient, "user", "admin"))
+	dictionaryAll := protectedAll.Group("/dictionaries")
 	{
-		dictionary.GET("/", dictionaryController.GetAllDictionary)
-		dictionary.GET("/:dictionary_type", dictionaryController.GetDictionaryByType)
-		dictionary.POST("/", dictionaryController.CreateDictionary, middleware.AuditTrailMiddleware(db, "post_create_dictionary"))
+		dictionaryAll.GET("/", dictionaryController.GetAllDictionary)
+		dictionaryAll.GET("/:dictionary_type", dictionaryController.GetDictionaryByType)
+	}
+
+	// Protected Routes - Admin
+	protectedAdmin := api.Group("/")
+	protectedAdmin.Use(middleware.AuthMiddleware(redisClient, "admin"))
+	dictionaryAdmin := protectedAdmin.Group("/dictionaries")
+	{
+		dictionaryAdmin.POST("/", dictionaryController.CreateDictionary, middleware.AuditTrailMiddleware(db, "post_create_dictionary"))
 	}
 }

@@ -18,7 +18,7 @@ func NewUserContext(db *gorm.DB) *UserContext {
 }
 
 func GetUserID(ctx *gin.Context) (*uuid.UUID, error) {
-	userIDValue, exists := ctx.Get("userId")
+	userIDValue, exists := ctx.Get("userID")
 	if !exists {
 		return nil, errors.New("user not found in context")
 	}

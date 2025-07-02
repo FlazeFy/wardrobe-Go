@@ -65,7 +65,7 @@ func (s *authService) BasicRegister(userReq models.User) (*string, error) {
 	}
 
 	// JWT Token Generate
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(user.ID, "user")
 	if err != nil {
 		return nil, errors.New("failed generating token")
 	}
@@ -74,6 +74,8 @@ func (s *authService) BasicRegister(userReq models.User) (*string, error) {
 }
 
 func (s *authService) GoogleRegister(code string) (*string, error) {
+	var role string
+
 	// Token Exchange
 	tokenGoogle, err := config.GetGoogleOAuthConfig().Exchange(context.Background(), code)
 	if err != nil {
@@ -116,6 +118,7 @@ func (s *authService) GoogleRegister(code string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+	role = "user"
 
 	// Repo : Create Google Token
 	googleToken := &models.GoogleToken{
@@ -129,7 +132,7 @@ func (s *authService) GoogleRegister(code string) (*string, error) {
 	}
 
 	// JWT Token Generate
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(user.ID, role)
 	if err != nil {
 		return nil, errors.New("failed generating token")
 	}
@@ -138,6 +141,8 @@ func (s *authService) GoogleRegister(code string) (*string, error) {
 }
 
 func (s *authService) BasicLogin(loginReq others.LoginRequest) (*string, error) {
+	var role string
+
 	// Repo : Find By Email
 	user, err := s.userRepo.FindByEmail(loginReq.Email)
 	if err != nil {
@@ -147,6 +152,7 @@ func (s *authService) BasicLogin(loginReq others.LoginRequest) (*string, error) 
 
 		return nil, err
 	}
+	role = "user"
 
 	// Utils : Check Password
 	if err := utils.CheckPassword(user, loginReq.Password); err != nil {
@@ -154,7 +160,7 @@ func (s *authService) BasicLogin(loginReq others.LoginRequest) (*string, error) 
 	}
 
 	// Utils : JWT Token Generate
-	token, err := utils.GenerateToken(user.ID)
+	token, err := utils.GenerateToken(user.ID, role)
 	if err != nil {
 		return nil, errors.New("failed generating token")
 	}

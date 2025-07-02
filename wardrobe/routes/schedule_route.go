@@ -11,13 +11,13 @@ import (
 
 func SetUpRouteSchedule(api *gin.RouterGroup, scheduleController *controllers.ScheduleController, redisClient *redis.Client, db *gorm.DB) {
 	// Protected Routes
-	protected := api.Group("/")
-	protected.Use(middleware.AuthMiddleware(redisClient))
-	schedule := protected.Group("/schedules")
+	protectedUser := api.Group("/")
+	protectedUser.Use(middleware.AuthMiddleware(redisClient, "user"))
+	scheduleUser := protectedUser.Group("/schedules")
 	{
-		schedule.GET("/by_day/:day", scheduleController.GetScheduleByDay)
-		schedule.GET("/by_tomorrow/:day", scheduleController.GetScheduleForTomorrow)
-		schedule.POST("/", scheduleController.CreateSchedule, middleware.AuditTrailMiddleware(db, "post_create_schedule"))
-		schedule.DELETE("/destroy/:id", scheduleController.HardDeleteScheduleById, middleware.AuditTrailMiddleware(db, "hard_delete_schedule_by_id"))
+		scheduleUser.GET("/by_day/:day", scheduleController.GetScheduleByDay)
+		scheduleUser.GET("/by_tomorrow/:day", scheduleController.GetScheduleForTomorrow)
+		scheduleUser.POST("/", scheduleController.CreateSchedule, middleware.AuditTrailMiddleware(db, "post_create_schedule"))
+		scheduleUser.DELETE("/destroy/:id", scheduleController.HardDeleteScheduleById, middleware.AuditTrailMiddleware(db, "hard_delete_schedule_by_id"))
 	}
 }

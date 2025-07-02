@@ -10,13 +10,20 @@ import (
 )
 
 func SetUpRouteFeedback(api *gin.RouterGroup, feedbackController *controllers.FeedbackController, redisClient *redis.Client, db *gorm.DB) {
-	// Protected Routes
-	protected := api.Group("/")
-	protected.Use(middleware.AuthMiddleware(redisClient))
-	feedback := protected.Group("/feedbacks")
+	// Protected Routes - User
+	protectedUser := api.Group("/")
+	protectedUser.Use(middleware.AuthMiddleware(redisClient, "user"))
+	feedbackUser := protectedUser.Group("/feedbacks")
 	{
-		feedback.GET("/", feedbackController.GetAllFeedback)
-		feedback.POST("/", feedbackController.CreateFeedback, middleware.AuditTrailMiddleware(db, "post_crete_feedback"))
-		feedback.DELETE("/destroy/:id", feedbackController.HardDeleteFeedbackById, middleware.AuditTrailMiddleware(db, "hard_delete_feedback_by_id"))
+		feedbackUser.POST("/", feedbackController.CreateFeedback, middleware.AuditTrailMiddleware(db, "post_crete_feedback"))
+	}
+
+	// Protected Routes - Admin
+	protectedAdmin := api.Group("/")
+	protectedAdmin.Use(middleware.AuthMiddleware(redisClient, "admin"))
+	feedbackAdmin := protectedAdmin.Group("/feedbacks")
+	{
+		feedbackAdmin.GET("/", feedbackController.GetAllFeedback)
+		feedbackAdmin.DELETE("/destroy/:id", feedbackController.HardDeleteFeedbackById, middleware.AuditTrailMiddleware(db, "hard_delete_feedback_by_id"))
 	}
 }

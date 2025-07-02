@@ -14,6 +14,9 @@ import (
 )
 
 func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
+	// Migrate DB
+	MigrateAll(db)
+
 	// Dependency Repositories
 	adminRepo := repositories.NewAdminRepository(db)
 	clothesRepo := repositories.NewClothesRepository(db)
@@ -59,18 +62,13 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	scheduleController := controllers.NewScheduleController(scheduleService)
 
 	// Routes Endpoint
-	SetUpRoutes(r, db, redisClient,
-		authController, questionController, feedbackController,
-		dictionaryController, historyController, clothesController,
-		clothesUsedController, scheduleController,
+	SetUpRoutes(r, db, redisClient, authController, questionController, feedbackController,
+		dictionaryController, historyController, clothesController, clothesUsedController, scheduleController,
 	)
 
 	// Task Scheduler
-	SetUpScheduler(
-		adminService, errorService, historyService,
-		clothesService, clothesUsedService, scheduleService,
-		washService, questionService, userService,
-		userWeatherService,
+	SetUpScheduler(adminService, errorService, historyService, clothesService, clothesUsedService,
+		scheduleService, washService, questionService, userService, userWeatherService,
 	)
 
 	// Seeder & Factories

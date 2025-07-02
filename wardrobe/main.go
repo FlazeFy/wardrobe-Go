@@ -4,12 +4,10 @@ import (
 	"log"
 	"os"
 	"wardrobe/config"
-	"wardrobe/models"
 	"wardrobe/routes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"gorm.io/gorm"
 )
 
 func main() {
@@ -21,12 +19,14 @@ func main() {
 
 	// Connect DB
 	db := config.ConnectDatabase()
-	MigrateAll(db)
 
 	// Setup Gin
 	router := gin.Default()
+
+	// Setup Redis
 	redisClient := config.InitRedis()
 
+	// Dependency For Routes, Migrations, Seeders, and Task Scheduler
 	routes.SetUpDependency(router, db, redisClient)
 
 	// Run server
@@ -34,29 +34,4 @@ func main() {
 	router.Run(":" + port)
 
 	log.Printf("Wardrobe is running on port %s\n", port)
-}
-
-func MigrateAll(db *gorm.DB) {
-	db.AutoMigrate(
-		&models.Admin{},
-		&models.User{},
-		&models.GoogleToken{},
-		&models.Dictionary{},
-		&models.Error{},
-		&models.History{},
-		&models.Feedback{},
-		&models.Clothes{},
-		&models.ClothesUsed{},
-		&models.Outfit{},
-		&models.OutfitRelation{},
-		&models.OutfitUsed{},
-		&models.Question{},
-		&models.Schedule{},
-		&models.UserRequest{},
-		&models.UserTrack{},
-		&models.UserWeather{},
-		&models.Wash{},
-		&models.AuditTrail{},
-	)
-	log.Printf("Migration : Success to migrate database")
 }

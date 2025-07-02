@@ -11,11 +11,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GenerateToken(userId uuid.UUID) (string, error) {
+func GenerateToken(userId uuid.UUID, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userId.String(),
 		"exp":     time.Now().Add(config.GetJWTExpirationDuration()).Unix(),
 		"iat":     time.Now().Unix(),
+		"role":    role,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

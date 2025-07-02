@@ -10,7 +10,10 @@ func SetUpRouteAuth(api *gin.RouterGroup, authController *controllers.AuthContro
 	// Public Routes
 	auth := api.Group("/auths")
 	{
+		// User
 		auth.POST("/register", authController.BasicRegister)
+
+		// All Role
 		auth.POST("/login", authController.BasicLogin)
 		auth.POST("/signout", authController.BasicSignOut)
 		auth.GET("/google", authController.GoogleLogin)
