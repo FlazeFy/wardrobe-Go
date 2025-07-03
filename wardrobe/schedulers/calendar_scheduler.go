@@ -65,7 +65,7 @@ func (s *CalendarScheduler) SchedulerCalendarSycnSchedule() {
 				log.Printf("Failed to add calendar event:", err)
 				total_failed++
 			} else {
-				// Repo : Set Schedule Reminded
+				// Service : Update Remind By Id
 				err := s.ScheduleService.UpdateRemindByID(dt.ID, true)
 				if err != nil {
 					log.Printf("Failed to add calendar event:", err)

@@ -168,7 +168,6 @@ func (c *ClothesController) CreateClothes(ctx *gin.Context) {
 	if desc != "" {
 		clothesDesc = &desc
 	}
-
 	var clothesMerk *string
 	merk := ctx.PostForm("clothes_merk")
 	if merk != "" {
@@ -293,6 +292,7 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 		return
 	}
 
+	// Service : Soft Delete Clothes By Id
 	err = c.ClothesService.SoftDeleteClothesById(*userID, clothesID)
 	if err != nil {
 		switch {
@@ -304,7 +304,6 @@ func (c *ClothesController) SoftDeleteClothesById(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "clothes", "soft delete", http.StatusOK, nil, nil)
 }
 
@@ -326,6 +325,7 @@ func (c *ClothesController) RecoverDeletedClothesById(ctx *gin.Context) {
 		return
 	}
 
+	// Service : Recover Deleted Clothes By Id
 	err = c.ClothesService.RecoverDeletedClothesById(*userID, clothesID)
 	if err != nil {
 		switch {
@@ -337,7 +337,6 @@ func (c *ClothesController) RecoverDeletedClothesById(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "clothes", "recover", http.StatusOK, nil, nil)
 }
 
@@ -370,6 +369,5 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "clothes", "hard delete", http.StatusOK, nil, nil)
 }

@@ -21,7 +21,7 @@ import (
 type AuthService interface {
 	BasicRegister(userReq models.User) (*string, error)
 	BasicSignOut(token string) error
-	BasicLogin(loginReq others.LoginRequest) (*string, error)
+	BasicLogin(loginReq others.LoginRequest) (*string, *string, error)
 	GoogleRegister(code string) (*string, error)
 }
 
@@ -140,32 +140,47 @@ func (s *authService) GoogleRegister(code string) (*string, error) {
 	return &token, nil
 }
 
-func (s *authService) BasicLogin(loginReq others.LoginRequest) (*string, error) {
+func (s *authService) BasicLogin(loginReq others.LoginRequest) (*string, *string, error) {
 	var role string
+	// Model
+	var account others.Account
 
-	// Repo : Find By Email
+	// Repo : Find User By Email
 	user, err := s.userRepo.FindByEmail(loginReq.Email)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errors.New("account not found")
-		}
-
-		return nil, err
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, nil, err
 	}
-	role = "user"
+	if user != nil {
+		role = "user"
+		account = user
+	}
+
+	if account == nil {
+		// Repo : Find Admin By Email
+		admin, err := s.adminRepo.FindByEmail(loginReq.Email)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return nil, nil, errors.New("account not found")
+			}
+
+			return nil, nil, err
+		}
+		role = "admin"
+		account = admin
+	}
 
 	// Utils : Check Password
-	if err := utils.CheckPassword(user, loginReq.Password); err != nil {
-		return nil, errors.New("invalid password")
+	if err := utils.CheckPassword(account, loginReq.Password); err != nil {
+		return nil, nil, errors.New("invalid password")
 	}
 
 	// Utils : JWT Token Generate
-	token, err := utils.GenerateToken(user.ID, role)
+	token, err := utils.GenerateToken(account.GetID(), role)
 	if err != nil {
-		return nil, errors.New("failed generating token")
+		return nil, nil, errors.New("failed generating token")
 	}
 
-	return &token, nil
+	return &token, &role, nil
 }
 
 func (s *authService) BasicSignOut(authHeader string) error {

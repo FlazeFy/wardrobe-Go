@@ -5,6 +5,7 @@ import (
 	"time"
 	"wardrobe/config"
 	"wardrobe/models"
+	"wardrobe/models/others"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -55,6 +56,6 @@ func HashPassword(user models.User, password string) (*models.User, error) {
 	return &user, nil
 }
 
-func CheckPassword(u *models.User, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+func CheckPassword(u others.Account, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.GetPassword()), []byte(password))
 }

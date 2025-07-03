@@ -23,7 +23,6 @@ func NewHistoryController(historyService services.HistoryService) *HistoryContro
 func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 	// Service : Get All History
 	history, err := c.HistoryService.GetAllHistory()
-
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):

@@ -46,7 +46,6 @@ func (r *scheduleRepository) FindScheduleByDay(day string, userId uuid.UUID) ([]
 		Where("day = ? AND schedules.created_by = ?", day, userId).
 		Scan(&data)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -66,7 +65,6 @@ func (r *scheduleRepository) CheckScheduleByDayAndClothesID(day string, userID, 
 		Where("day = ? AND created_by = ? AND clothes_id = ?", day, userID, clothesID).
 		First(&data)
 
-	// Response
 	if result.Error != nil {
 		return true, result.Error
 	}
@@ -109,7 +107,6 @@ func (r *scheduleRepository) DeleteScheduleByClothesId(id uuid.UUID) (int64, err
 	// Query
 	result := r.db.Unscoped().Where("clothes_id", id).Delete(&schedule)
 
-	// Response
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -146,7 +143,6 @@ func (r *scheduleRepository) FindScheduleReadyToAssignCalendarTaskByDay(day stri
 		Order("username ASC").
 		Find(&schedules)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}

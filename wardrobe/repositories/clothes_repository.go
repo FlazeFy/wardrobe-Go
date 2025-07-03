@@ -53,7 +53,6 @@ func (r *clothesRepository) FindClothesById(ID uuid.UUID) (*models.Clothes, erro
 	// Query
 	result := r.db.Unscoped().Where("id = ?", ID).First(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -68,7 +67,6 @@ func (r *clothesRepository) CheckClothesByName(clothesName string, userID uuid.U
 	// Query
 	result := r.db.Unscoped().Where("LOWER(clothes_name) = LOWER(?) AND created_by = ?", clothesName, userID).First(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return true, result.Error
 	}
@@ -124,7 +122,6 @@ func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, ca
 
 	result := query.Find(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, 0, result.Error
 	}
@@ -204,7 +201,6 @@ func (r *clothesRepository) FindAllClothesDetail(pagination utils.Pagination, ca
 
 	result := query.Find(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, 0, result.Error
 	}
@@ -222,7 +218,6 @@ func (r *clothesRepository) FindClothesShortInfoById(id uuid.UUID) (*models.Clot
 		Where("id = ?", id).
 		First(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -243,7 +238,6 @@ func (r *clothesRepository) FindClothesLastCreated(ctx string, userID uuid.UUID)
 			Desc:   true,
 		}).First(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -265,7 +259,6 @@ func (r *clothesRepository) FindClothesLastDeleted(ctx string, userID uuid.UUID)
 			Desc:   true,
 		}).First(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -285,7 +278,6 @@ func (r *clothesRepository) FindDeletedClothes(userID uuid.UUID) ([]models.Cloth
 		Order("deleted_at DESC").
 		Find(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -307,7 +299,6 @@ func (r *clothesRepository) FindClothesPlanDestroy(days int) ([]models.ClothesPl
 		Order("username ASC").
 		Find(&clothes)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
 		return nil, errors.New("clothes not found")
 	}
@@ -340,7 +331,6 @@ func (r *clothesRepository) HardDeleteClothesById2(id uuid.UUID) (int64, error) 
 	// Query
 	result := r.db.Unscoped().Where("id", id).Delete(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -370,7 +360,6 @@ func (r *clothesRepository) SchedulerFindUnusedClothes(days int) ([]models.Sched
 		Order("username ASC").
 		Find(&clothes)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
 		return nil, errors.New("clothes not found")
 	}
@@ -398,7 +387,6 @@ func (r *clothesRepository) SchedulerFindUnironedClothes() ([]models.SchedulerCl
 		Order("username ASC").
 		Find(&clothes)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
 		return nil, errors.New("clothes not found")
 	}

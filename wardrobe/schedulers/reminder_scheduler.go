@@ -41,7 +41,7 @@ func (s *ReminderScheduler) SchedulerReminderUnansweredQuestion() {
 		return
 	}
 
-	// Get Unanswered Question
+	// Service : Get Unanswered Question
 	questions, err := s.QuestionService.GetUnansweredQuestion()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -95,7 +95,7 @@ func (s *ReminderScheduler) SchedulerReminderUnansweredQuestion() {
 }
 
 func (s *ReminderScheduler) SchedulerReminderUnusedClothes() {
-	// Service : Get Unused Clothes
+	// Service : Scheduler Get Unused Clothes
 	days := 60
 	clothes, err := s.ClothesService.SchedulerGetUnusedClothes(days)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *ReminderScheduler) SchedulerReminderUnusedClothes() {
 }
 
 func (s *ReminderScheduler) SchedulerReminderUnironedClothes() {
-	// Service : Get Unironed Clothes
+	// Service : Scheduler Get Unironed Clothes
 	clothes, err := s.ClothesService.SchedulerGetUnironedClothes()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -242,7 +242,7 @@ func (s *ReminderScheduler) SchedulerReminderUnironedClothes() {
 func (s *ReminderScheduler) SchedulerReminderWashUsedClothes() {
 	days := 7
 
-	// Service : Get Unwashed Clothes
+	// Service : Scheduler Get Used Clothes Ready To Wash
 	clothes, err := s.ClothesUsedService.SchedulerGetUsedClothesReadyToWash(days)
 	if err != nil {
 		fmt.Println(err.Error())

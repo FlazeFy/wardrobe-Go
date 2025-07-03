@@ -48,7 +48,7 @@ func (s *CleanScheduler) SchedulerCleanHistory() {
 		return
 	}
 
-	// Service : Delete History
+	// Service : Delete History For Last N Days
 	total, err := s.HistoryService.DeleteHistoryForLastNDays(days)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -94,7 +94,7 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 		return
 	}
 
-	// Get Clothes Plan Destroy
+	// Service : Get Clothes Plan Destroy
 	plans, err := s.ClothesService.GetClothesPlanDestroy(days)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -110,21 +110,28 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 		var next *models.ClothesPlanDestroy
 
 		for idx, dt := range plans {
+			// Service : Scheduler Hard Delete Clothes By Id
 			_, err = s.ClothesService.SchedulerHardDeleteClothesById(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
+
+			// Service : Scheduler Hard Delete Clothes Used By Clothes Id
 			_, err = s.ClothesUsedService.DeleteClothesUsedByClothesId(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
+
+			// Service : Scheduler Hard Delete Schedule By Clothes Id
 			_, err = s.ScheduleService.DeleteScheduleByClothesId(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())
 				return
 			}
+
+			// Service : Scheduler Hard Delete Wash By Clothes Id
 			_, err = s.WashService.DeleteWashByClothesId(dt.ID)
 			if err != nil {
 				fmt.Println(err.Error())

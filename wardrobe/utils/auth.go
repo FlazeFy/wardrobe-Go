@@ -46,7 +46,6 @@ func (c *UserContext) GetAdminContact() ([]models.UserContact, error) {
 		Select("username, email, telegram_user_id, telegram_is_valid").
 		Find(&contact)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(contact) == 0 {
 		return nil, errors.New("admin contact not found")
 	}

@@ -43,7 +43,6 @@ func (c *AuthController) BasicRegister(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "user", "register", http.StatusCreated, gin.H{
 		"token": token,
 	}, nil)
@@ -75,7 +74,6 @@ func (c *AuthController) GoogleRegister(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "user", "register", http.StatusCreated, gin.H{
 		"token": token,
 	}, nil)
@@ -92,15 +90,15 @@ func (c *AuthController) BasicLogin(ctx *gin.Context) {
 	}
 
 	// Service : Basic Login
-	token, err := c.AuthService.BasicLogin(req)
+	token, role, err := c.AuthService.BasicLogin(req)
 	if err != nil {
 		utils.BuildResponseMessage(ctx, "failed", "auth", err.Error(), http.StatusBadRequest, nil, nil)
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "user", "login", http.StatusOK, gin.H{
 		"token": token,
+		"role":  role,
 	}, nil)
 }
 
@@ -119,6 +117,5 @@ func (c *AuthController) BasicSignOut(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "user", "sign out", http.StatusOK, nil, nil)
 }

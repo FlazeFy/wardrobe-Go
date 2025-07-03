@@ -25,7 +25,6 @@ func NewDictionaryController(dictionaryService services.DictionaryService) *Dict
 func (c *DictionaryController) GetAllDictionary(ctx *gin.Context) {
 	// Service : Get All Dictionary
 	dictionary, err := c.DictionaryService.GetAllDictionary()
-
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -51,7 +50,6 @@ func (c *DictionaryController) GetDictionaryByType(ctx *gin.Context) {
 
 	// Service : Get Dictionary By Type
 	dictionary, err := c.DictionaryService.GetDictionaryByType(dictionaryType)
-
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -98,7 +96,6 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "dictionary", "post", http.StatusCreated, nil, nil)
 }
 

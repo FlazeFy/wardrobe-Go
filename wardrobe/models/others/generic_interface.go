@@ -1,6 +1,10 @@
 package others
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type (
 	GoogleUser struct {
@@ -8,6 +12,11 @@ type (
 		Email   string `json:"email"`
 		Name    string `json:"name"`
 		Picture string `json:"picture"`
+	}
+	// All Role
+	Account interface {
+		GetID() uuid.UUID
+		GetPassword() string
 	}
 	MyProfile struct {
 		Username        string    `json:"username" gorm:"type:varchar(36);not null"`

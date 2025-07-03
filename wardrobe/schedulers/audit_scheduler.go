@@ -27,14 +27,14 @@ func NewAuditScheduler(
 }
 
 func (s *AuditScheduler) SchedulerAuditError() {
-	// Service : Find All Admin Contact
+	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	// Service : Find All Error
+	// Service : Get All Error Audit
 	errors_list, err := s.ErrorService.GetAllErrorAudit()
 	if err != nil {
 		fmt.Println(err.Error())

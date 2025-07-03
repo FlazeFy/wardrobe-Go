@@ -74,7 +74,6 @@ func (r *clothesUsedRepository) FindClothesUsedHistory(userID uuid.UUID, clothes
 
 	result := query.Find(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -117,7 +116,6 @@ func (r *clothesUsedRepository) DeleteClothesUsedByClothesId(id uuid.UUID) (int6
 	// Query
 	result := r.db.Unscoped().Where("clothes_id", id).Delete(&clothes)
 
-	// Response
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -156,7 +154,6 @@ func (r *clothesUsedRepository) SchedulerFindUsedClothesReadyToWash(days int) ([
 		Order("clothes_useds.created_at DESC").
 		Find(&clothes)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(clothes) == 0 {
 		return nil, errors.New("clothes not found")
 	}

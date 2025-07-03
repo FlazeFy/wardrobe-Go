@@ -114,7 +114,6 @@ func (r *userRepository) FindUserReadyFetchWeather() ([]models.UserReadyFetchWea
 		Order("users.username ASC").
 		Find(&users)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -135,7 +134,6 @@ func (r *userRepository) FindUserContactByID(id uuid.UUID) (*models.UserContact,
 		Where("id = ?", id).
 		First(&contact)
 
-	// Response
 	if result.Error != nil {
 		return nil, result.Error
 	}

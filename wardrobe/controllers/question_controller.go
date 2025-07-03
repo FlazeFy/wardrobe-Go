@@ -23,7 +23,6 @@ func NewQuestionController(questionService services.QuestionService) *QuestionCo
 func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
 	// Service : Get All Question
 	questions, err := c.QuestionService.GetAllQuestion()
-
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -42,7 +41,7 @@ func (c *QuestionController) CreateQuestion(ctx *gin.Context) {
 	// Models
 	var req models.Question
 
-	// Validate
+	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		utils.BuildResponseMessage(ctx, "failed", "question", "invalid request body", http.StatusBadRequest, nil, nil)
 		return

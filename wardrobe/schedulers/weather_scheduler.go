@@ -70,7 +70,7 @@ func (s *WeatherScheduler) BroadCastErrorToAdmin() {
 }
 
 func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
-	// Get User Ready Fetch Weather
+	// Service : Scheduler Get User Ready Fetch Weather
 	users, err := s.UserService.SchedulerGetUserReadyFetchWeather()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -115,7 +115,7 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 				WeatherHitFrom:   "Task Schedule",
 			}
 
-			// Query : Create User Weather
+			// Service : Create User Weather
 			err = s.UserWeatherService.CreateUserWeather(weather, dt.UserID)
 			if err != nil {
 				fmt.Println("failed to create weather: %w", err)

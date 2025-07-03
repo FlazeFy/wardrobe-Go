@@ -40,10 +40,7 @@ func (c *ClothesUsedController) GetClothesUsedHistory(ctx *gin.Context) {
 	} else {
 		clothes_id, err = uuid.Parse(clothes_id_param)
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"status":  "failed",
-				"message": "invalid clothes id",
-			})
+			utils.BuildResponseMessage(ctx, "failed", "clothes used", "invalid id", http.StatusBadRequest, nil, nil)
 			return
 		}
 	}
@@ -91,7 +88,6 @@ func (c *ClothesUsedController) HardDeleteClothesUsedById(ctx *gin.Context) {
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "clothes used", "hard delete", http.StatusOK, nil, nil)
 }
 
@@ -102,12 +98,6 @@ func (c *ClothesUsedController) CreateClothesUsed(ctx *gin.Context) {
 	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		utils.BuildResponseMessage(ctx, "failed", "clothes used", "invalid request body", http.StatusBadRequest, nil, nil)
-		return
-	}
-
-	// Validate Field
-	if req.ClothesId == uuid.Nil {
-		utils.BuildResponseMessage(ctx, "failed", "schedule", "clothes_id is not valid", http.StatusBadRequest, nil, nil)
 		return
 	}
 
@@ -124,20 +114,17 @@ func (c *ClothesUsedController) CreateClothesUsed(ctx *gin.Context) {
 		return
 	}
 
-	// Query : Add Clothes Used
+	// Service : Create Clothes Used
 	clothes_used := models.ClothesUsed{
 		ClothesNote: req.ClothesNote,
 		ClothesId:   req.ClothesId,
 		UsedContext: req.UsedContext,
 	}
-
-	// Service : Create Clothes Used
 	err = c.ClothesUsedService.CreateClothesUsed(&req, *userID)
 	if err != nil {
 		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "clothes used", "post", http.StatusCreated, clothes_used, nil)
 }

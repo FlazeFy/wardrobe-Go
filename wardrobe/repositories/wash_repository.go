@@ -59,7 +59,6 @@ func (r *washRepository) DeleteWashByClothesId(id uuid.UUID) (int64, error) {
 	// Query
 	result := r.db.Unscoped().Where("clothes_id", id).Delete(&wash)
 
-	// Response
 	if result.Error != nil {
 		return 0, result.Error
 	}

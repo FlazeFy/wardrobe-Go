@@ -21,15 +21,14 @@ func AuditTrailMiddleware(db *gorm.DB, activityName string) gin.HandlerFunc {
 			return
 		}
 
-		history := models.AuditTrail{
+		auditTrail := models.AuditTrail{
 			ID:             uuid.New(),
 			UserID:         userID,
 			TypeAuditTrail: activityName,
 			CreatedAt:      time.Now(),
 		}
 
-		err = db.Create(&history).Error
-
+		err = db.Create(&auditTrail).Error
 		if err != nil {
 			log.Printf("failed to write audit log: %v\n", err)
 		}

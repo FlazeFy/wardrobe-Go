@@ -32,3 +32,11 @@ type (
 		TelegramIsValid bool      `json:"telegram_is_valid"`
 	}
 )
+
+// For Generic Interface
+func (a *User) GetID() uuid.UUID {
+	return a.ID
+}
+func (a *User) GetPassword() string {
+	return a.Password
+}

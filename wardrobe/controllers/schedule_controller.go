@@ -68,13 +68,13 @@ func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
 		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
-	dataTwoDayLater, errTwoDayLater := c.ScheduleService.GetScheduleByDay(tomorrow, *userID)
+	// Service : Get Schedule By Day
+	dataTwoDayLater, errTwoDayLater := c.ScheduleService.GetScheduleByDay(twoDaysLater, *userID)
 	if errTwoDayLater != nil && !errors.Is(errTwoDayLater, gorm.ErrRecordNotFound) {
 		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
-	// Response
 	utils.BuildResponseMessage(ctx, "success", "schedule", "get", http.StatusOK, gin.H{
 		"tomorrow":           utils.CheckIfEmpty(dataTommorow),
 		"tomorrow_day":       tomorrow,
@@ -91,16 +91,6 @@ func (c *ScheduleController) CreateSchedule(ctx *gin.Context) {
 	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		utils.BuildResponseMessage(ctx, "failed", "feedback", "invalid request body", http.StatusBadRequest, nil, nil)
-		return
-	}
-
-	// Validate Field
-	if req.Day == "" {
-		utils.BuildResponseMessage(ctx, "failed", "schedule", "day is required", http.StatusBadRequest, nil, nil)
-		return
-	}
-	if req.ClothesId == uuid.Nil {
-		utils.BuildResponseMessage(ctx, "failed", "schedule", "clothes_id is not valid", http.StatusBadRequest, nil, nil)
 		return
 	}
 

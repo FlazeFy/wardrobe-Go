@@ -24,7 +24,6 @@ func NewFeedbackController(feedbackService services.FeedbackService) *FeedbackCo
 func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
 	// Service : Get All Feedback
 	feedback, err := c.FeedbackService.GetAllFeedback()
-
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -56,7 +55,7 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 		return
 	}
 
-	// Service : Add Feedback
+	// Service : Create Feedback
 	err = c.FeedbackService.CreateFeedback(&req, *userID)
 	if err != nil {
 		utils.BuildErrorMessage(ctx, err.Error())

@@ -45,7 +45,6 @@ func (r *errorRepository) FindAllErrorAudit() ([]models.ErrorAudit, error) {
 			},
 		}).Find(&errors_list)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(errors_list) == 0 {
 		return nil, errors.New("error not found")
 	}

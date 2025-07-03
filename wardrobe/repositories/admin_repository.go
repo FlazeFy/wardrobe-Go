@@ -54,11 +54,11 @@ func (r *adminRepository) FindByEmail(email string) (*models.Admin, error) {
 
 	// Query
 	err := r.db.Where("email = ?", email).First(&admin).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return &admin, err
+	return &admin, nil
 }
 
 // For Task Scheduler
@@ -71,7 +71,6 @@ func (r *adminRepository) FindAllAdminContact() ([]models.UserContact, error) {
 		Select("username, email, telegram_user_id, telegram_is_valid").
 		Find(&contact)
 
-	// Response
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) || len(contact) == 0 {
 		return nil, errors.New("admin contact not found")
 	}
