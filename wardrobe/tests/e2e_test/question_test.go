@@ -20,7 +20,7 @@ type ResponseGetAllQuestion struct {
 
 func TestGetAllQuestion(t *testing.T) {
 	var res ResponseGetAllQuestion
-	url := "http://127.0.0.1:9000/api/v2/question"
+	url := "http://127.0.0.1:9000/api/v1/questions"
 
 	// Exec
 	resp, err := http.Get(url)
@@ -38,7 +38,7 @@ func TestGetAllQuestion(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "question fetched", res.Message)
+	assert.Equal(t, "Question fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, item := range res.Data {

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 	"wardrobe/models"
+	"wardrobe/tests"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -48,10 +49,11 @@ type ResponseGetClothesDeleted struct {
 	Status  string                  `json:"status"`
 }
 
+// check this
 func TestGetClothesLastHistory(t *testing.T) {
 	var res ResponseGetClothesLastHistory
-	url := "http://127.0.0.1:9000/api/v2/clothes/last_history"
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := "http://127.0.0.1:9000/api/v1/clothes/last_history"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -72,7 +74,7 @@ func TestGetClothesLastHistory(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "clothes last history fetched", res.Message)
+	assert.Equal(t, "Clothes fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	if res.Data.LastAddedClothes != nil {
@@ -95,8 +97,8 @@ func TestGetClothesLastHistory(t *testing.T) {
 
 func TestGetClothesUsedHistory(t *testing.T) {
 	var res ResponseGetUsedHistory
-	url := "http://127.0.0.1:9000/api/v2/clothes/history/all/desc"
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -117,7 +119,7 @@ func TestGetClothesUsedHistory(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "clothes fetched", res.Message)
+	assert.Equal(t, "Clothes used fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, dt := range res.Data {
@@ -137,15 +139,16 @@ func TestGetClothesUsedHistory(t *testing.T) {
 		assert.IsType(t, "", dt.UsedContext)
 		assert.IsType(t, time.Time{}, dt.CreatedAt)
 		if dt.ClothesNote != nil {
-			assert.IsType(t, "", dt.ClothesNote)
+			assert.IsType(t, new(string), dt.ClothesNote)
 		}
 	}
 }
 
+// check this
 func TestGetAllClothesHeader(t *testing.T) {
 	var res ResponseGetClothesHeader
-	url := "http://127.0.0.1:9000/api/v2/clothes/header/all/desc"
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := "http://127.0.0.1:9000/api/v1/clothes/header/all/desc"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -166,7 +169,7 @@ func TestGetAllClothesHeader(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "clothes fetched", res.Message)
+	assert.Equal(t, "Clothes fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, dt := range res.Data {
@@ -202,10 +205,11 @@ func TestGetAllClothesHeader(t *testing.T) {
 	}
 }
 
+// check this
 func TestGetAllClothesDetail(t *testing.T) {
 	var res ResponseGetClothesDetail
-	url := "http://127.0.0.1:9000/api/v2/clothes/detail/all/desc"
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := "http://127.0.0.1:9000/api/v1/clothes/detail/all/desc"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -226,7 +230,7 @@ func TestGetAllClothesDetail(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "clothes fetched", res.Message)
+	assert.Equal(t, "Clothes fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, dt := range res.Data {
@@ -302,8 +306,8 @@ func TestGetAllClothesDetail(t *testing.T) {
 
 func TestGetDeletedClothes(t *testing.T) {
 	var res ResponseGetClothesDeleted
-	url := "http://127.0.0.1:9000/api/v2/clothes/trash"
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := "http://127.0.0.1:9000/api/v1/clothes/trash"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -324,7 +328,7 @@ func TestGetDeletedClothes(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "clothes fetched", res.Message)
+	assert.Equal(t, "Clothes fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, dt := range res.Data {

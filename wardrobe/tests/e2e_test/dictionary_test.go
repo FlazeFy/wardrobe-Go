@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 	"wardrobe/models"
+	"wardrobe/tests"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,8 @@ type ResponseGetAllDictionary struct {
 
 func TestGetAllDictionary(t *testing.T) {
 	var res ResponseGetAllDictionary
-	url := "http://127.0.0.1:9000/api/v2/dictionary"
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := "http://127.0.0.1:9000/api/v1/dictionaries"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -43,7 +44,7 @@ func TestGetAllDictionary(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "dictionary fetched", res.Message)
+	assert.Equal(t, "Dictionary fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, dt := range res.Data {
@@ -63,8 +64,8 @@ func TestGetAllDictionary(t *testing.T) {
 func TestGetDictionaryByType(t *testing.T) {
 	var res ResponseGetAllDictionary
 	dictionary_type := "clothes_type"
-	url := fmt.Sprintf("http://127.0.0.1:9000/api/v2/dictionary/%s", dictionary_type)
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDgzODk1NjAsImlhdCI6MTc0Nzc4NDc2MCwidXNlcl9pZCI6IjU0YWYyOTEzLTVkMjEtNDgyOC05NDZhLTg2YTYyZTA1OGU1NCJ9.__Ag7Rcz-HInB4pjTzIN2KbBvGdulQIN8jmiU3Y9IZQ"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/dictionaries/%s", dictionary_type)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
 	req, err := http.NewRequest("GET", url, nil)
@@ -85,7 +86,7 @@ func TestGetDictionaryByType(t *testing.T) {
 	assert.NotEmpty(t, res.Status)
 	assert.Equal(t, "success", res.Status)
 	assert.NotEmpty(t, res.Message)
-	assert.Equal(t, "dictionary fetched", res.Message)
+	assert.Equal(t, "Dictionary fetched", res.Message)
 	assert.NotNil(t, res.Data)
 
 	for _, dt := range res.Data {

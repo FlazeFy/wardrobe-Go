@@ -7,15 +7,41 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func AdminFactory() models.Admin {
-	password := "nopass123"
-	hashedPass, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func AdminFactory(username, email, telegramUserId, password *string) models.Admin {
+	var finalUsername string
+	if username != nil && *username != "" {
+		finalUsername = *username
+	} else {
+		finalUsername = gofakeit.Username()
+	}
+
+	var finalEmail string
+	if email != nil && *email != "" {
+		finalEmail = *email
+	} else {
+		finalEmail = gofakeit.Email()
+	}
+
+	var pwd string
+	if password != nil && *password != "" {
+		pwd = *password
+	} else {
+		pwd = "nopass123"
+	}
+	hashedPass, _ := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
+
+	var finalTelegramUserId *string
+	if telegramUserId != nil && *telegramUserId != "" {
+		finalTelegramUserId = telegramUserId
+	} else {
+		finalTelegramUserId = nil
+	}
 
 	return models.Admin{
-		Username:        gofakeit.Username(),
+		Username:        finalUsername,
 		Password:        string(hashedPass),
-		TelegramUserId:  nil,
+		TelegramUserId:  finalTelegramUserId,
 		TelegramIsValid: false,
-		Email:           gofakeit.Email(),
+		Email:           finalEmail,
 	}
 }
