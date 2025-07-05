@@ -44,7 +44,8 @@ func (c *FeedbackController) CreateFeedback(ctx *gin.Context) {
 
 	// Validate
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.BuildResponseMessage(ctx, "failed", "feedback", "invalid request body", http.StatusBadRequest, nil, nil)
+		formattedErrors := utils.BuildValidationError(err)
+		utils.BuildResponseMessage(ctx, "failed", "feedback", formattedErrors, http.StatusBadRequest, nil, nil)
 		return
 	}
 

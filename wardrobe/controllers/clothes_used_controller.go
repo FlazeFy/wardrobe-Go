@@ -97,7 +97,8 @@ func (c *ClothesUsedController) CreateClothesUsed(ctx *gin.Context) {
 
 	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.BuildResponseMessage(ctx, "failed", "clothes used", "invalid request body", http.StatusBadRequest, nil, nil)
+		formattedErrors := utils.BuildValidationError(err)
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", formattedErrors, http.StatusBadRequest, nil, nil)
 		return
 	}
 

@@ -27,7 +27,8 @@ func (c *AuthController) BasicRegister(ctx *gin.Context) {
 
 	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.BuildResponseMessage(ctx, "failed", "register", "invalid request body", http.StatusBadRequest, nil, nil)
+		formattedErrors := utils.BuildValidationError(err)
+		utils.BuildResponseMessage(ctx, "failed", "register", formattedErrors, http.StatusBadRequest, nil, nil)
 		return
 	}
 
@@ -85,7 +86,8 @@ func (c *AuthController) BasicLogin(ctx *gin.Context) {
 
 	// Validate JSON
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.BuildResponseMessage(ctx, "failed", "auth", "invalid request body", http.StatusBadRequest, nil, nil)
+		formattedErrors := utils.BuildValidationError(err)
+		utils.BuildResponseMessage(ctx, "failed", "auth", formattedErrors, http.StatusBadRequest, nil, nil)
 		return
 	}
 
