@@ -1,4 +1,4 @@
-package integrationtest
+package e2etest
 
 import (
 	"bytes"
@@ -20,6 +20,7 @@ type ResponseGetAllQuestion struct {
 	Status  string            `json:"status"`
 }
 
+// API Get : Get All Question
 func TestSuccessGetAllQuestionValidData(t *testing.T) {
 	var res ResponseGetAllQuestion
 	url := "http://127.0.0.1:9000/api/v1/questions"
@@ -62,6 +63,7 @@ func TestSuccessGetAllQuestionValidData(t *testing.T) {
 	}
 }
 
+// API Post : Create Question
 func TestFailedPostCreateQuestionWithShortCharQuestion(t *testing.T) {
 	var res tests.ResponseFailedValidation
 	url := "http://127.0.0.1:9000/api/v1/questions"

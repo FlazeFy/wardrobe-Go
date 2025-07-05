@@ -1,4 +1,4 @@
-package integrationtest
+package e2etest
 
 import (
 	"encoding/json"
