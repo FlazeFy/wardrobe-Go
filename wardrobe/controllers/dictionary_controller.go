@@ -88,8 +88,8 @@ func (c *DictionaryController) CreateDictionary(ctx *gin.Context) {
 	}
 	err := c.DictionaryService.CreateDictionary(&dictionary)
 	if err != nil {
-		if err.Error() == "dictionary already exists" {
-			utils.BuildResponseMessage(ctx, "failed", "dictionary", "already exists", http.StatusConflict, nil, nil)
+		if err == gorm.ErrDuplicatedKey {
+			utils.BuildResponseMessage(ctx, "failed", "dictionary", "conflict", http.StatusConflict, nil, nil)
 			return
 		}
 

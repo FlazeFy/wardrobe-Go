@@ -41,7 +41,7 @@ func (r *dictionaryService) CreateDictionary(dictionary *models.Dictionary) erro
 	// Repo : Find Dictionary By Type
 	_, err := r.dictionaryRepo.FindOneDictionaryByName(dictionary.DictionaryName)
 	if err == nil {
-		return errors.New("dictionary already exist")
+		return gorm.ErrDuplicatedKey
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err

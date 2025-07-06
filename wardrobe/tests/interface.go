@@ -9,3 +9,8 @@ type ResponseFailedValidation struct {
 	Message []ValidationError `json:"message"`
 	Status  string            `json:"status"`
 }
+
+type ResponseSimple struct {
+	Message string `json:"message"`
+	Status  string `json:"status"`
+}

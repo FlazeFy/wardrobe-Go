@@ -11,6 +11,7 @@ var ResponseMessages = map[string]string{
 	"login":       "login",
 	"sign out":    "signed out",
 	"empty":       "not found",
+	"conflict":    "already exist",
 }
 
 // Rules
