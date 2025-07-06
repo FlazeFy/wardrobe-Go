@@ -159,10 +159,6 @@ func (s *authService) BasicLogin(loginReq others.LoginRequest) (*string, *string
 		// Repo : Find Admin By Email
 		admin, err := s.adminRepo.FindByEmail(loginReq.Email)
 		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return nil, nil, errors.New("account not found")
-			}
-
 			return nil, nil, err
 		}
 		role = "admin"

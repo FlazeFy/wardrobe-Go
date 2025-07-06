@@ -1,6 +1,6 @@
 package others
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" binding:"required,min=6,max=36,email"`
+	Password string `json:"password" binding:"required,min=6,max=36"`
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
+	"gorm.io/gorm"
 )
 
 type AuthController struct {
@@ -94,11 +95,20 @@ func (c *AuthController) BasicLogin(ctx *gin.Context) {
 	// Service : Basic Login
 	token, role, err := c.AuthService.BasicLogin(req)
 	if err != nil {
-		utils.BuildResponseMessage(ctx, "failed", "auth", err.Error(), http.StatusBadRequest, nil, nil)
+		if err == gorm.ErrRecordNotFound {
+			utils.BuildResponseMessage(ctx, "failed", "auth", "account not found", http.StatusNotFound, nil, nil)
+			return
+		}
+		if err.Error() == "invalid password" {
+			utils.BuildResponseMessage(ctx, "failed", "auth", err.Error(), http.StatusBadRequest, nil, nil)
+			return
+		}
+
+		utils.BuildErrorMessage(ctx, err.Error())
 		return
 	}
 
-	utils.BuildResponseMessage(ctx, "success", "user", "login", http.StatusOK, gin.H{
+	utils.BuildResponseMessage(ctx, "success", *role, "login", http.StatusOK, gin.H{
 		"token": token,
 		"role":  role,
 	}, nil)
