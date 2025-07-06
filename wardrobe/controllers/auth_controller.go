@@ -122,6 +122,13 @@ func (c *AuthController) BasicSignOut(ctx *gin.Context) {
 		return
 	}
 
+	// Get Role
+	role, errRole := utils.GetRole(ctx)
+	if errRole != nil {
+		utils.BuildResponseMessage(ctx, "failed", "auth", errRole.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
 	// Service : Basic Sign Out
 	err := c.AuthService.BasicSignOut(authHeader)
 	if err != nil {
@@ -129,5 +136,5 @@ func (c *AuthController) BasicSignOut(ctx *gin.Context) {
 		return
 	}
 
-	utils.BuildResponseMessage(ctx, "success", "user", "sign out", http.StatusOK, nil, nil)
+	utils.BuildResponseMessage(ctx, "success", role, "sign out", http.StatusOK, nil, nil)
 }

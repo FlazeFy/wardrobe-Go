@@ -466,3 +466,108 @@ func TestFailedPostBasicRegisterWithUsedEmail(t *testing.T) {
 	assert.Equal(t, "failed", res.Status)
 	assert.Equal(t, "Username or email has already been used", res.Message)
 }
+
+// API POST : Sign Out (Admin)
+func TestSuccessPostSignOutWithValidAdminToken(t *testing.T) {
+	var res tests.ResponseSimple
+	url := "http://127.0.0.1:9000/api/v1/auths/signout"
+
+	// Test Data
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "admin")
+
+	// Exec
+	req, err := http.NewRequest("POST", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "success", res.Status)
+	assert.Equal(t, "Admin signed out", res.Message)
+}
+
+// API POST : Sign Out (User)
+func TestSuccessPostSignOutWithValidUserToken(t *testing.T) {
+	var res tests.ResponseSimple
+	url := "http://127.0.0.1:9000/api/v1/auths/signout"
+
+	// Test Data
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("POST", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "success", res.Status)
+	assert.Equal(t, "User signed out", res.Message)
+}
+
+// API POST : Sign Out All Role
+func TestFailedPostSignOutWithEmptyToken(t *testing.T) {
+	var res tests.ResponseSimple
+	url := "http://127.0.0.1:9000/api/v1/auths/signout"
+
+	// Exec
+	req, err := http.NewRequest("POST", url, nil)
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	assert.Equal(t, "invalid authorization header", res.Message)
+}
+
+func TestFailedPostSignOutWithExpiredToken(t *testing.T) {
+	var res tests.ResponseSimple
+	url := "http://127.0.0.1:9000/api/v1/auths/signout"
+
+	// Exec
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NTI0NDgxMjgsImlhdCI6MTc1MTg0MzMyOCwicm9sZSI6ImFkbWluIiwidXNlcl9pZCI6IjQ3MWMxZWViLWFmZTItNDIzOC1iMjgyLWIyYzEzNWIyNzg0OCJ9.sYP5eHVPo48OTBqZco_yYo7yXotFcXg_aszpSrrBxuo"
+	req, err := http.NewRequest("POST", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	assert.Equal(t, "token already expired", res.Message)
+}

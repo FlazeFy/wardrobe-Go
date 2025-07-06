@@ -37,6 +37,20 @@ func GetUserID(ctx *gin.Context) (*uuid.UUID, error) {
 	}
 }
 
+func GetRole(c *gin.Context) (string, error) {
+	roleVal, exists := c.Get("role")
+	if !exists {
+		return "", errors.New("role not found in context")
+	}
+
+	role, ok := roleVal.(string)
+	if !ok {
+		return "", errors.New("invalid role format in context")
+	}
+
+	return role, nil
+}
+
 func (c *UserContext) GetAdminContact() ([]models.UserContact, error) {
 	// Model
 	var contact []models.UserContact

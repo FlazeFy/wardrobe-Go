@@ -22,7 +22,7 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB, redisClient *redis.Client,
 	api := r.Group("/api/v1")
 
 	// Routes Endpoint
-	SetUpRouteAuth(api, authController)
+	SetUpRouteAuth(api, authController, redisClient)
 	SetUpRouteQuestion(api, questionController)
 	SetUpRouteFeedback(api, feedbackController, redisClient, db)
 	SetUpRouteDictionary(api, dictionaryController, redisClient, db)

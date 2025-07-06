@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"wardrobe/utils"
 
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
@@ -60,7 +61,7 @@ func TemplatePostBasicLogin(t *testing.T, email, password *string, roleAccount s
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "success", result["status"])
-	assert.Equal(t, "User login", result["message"])
+	assert.Equal(t, utils.Capitalize(roleAccount)+" login", result["message"])
 
 	data, ok := result["data"].(map[string]interface{})
 	assert.True(t, ok, "data should be a JSON object")
