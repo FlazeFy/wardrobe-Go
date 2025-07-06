@@ -24,6 +24,16 @@ type dataAuthLogin struct {
 	Token string `json:"token"`
 }
 
+type ResponseAuthRegister struct {
+	Data    dataAuthRegister `json:"data"`
+	Message string           `json:"message"`
+	Status  string           `json:"status"`
+}
+
+type dataAuthRegister struct {
+	Token string `json:"token"`
+}
+
 // API POST : Basic Login (Admin)
 func TestSuccessPostBasicLoginWithValidAdminData(t *testing.T) {
 	// Load Env
@@ -270,4 +280,189 @@ func TestFailedPostBasicLoginWithInvalidEmail(t *testing.T) {
 	// Check Validation Message
 	assert.Equal(t, "Email is not valid", res.Message[0].Error)
 	assert.Equal(t, "Email", res.Message[0].Field)
+}
+
+// API POST : Basic Register (User)
+func TestSuccessPostBasicRegisterWithValidUserData(t *testing.T) {
+	var res ResponseAuthRegister
+	url := "http://127.0.0.1:9000/api/v1/auths/register"
+
+	// Test Data
+	reqBody := map[string]interface{}{
+		"username":         "tester123",
+		"password":         "nopass123",
+		"email":            "tester123456@gmail.com",
+		"telegram_user_id": "1317625123",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "success", res.Status)
+	assert.Equal(t, "User register", res.Message)
+
+	// Check Auth Data
+	assert.IsType(t, "", res.Data.Token)
+}
+
+func TestFailedPostBasicRegisterWithShortCharUsername(t *testing.T) {
+	var res tests.ResponseFailedValidation
+	url := "http://127.0.0.1:9000/api/v1/auths/register"
+
+	// Test Data
+	reqBody := map[string]interface{}{
+		"username":         "test",
+		"password":         "nopass123",
+		"email":            "tester123456@gmail.com",
+		"telegram_user_id": "1317625123",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+
+	// Check Validation Message
+	assert.Equal(t, "Username must be at least 6 characters long", res.Message[0].Error)
+	assert.Equal(t, "Username", res.Message[0].Field)
+}
+
+func TestFailedPostBasicRegisterWithInvalidEmail(t *testing.T) {
+	var res tests.ResponseFailedValidation
+	url := "http://127.0.0.1:9000/api/v1/auths/register"
+
+	// Test Data
+	reqBody := map[string]interface{}{
+		"username":         "tester123",
+		"password":         "nopass123",
+		"email":            "tester123456.com",
+		"telegram_user_id": "1317625123",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+
+	// Check Validation Message
+	assert.Equal(t, "Email is not valid", res.Message[0].Error)
+	assert.Equal(t, "Email", res.Message[0].Field)
+}
+
+func TestFailedPostBasicRegisterWithEmptyPassword(t *testing.T) {
+	var res tests.ResponseFailedValidation
+	url := "http://127.0.0.1:9000/api/v1/auths/register"
+
+	// Test Data
+	reqBody := map[string]interface{}{
+		"username":         "tester123",
+		"password":         "",
+		"email":            "tester123456.com",
+		"telegram_user_id": "1317625123",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+
+	// Check Validation Message
+	assert.Equal(t, "Password is required", res.Message[0].Error)
+	assert.Equal(t, "Password", res.Message[0].Field)
+}
+
+func TestFailedPostBasicRegisterWithUsedEmail(t *testing.T) {
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	var res tests.ResponseSimple
+	url := "http://127.0.0.1:9000/api/v1/auths/register"
+
+	// Test Data
+	userEmail := os.Getenv("USER_EMAIL")
+	reqBody := map[string]interface{}{
+		"username":         "testeruser",
+		"password":         "nopass123",
+		"email":            userEmail,
+		"telegram_user_id": "1317625123",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusConflict, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.Equal(t, "Username or email has already been used", res.Message)
 }
