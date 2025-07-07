@@ -14,6 +14,7 @@ import (
 	"wardrobe/utils"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -23,6 +24,7 @@ type AuthService interface {
 	BasicSignOut(token string) error
 	BasicLogin(loginReq others.LoginRequest) (*string, *string, error)
 	GoogleRegister(code string) (*string, error)
+	GetMyProfile(userID uuid.UUID, role string) (*others.MyProfile, error)
 }
 
 type authService struct {
@@ -219,4 +221,12 @@ func (s *authService) BasicSignOut(authHeader string) error {
 	}
 
 	return nil
+}
+
+func (s *authService) GetMyProfile(userID uuid.UUID, role string) (*others.MyProfile, error) {
+	if role == "admin" {
+		return s.adminRepo.FindById(userID)
+	} else { // user
+		return s.userRepo.FindById(userID)
+	}
 }

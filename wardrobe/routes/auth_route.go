@@ -27,5 +27,6 @@ func SetUpRouteAuth(api *gin.RouterGroup, authController *controllers.AuthContro
 	authAll := protectedAll.Group("/auths")
 	{
 		authAll.POST("/signout", authController.BasicSignOut)
+		authAll.GET("/profile", authController.GetMyProfile)
 	}
 }

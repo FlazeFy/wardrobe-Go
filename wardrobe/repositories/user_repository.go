@@ -15,7 +15,7 @@ type UserRepository interface {
 	FindByUsernameOrEmail(username, email string) (*models.User, error)
 	FindUserContactByID(id uuid.UUID) (*models.UserContact, error)
 	FindByEmail(email string) (*models.User, error)
-	FindById(id string) (*others.MyProfile, error)
+	FindById(id uuid.UUID) (*others.MyProfile, error)
 	CreateUser(user *models.User) (*models.User, error)
 
 	// For Task Scheduler
@@ -63,7 +63,7 @@ func (r *userRepository) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) FindById(id string) (*others.MyProfile, error) {
+func (r *userRepository) FindById(id uuid.UUID) (*others.MyProfile, error) {
 	// Models
 	var user others.MyProfile
 

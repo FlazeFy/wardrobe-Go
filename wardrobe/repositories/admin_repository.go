@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"wardrobe/models"
+	"wardrobe/models/others"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -13,6 +14,7 @@ type AdminRepository interface {
 	FindByEmail(email string) (*models.Admin, error)
 	FindAllContact() ([]models.AdminContact, error)
 	FindAllAdminContact() ([]models.UserContact, error)
+	FindById(id uuid.UUID) (*others.MyProfile, error)
 
 	// For Seeder
 	Create(room *models.Admin) error
@@ -54,6 +56,22 @@ func (r *adminRepository) FindByEmail(email string) (*models.Admin, error) {
 
 	// Query
 	err := r.db.Where("email = ?", email).First(&admin).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &admin, nil
+}
+
+func (r *adminRepository) FindById(id uuid.UUID) (*others.MyProfile, error) {
+	// Models
+	var admin others.MyProfile
+
+	// Query
+	err := r.db.Table("admins").
+		Select("username, email, telegram_is_valid, telegram_user_id, created_at").
+		Where("id = ?", id).
+		First(&admin).Error
 	if err != nil {
 		return nil, err
 	}
