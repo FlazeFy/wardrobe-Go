@@ -35,6 +35,7 @@ type dataAuthRegister struct {
 }
 
 // API POST : Basic Login (Admin)
+// Test Case ID : TC-E2E-AU-001
 func TestSuccessPostBasicLoginWithValidAdminData(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
@@ -79,6 +80,7 @@ func TestSuccessPostBasicLoginWithValidAdminData(t *testing.T) {
 }
 
 // API POST : Basic Login (User)
+// Test Case ID : TC-E2E-AU-002
 func TestSuccessPostBasicLoginWithValidUserData(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
@@ -123,6 +125,7 @@ func TestSuccessPostBasicLoginWithValidUserData(t *testing.T) {
 }
 
 // API POST : Basic Login (All Role)
+// Test Case ID : TC-E2E-AU-003
 func TestFailedPostBasicLoginWithUnregisteredAccount(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
@@ -160,7 +163,8 @@ func TestFailedPostBasicLoginWithUnregisteredAccount(t *testing.T) {
 	assert.Equal(t, "Account not found", res.Message)
 }
 
-func TestFailedPostBasicLoginWithInvalidPassword(t *testing.T) {
+// Test Case ID : TC-E2E-AU-004
+func TestFailedPostBasicLoginWithEmptyPassword(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
 	if err != nil {
@@ -201,6 +205,46 @@ func TestFailedPostBasicLoginWithInvalidPassword(t *testing.T) {
 	assert.Equal(t, "Password", res.Message[0].Field)
 }
 
+// Test Case ID : TC-E2E-AU-005
+func TestFailedPostBasicLoginWithWrongPassword(t *testing.T) {
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	var res ResponseAuthLogin
+	url := "http://127.0.0.1:9000/api/v1/auths/login"
+
+	// Test Data
+	userEmail := os.Getenv("USER_EMAIL")
+	reqBody := map[string]interface{}{
+		"email":    userEmail,
+		"password": "nopass1234",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.Equal(t, "Invalid password", res.Message)
+}
+
+// Test Case ID : TC-E2E-AU-006
 func TestFailedPostBasicLoginWithInvalidCharLengthPassword(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
@@ -242,6 +286,7 @@ func TestFailedPostBasicLoginWithInvalidCharLengthPassword(t *testing.T) {
 	assert.Equal(t, "Password", res.Message[0].Field)
 }
 
+// Test Case ID : TC-E2E-AU-007
 func TestFailedPostBasicLoginWithInvalidEmail(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
@@ -283,6 +328,7 @@ func TestFailedPostBasicLoginWithInvalidEmail(t *testing.T) {
 }
 
 // API POST : Basic Register (User)
+// Test Case ID : TC-E2E-AU-008
 func TestSuccessPostBasicRegisterWithValidUserData(t *testing.T) {
 	var res ResponseAuthRegister
 	url := "http://127.0.0.1:9000/api/v1/auths/register"
@@ -319,6 +365,7 @@ func TestSuccessPostBasicRegisterWithValidUserData(t *testing.T) {
 	assert.IsType(t, "", res.Data.Token)
 }
 
+// Test Case ID : TC-E2E-AU-009
 func TestFailedPostBasicRegisterWithShortCharUsername(t *testing.T) {
 	var res tests.ResponseFailedValidation
 	url := "http://127.0.0.1:9000/api/v1/auths/register"
@@ -355,6 +402,7 @@ func TestFailedPostBasicRegisterWithShortCharUsername(t *testing.T) {
 	assert.Equal(t, "Username", res.Message[0].Field)
 }
 
+// Test Case ID : TC-E2E-AU-010
 func TestFailedPostBasicRegisterWithInvalidEmail(t *testing.T) {
 	var res tests.ResponseFailedValidation
 	url := "http://127.0.0.1:9000/api/v1/auths/register"
@@ -391,6 +439,7 @@ func TestFailedPostBasicRegisterWithInvalidEmail(t *testing.T) {
 	assert.Equal(t, "Email", res.Message[0].Field)
 }
 
+// Test Case ID : TC-E2E-AU-011
 func TestFailedPostBasicRegisterWithEmptyPassword(t *testing.T) {
 	var res tests.ResponseFailedValidation
 	url := "http://127.0.0.1:9000/api/v1/auths/register"
@@ -427,6 +476,7 @@ func TestFailedPostBasicRegisterWithEmptyPassword(t *testing.T) {
 	assert.Equal(t, "Password", res.Message[0].Field)
 }
 
+// Test Case ID : TC-E2E-AU-012
 func TestFailedPostBasicRegisterWithUsedEmail(t *testing.T) {
 	// Load Env
 	err := godotenv.Load("../../.env")
@@ -468,6 +518,7 @@ func TestFailedPostBasicRegisterWithUsedEmail(t *testing.T) {
 }
 
 // API POST : Sign Out (Admin)
+// Test Case ID : TC-E2E-AU-013
 func TestSuccessPostSignOutWithValidAdminToken(t *testing.T) {
 	var res tests.ResponseSimple
 	url := "http://127.0.0.1:9000/api/v1/auths/signout"
@@ -497,6 +548,7 @@ func TestSuccessPostSignOutWithValidAdminToken(t *testing.T) {
 }
 
 // API POST : Sign Out (User)
+// Test Case ID : TC-E2E-AU-014
 func TestSuccessPostSignOutWithValidUserToken(t *testing.T) {
 	var res tests.ResponseSimple
 	url := "http://127.0.0.1:9000/api/v1/auths/signout"
@@ -526,6 +578,7 @@ func TestSuccessPostSignOutWithValidUserToken(t *testing.T) {
 }
 
 // API POST : Sign Out All Role
+// Test Case ID : TC-E2E-AU-015
 func TestFailedPostSignOutWithEmptyToken(t *testing.T) {
 	var res tests.ResponseSimple
 	url := "http://127.0.0.1:9000/api/v1/auths/signout"
@@ -548,6 +601,7 @@ func TestFailedPostSignOutWithEmptyToken(t *testing.T) {
 	assert.Equal(t, "invalid authorization header", res.Message)
 }
 
+// Test Case ID : TC-E2E-AU-016
 func TestFailedPostSignOutWithExpiredToken(t *testing.T) {
 	var res tests.ResponseSimple
 	url := "http://127.0.0.1:9000/api/v1/auths/signout"

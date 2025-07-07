@@ -10,7 +10,7 @@ import (
 
 // History Interface
 type HistoryRepository interface {
-	FindAllHistory() ([]models.History, error)
+	FindAllHistory(userID *uuid.UUID) ([]models.GetHistory, error)
 	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
 	CreateHistory(history *models.History, userID uuid.UUID) error
 	// Task Scheduler
@@ -29,12 +29,17 @@ func NewHistoryRepository(db *gorm.DB) HistoryRepository {
 	return &historyRepository{db: db}
 }
 
-func (r *historyRepository) FindAllHistory() ([]models.History, error) {
+func (r *historyRepository) FindAllHistory(userID *uuid.UUID) ([]models.GetHistory, error) {
 	// Model
-	var histories []models.History
+	var histories []models.GetHistory
 
-	// Query
-	if err := r.db.Preload("User").Find(&histories).Error; err != nil {
+	query := r.db.Table("histories").
+		Select("histories.id, history_type, history_context, histories.created_at, username").
+		Joins("JOIN users ON users.id = histories.created_by")
+	if userID != nil {
+		query = query.Where("created_by = ?", userID)
+	}
+	if err := query.Find(&histories).Error; err != nil {
 		return nil, err
 	}
 	if len(histories) == 0 {

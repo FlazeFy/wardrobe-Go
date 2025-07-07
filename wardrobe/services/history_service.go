@@ -9,7 +9,7 @@ import (
 
 // History Interface
 type HistoryService interface {
-	GetAllHistory() ([]models.History, error)
+	GetAllHistory(userID *uuid.UUID) ([]models.GetHistory, error)
 	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
 
 	// Task Scheduler
@@ -28,8 +28,8 @@ func NewHistoryService(historyRepo repositories.HistoryRepository) HistoryServic
 	}
 }
 
-func (r *historyService) GetAllHistory() ([]models.History, error) {
-	return r.historyRepo.FindAllHistory()
+func (r *historyService) GetAllHistory(userID *uuid.UUID) ([]models.GetHistory, error) {
+	return r.historyRepo.FindAllHistory(userID)
 }
 
 func (r *historyService) HardDeleteHistoryByID(ID, createdBy uuid.UUID) error {
