@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"wardrobe/models/others"
 	"wardrobe/utils"
 
 	"github.com/joho/godotenv"
@@ -75,4 +76,17 @@ func TemplatePostBasicLogin(t *testing.T, email, password *string, roleAccount s
 	assert.NotEmpty(t, role)
 
 	return token, role
+}
+
+func TemplatePagination(t *testing.T, data others.Metadata) {
+	// Pagination
+	assert.NotEmpty(t, data.Limit)
+	assert.NotEmpty(t, data.Page)
+	assert.NotEmpty(t, data.Total)
+	assert.NotEmpty(t, data.TotalPages)
+
+	assert.IsType(t, 0, data.Limit)
+	assert.IsType(t, 0, data.Page)
+	assert.IsType(t, 0, data.Total)
+	assert.IsType(t, 0, data.TotalPages)
 }

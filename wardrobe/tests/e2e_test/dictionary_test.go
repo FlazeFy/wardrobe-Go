@@ -21,7 +21,7 @@ type ResponseGetAllDictionary struct {
 	Status  string              `json:"status"`
 }
 
-// API GET : Get All Dictionary With Valid Data
+// API GET : Get All Dictionary
 func TestSuccessGetAllDictionaryWithValidData(t *testing.T) {
 	var res ResponseGetAllDictionary
 	url := "http://127.0.0.1:9000/api/v1/dictionaries"

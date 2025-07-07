@@ -13,6 +13,12 @@ type (
 		Name    string `json:"name"`
 		Picture string `json:"picture"`
 	}
+	Metadata struct {
+		Total      int `json:"total"`
+		Page       int `json:"page"`
+		Limit      int `json:"limit"`
+		TotalPages int `json:"total_pages"`
+	}
 	// All Role
 	Account interface {
 		GetID() uuid.UUID

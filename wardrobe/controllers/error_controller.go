@@ -29,7 +29,7 @@ func (c *ErrorController) GetAllError(ctx *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
-			utils.BuildResponseMessage(ctx, "failed", "error", "get", http.StatusNotFound, nil, nil)
+			utils.BuildResponseMessage(ctx, "failed", "error", "empty", http.StatusNotFound, nil, nil)
 		default:
 			utils.BuildErrorMessage(ctx, err.Error())
 		}
