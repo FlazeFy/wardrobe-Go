@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
+	"wardrobe/models/others"
 	"wardrobe/tests"
 
 	"github.com/joho/godotenv"
@@ -32,6 +34,12 @@ type ResponseAuthRegister struct {
 
 type dataAuthRegister struct {
 	Token string `json:"token"`
+}
+
+type ResponseAuthMyProfile struct {
+	Data    others.MyProfile `json:"data"`
+	Message string           `json:"message"`
+	Status  string           `json:"status"`
 }
 
 // API POST : Basic Login (Admin)
@@ -624,4 +632,80 @@ func TestFailedPostSignOutWithExpiredToken(t *testing.T) {
 	// Get Template Test
 	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 	assert.Equal(t, "token already expired", res.Message)
+}
+
+// API GET : Get My Profile
+// Test Case ID : TC-E2E-AU-017
+func TestSuccessGetMyProfileWithValidDataAdminAndUser(t *testing.T) {
+	roles := []string{"user", "admin"}
+
+	for _, role := range roles {
+		var res ResponseAuthMyProfile
+		url := "http://127.0.0.1:9000/api/v1/auths/profile"
+		token, _ := tests.TemplatePostBasicLogin(t, nil, nil, role)
+
+		// Exec
+		req, err := http.NewRequest("GET", url, nil)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		// Prepare Test
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		err = json.Unmarshal(body, &res)
+		assert.NoError(t, err)
+
+		// Get Template Test
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.NotEmpty(t, res.Status)
+		assert.Equal(t, "success", res.Status)
+		assert.NotEmpty(t, res.Message)
+		assert.Equal(t, "Profile fetched", res.Message)
+
+		// Check Object
+		assert.NotEmpty(t, res.Data.Username)
+		assert.NotEmpty(t, res.Data.Email)
+		assert.NotEmpty(t, res.Data.CreatedAt)
+
+		// Check Data Type
+		assert.IsType(t, "", res.Data.Email)
+		assert.IsType(t, "", res.Data.Username)
+		assert.IsType(t, true, res.Data.TelegramIsValid)
+		if res.Data.TelegramUserId != nil {
+			assert.IsType(t, "", *res.Data.TelegramUserId)
+		}
+		assert.IsType(t, time.Time{}, res.Data.CreatedAt)
+	}
+}
+
+// Test Case ID : TC-E2E-AU-018
+func TestFailedGetMyProfileWithInvalidTokenAdminAndUser(t *testing.T) {
+	tokens := []string{"d91ue09sad09", "a89usd8u1a"}
+
+	for _, token := range tokens {
+		var res ResponseAuthMyProfile
+		url := "http://127.0.0.1:9000/api/v1/auths/profile"
+
+		// Exec
+		req, err := http.NewRequest("GET", url, nil)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		// Prepare Test
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		err = json.Unmarshal(body, &res)
+		assert.NoError(t, err)
+
+		// Get Template Test
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		assert.NotEmpty(t, res.Message)
+		assert.Equal(t, "invalid or expired token", res.Message)
+	}
 }
