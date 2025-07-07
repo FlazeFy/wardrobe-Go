@@ -3,11 +3,15 @@ package services
 import (
 	"wardrobe/models"
 	"wardrobe/repositories"
+	"wardrobe/utils"
 )
 
 // Error Interface
 type ErrorService interface {
-	GetAllErrorAudit() ([]models.ErrorAudit, error)
+	GetAllError(pagination utils.Pagination) ([]models.ErrorAudit, int64, error)
+
+	// For Scheduler
+	SchedulerGetAllErrorAudit() ([]models.ErrorAudit, error)
 }
 
 // Error Struct
@@ -22,12 +26,11 @@ func NewErrorService(errorRepo repositories.ErrorRepository) ErrorService {
 	}
 }
 
-func (s *errorService) GetAllErrorAudit() ([]models.ErrorAudit, error) {
-	// Repo : Get All Error Audit
-	errors_list, err := s.errorRepo.FindAllErrorAudit()
-	if err != nil {
-		return nil, err
-	}
+func (s *errorService) GetAllError(pagination utils.Pagination) ([]models.ErrorAudit, int64, error) {
+	return s.errorRepo.FindAllError(pagination)
+}
 
-	return errors_list, nil
+// For Scheduler
+func (s *errorService) SchedulerGetAllErrorAudit() ([]models.ErrorAudit, error) {
+	return s.errorRepo.FindAllErrorAudit()
 }

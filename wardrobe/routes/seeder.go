@@ -24,7 +24,7 @@ func SetUpSeeder(
 	seeders.SeedFeedbacks(feedbackRepo, userRepo, 10)
 	seeders.SeedHistories(historyRepo, userRepo, 40)
 	seeders.SeedUserTracks(userTrackRepo, userRepo, 15)
-	seeders.SeedErrors(errorRepo, 10)
+	seeders.SeedErrors(errorRepo, 25)
 	seeders.SeedClothes(clothesRepo, userRepo, 200)
 	seeders.SeedUserWeathers(userWeatherRepo, userRepo, 100)
 	seeders.SeedOutfits(outfitRepo, userRepo, 60)

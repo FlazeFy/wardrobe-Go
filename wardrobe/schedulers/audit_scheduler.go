@@ -35,7 +35,7 @@ func (s *AuditScheduler) SchedulerAuditError() {
 	}
 
 	// Service : Get All Error Audit
-	errors_list, err := s.ErrorService.GetAllErrorAudit()
+	errorsList, err := s.ErrorService.SchedulerGetAllErrorAudit()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -43,9 +43,9 @@ func (s *AuditScheduler) SchedulerAuditError() {
 
 	// Send to Telegram
 	datetime := time.Now()
-	if len(contact) > 0 && len(errors_list) > 0 {
+	if len(contact) > 0 && len(errorsList) > 0 {
 		filename := fmt.Sprintf("audit_error_%s.pdf", datetime)
-		err = utils.GeneratePDFErrorAudit(errors_list, filename)
+		err = utils.GeneratePDFErrorAudit(errorsList, filename)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -67,7 +67,7 @@ func (s *AuditScheduler) SchedulerAuditError() {
 
 				doc := tgbotapi.NewDocumentUpload(telegramID, filename)
 				doc.ParseMode = "html"
-				doc.Caption = fmt.Sprintf("[ADMIN] Hello %s, the system just run an audit error, with result of %d error found. Here's the document", dt.Username, len(errors_list))
+				doc.Caption = fmt.Sprintf("[ADMIN] Hello %s, the system just run an audit error, with result of %d error found. Here's the document", dt.Username, len(errorsList))
 
 				_, err = bot.Send(doc)
 				if err != nil {
