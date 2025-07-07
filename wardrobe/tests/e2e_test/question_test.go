@@ -21,7 +21,7 @@ type ResponseGetAllQuestion struct {
 }
 
 // API Get : Get All Question
-func TestSuccessGetAllQuestionValidData(t *testing.T) {
+func TestSuccessGetAllQuestionWithValidData(t *testing.T) {
 	var res ResponseGetAllQuestion
 	url := "http://127.0.0.1:9000/api/v1/questions"
 
@@ -64,6 +64,34 @@ func TestSuccessGetAllQuestionValidData(t *testing.T) {
 }
 
 // API Post : Create Question
+func TestSuccessPostCreateQuestionWithValidData(t *testing.T) {
+	var res tests.ResponseSimple
+	url := "http://127.0.0.1:9000/api/v1/questions"
+
+	// Test Data
+	reqBody := map[string]interface{}{
+		"question": "lorem ipsum",
+	}
+	jsonValue, _ := json.Marshal(reqBody)
+
+	// Exec
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "success", res.Status)
+	assert.Equal(t, "Question created", res.Message)
+}
+
 func TestFailedPostCreateQuestionWithShortCharQuestion(t *testing.T) {
 	var res tests.ResponseFailedValidation
 	url := "http://127.0.0.1:9000/api/v1/questions"
