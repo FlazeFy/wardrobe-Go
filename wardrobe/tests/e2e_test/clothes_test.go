@@ -2,6 +2,7 @@ package e2etest
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -170,7 +171,9 @@ func TestFailedGetClothesLastHistoryWithForbiddenRole(t *testing.T) {
 	assert.Equal(t, "access forbidden for this role", res.Message)
 }
 
-func TestGetClothesUsedHistory(t *testing.T) {
+// API GET : Get Clothes Used History
+// Test Case ID : TC-E2E-CL-004
+func TestSuccessGetClothesUsedHistoryWithValidData(t *testing.T) {
 	var res ResponseGetUsedHistory
 	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
 	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
@@ -217,6 +220,79 @@ func TestGetClothesUsedHistory(t *testing.T) {
 			assert.IsType(t, new(string), dt.ClothesNote)
 		}
 	}
+}
+
+// Test Case ID : TC-E2E-CL-005
+func TestFailedGetClothesUsedHistoryWithEmptyData(t *testing.T) {
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	db := config.ConnectDatabase()
+	clothesRepo := repositories.NewClothesRepository(db)
+	userRepo := repositories.NewUserRepository(db)
+	clothesUsedRepo := repositories.NewClothesUsedRepository(db)
+
+	// Precondition
+	clothesUsedRepo.DeleteAll()
+
+	var res ResponseGetUsedHistory
+	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes used not found", res.Message)
+
+	fmt.Println(len(res.Data))
+
+	// Seeder After Test
+	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 25)
+}
+
+// Test Case ID : TC-E2E-CL-006
+func TestFailedGetClothesUsedHistoryWithForbiddenRole(t *testing.T) {
+	var res ResponseGetAllError
+	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "admin")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "access forbidden for this role", res.Message)
 }
 
 // check this

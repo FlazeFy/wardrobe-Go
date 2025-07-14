@@ -77,6 +77,9 @@ func (r *clothesUsedRepository) FindClothesUsedHistory(userID uuid.UUID, clothes
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	if len(clothes) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
 
 	return clothes, nil
 }
