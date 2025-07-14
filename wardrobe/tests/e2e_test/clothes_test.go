@@ -174,8 +174,11 @@ func TestFailedGetClothesLastHistoryWithForbiddenRole(t *testing.T) {
 // API GET : Get Clothes Used History
 // Test Case ID : TC-E2E-CL-004
 func TestSuccessGetClothesUsedHistoryWithValidData(t *testing.T) {
+	clothesId := "all"
+	order := "desc"
+
 	var res ResponseGetUsedHistory
-	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes_used/history/%s/%s", clothesId, order)
 	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
@@ -239,7 +242,10 @@ func TestFailedGetClothesUsedHistoryWithEmptyData(t *testing.T) {
 	clothesUsedRepo.DeleteAll()
 
 	var res ResponseGetUsedHistory
-	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
+	clothesId := "all"
+	order := "desc"
+
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes_used/history/%s/%s", clothesId, order)
 	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
 
 	// Exec
@@ -263,16 +269,16 @@ func TestFailedGetClothesUsedHistoryWithEmptyData(t *testing.T) {
 	assert.NotEmpty(t, res.Message)
 	assert.Equal(t, "Clothes used not found", res.Message)
 
-	fmt.Println(len(res.Data))
-
 	// Seeder After Test
 	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 25)
 }
 
 // Test Case ID : TC-E2E-CL-006
 func TestFailedGetClothesUsedHistoryWithForbiddenRole(t *testing.T) {
-	var res ResponseGetAllError
-	url := "http://127.0.0.1:9000/api/v1/clothes_used/history/all/desc"
+	var res tests.ResponseSimple
+	clothesId := "all"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes_used/history/%s/%s", clothesId, order)
 	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "admin")
 
 	// Exec
@@ -295,26 +301,8 @@ func TestFailedGetClothesUsedHistoryWithForbiddenRole(t *testing.T) {
 	assert.Equal(t, "access forbidden for this role", res.Message)
 }
 
-// check this
-func TestGetAllClothesHeader(t *testing.T) {
-	var res ResponseGetClothesHeader
-	url := "http://127.0.0.1:9000/api/v1/clothes/header/all/desc"
-	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
-
-	// Exec
-	req, err := http.NewRequest("GET", url, nil)
-	assert.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+token)
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-
-	// Prepare Test
-	body, err := ioutil.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	err = json.Unmarshal(body, &res)
-	assert.NoError(t, err)
-
+// API GET : Get All Clothes Header
+func TemplateSuccessGetAllClothesHeader(t *testing.T, resp *http.Response, res ResponseGetClothesHeader) {
 	// Get Template Test
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.NotEmpty(t, res.Status)
@@ -354,6 +342,126 @@ func TestGetAllClothesHeader(t *testing.T) {
 			assert.IsType(t, "", dt.ClothesImage)
 		}
 	}
+}
+
+// Test Case ID : TC-E2E-CL-007
+func TestSuccessGetAllClothesHeaderWithValidData(t *testing.T) {
+	var res ResponseGetClothesHeader
+	category := "all"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/header/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Template Success Get All Clothes Header
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	assert.NoError(t, err)
+	TemplateSuccessGetAllClothesHeader(t, resp, res)
+}
+
+// Test Case ID : TC-E2E-CL-010
+func TestSuccessGetAllClothesHeaderWithValidClothesCategory(t *testing.T) {
+	var res ResponseGetClothesHeader
+	category := "bottom_body"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/header/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Template Success Get All Clothes Header
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	assert.NoError(t, err)
+	TemplateSuccessGetAllClothesHeader(t, resp, res)
+}
+
+// Test Case ID : TC-E2E-CL-008
+func TestFailedGetAllClothesHeaderWithEmptyData(t *testing.T) {
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	db := config.ConnectDatabase()
+	userRepo := repositories.NewUserRepository(db)
+	clothesRepo := repositories.NewClothesRepository(db)
+
+	// Precondition
+	clothesRepo.DeleteAll()
+
+	var res ResponseGetClothesHeader
+	category := "all"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/header/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes not found", res.Message)
+
+	// Seeder After Test
+	seeders.SeedClothes(clothesRepo, userRepo, 25)
+}
+
+// Test Case ID : TC-E2E-CL-009
+func TestFailedGetAllClothesHeaderWithInvalidClothesCategory(t *testing.T) {
+	var res tests.ResponseSimple
+	category := "clothes_source"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/header/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes category is not valid", res.Message)
 }
 
 // check this

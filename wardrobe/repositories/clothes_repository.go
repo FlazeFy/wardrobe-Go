@@ -90,7 +90,7 @@ func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, ca
 
 	// Pagination Count
 	offset := (pagination.Page - 1) * pagination.Limit
-	countQuery := r.db.Model(&models.ClothesHeader{}).
+	countQuery := r.db.Table("clothes").
 		Where("created_by = ?", userID).
 		Where("deleted_at IS NULL")
 	if category != "all" {
@@ -124,6 +124,9 @@ func (r *clothesRepository) FindAllClothesHeader(pagination utils.Pagination, ca
 
 	if result.Error != nil {
 		return nil, 0, result.Error
+	}
+	if len(clothes) == 0 {
+		return nil, 0, gorm.ErrRecordNotFound
 	}
 
 	return clothes, total, nil
