@@ -124,6 +124,14 @@ func (c *ClothesController) GetAllClothesDetail(ctx *gin.Context) {
 	// Pagination
 	pagination := utils.GetPagination(ctx)
 
+	if category != "all" {
+		// Validator Contain : Clothes Category
+		if !utils.Contains(config.ClothesCategories, category) {
+			utils.BuildResponseMessage(ctx, "failed", "clothes", "clothes category is not valid", http.StatusBadRequest, nil, nil)
+			return
+		}
+	}
+
 	// Get User ID
 	userID, err := utils.GetUserID(ctx)
 	if err != nil {

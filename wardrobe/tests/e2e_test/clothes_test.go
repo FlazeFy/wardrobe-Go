@@ -464,26 +464,8 @@ func TestFailedGetAllClothesHeaderWithInvalidClothesCategory(t *testing.T) {
 	assert.Equal(t, "Clothes category is not valid", res.Message)
 }
 
-// check this
-func TestGetAllClothesDetail(t *testing.T) {
-	var res ResponseGetClothesDetail
-	url := "http://127.0.0.1:9000/api/v1/clothes/detail/all/desc"
-	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
-
-	// Exec
-	req, err := http.NewRequest("GET", url, nil)
-	assert.NoError(t, err)
-	req.Header.Set("Authorization", "Bearer "+token)
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-
-	// Prepare Test
-	body, err := ioutil.ReadAll(resp.Body)
-	assert.NoError(t, err)
-	err = json.Unmarshal(body, &res)
-	assert.NoError(t, err)
-
+// API GET : Get All Clothes Detail
+func TemplateSuccessGetAllClothesDetail(t *testing.T, resp *http.Response, res ResponseGetClothesDetail) {
 	// Get Template Test
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.NotEmpty(t, res.Status)
@@ -561,6 +543,126 @@ func TestGetAllClothesDetail(t *testing.T) {
 			assert.IsType(t, time.Time{}, *dt.ClothesBuyAt)
 		}
 	}
+}
+
+// Test Case ID : TC-E2E-CL-011
+func TestSuccessGetAllClothesDetailWithValidData(t *testing.T) {
+	var res ResponseGetClothesDetail
+	category := "all"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/detail/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Template Success Get All Clothes Detail
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	assert.NoError(t, err)
+	TemplateSuccessGetAllClothesDetail(t, resp, res)
+}
+
+// Test Case ID : TC-E2E-CL-012
+func TestSuccessGetAllClothesDetailWithValidClothesCategory(t *testing.T) {
+	var res ResponseGetClothesDetail
+	category := "upper_body"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/detail/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Template Success Get All Clothes Detail
+	err = json.NewDecoder(resp.Body).Decode(&res)
+	assert.NoError(t, err)
+	TemplateSuccessGetAllClothesDetail(t, resp, res)
+}
+
+// Test Case ID : TC-E2E-CL-013
+func TestFailedGetAllClothesDetailWithEmptyData(t *testing.T) {
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	db := config.ConnectDatabase()
+	userRepo := repositories.NewUserRepository(db)
+	clothesRepo := repositories.NewClothesRepository(db)
+
+	// Precondition
+	clothesRepo.DeleteAll()
+
+	var res ResponseGetClothesHeader
+	category := "all"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/detail/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes not found", res.Message)
+
+	// Seeder After Test
+	seeders.SeedClothes(clothesRepo, userRepo, 25)
+}
+
+// Test Case ID : TC-E2E-CL-014
+func TestFailedGetAllClothesDetailWithInvalidClothesCategory(t *testing.T) {
+	var res tests.ResponseSimple
+	category := "clothes_source"
+	order := "desc"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/detail/%s/%s", category, order)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes category is not valid", res.Message)
 }
 
 func TestGetDeletedClothes(t *testing.T) {
