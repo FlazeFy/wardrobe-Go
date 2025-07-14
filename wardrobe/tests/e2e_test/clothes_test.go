@@ -6,10 +6,14 @@ import (
 	"net/http"
 	"testing"
 	"time"
+	"wardrobe/config"
 	"wardrobe/models"
+	"wardrobe/repositories"
+	"wardrobe/seeders"
 	"wardrobe/tests"
 
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,8 +53,9 @@ type ResponseGetClothesDeleted struct {
 	Status  string                  `json:"status"`
 }
 
-// check this
-func TestGetClothesLastHistory(t *testing.T) {
+// API GET : Get Clothes Last History
+// Test Case ID : TC-E2E-CL-001
+func TestSuccessGetClothesLastHistoryWithValidData(t *testing.T) {
 	var res ResponseGetClothesLastHistory
 	url := "http://127.0.0.1:9000/api/v1/clothes/last_history"
 	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
@@ -93,6 +98,76 @@ func TestGetClothesLastHistory(t *testing.T) {
 		assert.IsType(t, "", *res.Data.LastAddedClothes)
 		assert.IsType(t, time.Time{}, *res.Data.LastAddedDate)
 	}
+}
+
+// Test Case ID : TC-E2E-CL-002
+func TestFailedGetClothesLastHistoryWithEmptyData(t *testing.T) {
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	db := config.ConnectDatabase()
+	clothesRepo := repositories.NewClothesRepository(db)
+	userRepo := repositories.NewUserRepository(db)
+
+	// Precondition
+	clothesRepo.DeleteAll()
+
+	var res ResponseGetClothesLastHistory
+	url := "http://127.0.0.1:9000/api/v1/clothes/last_history"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes not found", res.Message)
+
+	// Seeder After Test
+	seeders.SeedClothes(clothesRepo, userRepo, 25)
+}
+
+// Test Case ID : TC-E2E-CL-003
+func TestFailedGetClothesLastHistoryWithForbiddenRole(t *testing.T) {
+	var res ResponseGetAllError
+	url := "http://127.0.0.1:9000/api/v1/clothes/last_history"
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "admin")
+
+	// Exec
+	req, err := http.NewRequest("GET", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "access forbidden for this role", res.Message)
 }
 
 func TestGetClothesUsedHistory(t *testing.T) {
