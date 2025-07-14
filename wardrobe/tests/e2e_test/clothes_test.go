@@ -768,6 +768,7 @@ func TestFailedGetDeletedClothesWithEmptyData(t *testing.T) {
 	seeders.SeedClothes(clothesRepo, userRepo, 25)
 }
 
+// API PUT : Recover Deleted Clothes By Id
 // Test Case ID : TC-E2E-CL-017
 func TestSuccessRecoverDeletedClothesByIdWithValidId(t *testing.T) {
 	var res tests.ResponseSimple
@@ -797,6 +798,7 @@ func TestSuccessRecoverDeletedClothesByIdWithValidId(t *testing.T) {
 	assert.Equal(t, "Clothes recovered", res.Message)
 }
 
+// Test Case ID : TC-E2E-CL-018
 func TestFailedRecoverDeletedClothesByIdWithInvalidId(t *testing.T) {
 	var res tests.ResponseSimple
 	clothesId := "93c7d7bf-3aa3-4859-916b-5415ac45bb4b"
@@ -825,6 +827,7 @@ func TestFailedRecoverDeletedClothesByIdWithInvalidId(t *testing.T) {
 	assert.Equal(t, "Clothes not found", res.Message)
 }
 
+// Test Case ID : TC-E2E-CL-019
 func TestFailedRecoverDeletedClothesByIdWithInvalidUUID(t *testing.T) {
 	var res tests.ResponseSimple
 	clothesId := "93c7d7bf-3aa3-4859-916b"
@@ -833,6 +836,94 @@ func TestFailedRecoverDeletedClothesByIdWithInvalidUUID(t *testing.T) {
 
 	// Exec
 	req, err := http.NewRequest("PUT", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Invalid id", res.Message)
+}
+
+// API DELETE : Soft Delete Clothes By Id
+// Test Case ID : TC-E2E-CL-020
+func TestSuccessSoftDeleteClothesByIdWithValidId(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "06acbfe3-936f-4e61-a0d0-320c1685749d"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "success", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes deleted", res.Message)
+}
+
+// Test Case ID : TC-E2E-CL-021
+func TestFailedSoftDeleteClothesByIdWithInvalidId(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "93c7d7bf-3aa3-4859-916b-5415ac45bb4b"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes not found", res.Message)
+}
+
+// Test Case ID : TC-E2E-CL-022
+func TestFailedSoftDeleteClothesByIdWithInvalidUUID(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "93c7d7bf-3aa3-4859-916b"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
 	assert.NoError(t, err)
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := http.DefaultClient.Do(req)
