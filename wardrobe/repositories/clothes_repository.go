@@ -287,6 +287,9 @@ func (r *clothesRepository) FindDeletedClothes(userID uuid.UUID) ([]models.Cloth
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	if len(clothes) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
 
 	return clothes, nil
 }
