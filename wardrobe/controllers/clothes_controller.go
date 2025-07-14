@@ -18,10 +18,11 @@ import (
 
 type ClothesController struct {
 	ClothesService services.ClothesService
+	StatsService   services.StatsService
 }
 
-func NewClothesController(clothesService services.ClothesService) *ClothesController {
-	return &ClothesController{ClothesService: clothesService}
+func NewClothesController(clothesService services.ClothesService, statsService services.StatsService) *ClothesController {
+	return &ClothesController{ClothesService: clothesService, StatsService: statsService}
 }
 
 // Query
@@ -386,4 +387,36 @@ func (c *ClothesController) HardDeleteClothesById(ctx *gin.Context) {
 	}
 
 	utils.BuildResponseMessage(ctx, "success", "clothes", "hard delete", http.StatusOK, nil, nil)
+}
+
+func (c *ClothesController) GetMostContextClothes(ctx *gin.Context) {
+	// Param
+	targetCol := ctx.Param("target_col")
+
+	// Validator : Target Column Validator
+	if !utils.Contains(config.StatsClothesField, targetCol) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes", "target_col is not valid", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Get User ID
+	userID, err := utils.GetUserID(ctx)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "clothes", err.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service: Get Most Context
+	clothes, err := c.StatsService.GetMostUsedContext("clothes", targetCol, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	// Response
+	utils.BuildResponseMessage(ctx, "success", "clothes", "get", http.StatusOK, clothes, nil)
 }

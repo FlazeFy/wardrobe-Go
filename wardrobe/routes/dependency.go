@@ -35,6 +35,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	userTrackRepo := repositories.NewUserTrackRepository(db)
 	outfitUsedRepo := repositories.NewOutfitUsedRepository(db)
 	googleTokenRepo := repositories.NewGoogleTokenRepository(db)
+	statsRepo := repositories.NewStatsRepository(db)
 
 	// Dependency Services
 	adminService := services.NewAdminService(adminRepo)
@@ -49,11 +50,12 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	scheduleService := services.NewScheduleService(scheduleRepo, userRepo, clothesRepo)
 	userService := services.NewUserService(userRepo)
 	userWeatherService := services.NewUserWeatherService(userWeatherRepo)
+	statsService := services.NewStatsService(statsRepo)
 	washService := services.NewWashService(washRepo)
 
 	// Dependency Controller
 	authController := controllers.NewAuthController(authService)
-	clothesController := controllers.NewClothesController(clothesService)
+	clothesController := controllers.NewClothesController(clothesService, statsService)
 	clothesUsedController := controllers.NewClothesUsedController(clothesUsedService)
 	dictionaryController := controllers.NewDictionaryController(dictionaryService)
 	feedbackController := controllers.NewFeedbackController(feedbackService)
