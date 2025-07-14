@@ -943,3 +943,118 @@ func TestFailedSoftDeleteClothesByIdWithInvalidUUID(t *testing.T) {
 	assert.NotEmpty(t, res.Message)
 	assert.Equal(t, "Invalid id", res.Message)
 }
+
+// API DELETE : Hard Delete Clothes By Id
+// Test Case ID : TC-E2E-CL-023
+func TestSuccessHardDeleteClothesByIdWithValidId(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "06acbfe3-936f-4e61-a0d0-320c1685749d"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/destroy/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "success", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes permanentally deleted", res.Message)
+}
+
+// Test Case ID : TC-E2E-CL-024
+func TestFailedHardDeleteClothesByIdWithInvalidId(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "93c7d7bf-3aa3-4859-916b-5415ac45bb4b"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/destroy/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Clothes not found", res.Message)
+}
+
+// Test Case ID : TC-E2E-CL-025
+func TestFailedHardDeleteClothesByIdWithInvalidUUID(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "93c7d7bf-3aa3-4859-916b"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/destroy/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotEmpty(t, res.Status)
+	assert.Equal(t, "failed", res.Status)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "Invalid id", res.Message)
+}
+
+// Test Case ID : TC-E2E-CL-026
+func TestFailedHardDeleteClothesByIdWithForbiddenRole(t *testing.T) {
+	var res tests.ResponseSimple
+	clothesId := "06acbfe3-936f-4e61-a0d0-320c1685749d"
+	url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/clothes/destroy/%s", clothesId)
+	token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "admin")
+
+	// Exec
+	req, err := http.NewRequest("DELETE", url, nil)
+	assert.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	// Prepare Test
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	err = json.Unmarshal(body, &res)
+	assert.NoError(t, err)
+
+	// Get Template Test
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	assert.NotEmpty(t, res.Message)
+	assert.Equal(t, "access forbidden for this role", res.Message)
+}
