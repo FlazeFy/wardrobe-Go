@@ -50,6 +50,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	errorService := services.NewErrorService(errorRepo)
 	feedbackService := services.NewFeedbackService(feedbackRepo)
 	historyService := services.NewHistoryService(historyRepo)
+	outfitUsedService := services.NewOutfitUsedService(outfitUsedRepo)
 	questionService := services.NewQuestionService(questionRepo)
 	scheduleService := services.NewScheduleService(scheduleRepo, userRepo, clothesRepo)
 	userService := services.NewUserService(userRepo)
@@ -69,11 +70,12 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	errorController := controllers.NewErrorController(errorService)
 	userWeatherController := controllers.NewUserWeatherController(userWeatherService, statsService)
 	washController := controllers.NewWashController(washService, statsService)
+	outfitUsedController := controllers.NewOutfitUsedController(outfitUsedService, statsService)
 
 	// Routes Endpoint
 	SetUpRoutes(r, db, redisClient, authController, questionController, feedbackController,
 		dictionaryController, historyController, clothesController, clothesUsedController, scheduleController,
-		errorController, washController, userWeatherController,
+		errorController, washController, userWeatherController, outfitUsedController,
 	)
 
 	// Task Scheduler
