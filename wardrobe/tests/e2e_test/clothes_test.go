@@ -142,7 +142,7 @@ func TestFailedGetClothesLastHistoryWithEmptyData(t *testing.T) {
 	assert.Equal(t, "Clothes not found", res.Message)
 
 	// Seeder After Test
-	seeders.SeedClothes(clothesRepo, userRepo, 25)
+	seeders.SeedClothes(clothesRepo, userRepo, 200)
 }
 
 // Test Case ID : TC-E2E-CL-003
@@ -431,7 +431,7 @@ func TestFailedGetAllClothesHeaderWithEmptyData(t *testing.T) {
 	assert.Equal(t, "Clothes not found", res.Message)
 
 	// Seeder After Test
-	seeders.SeedClothes(clothesRepo, userRepo, 25)
+	seeders.SeedClothes(clothesRepo, userRepo, 200)
 }
 
 // Test Case ID : TC-E2E-CL-009
@@ -632,7 +632,7 @@ func TestFailedGetAllClothesDetailWithEmptyData(t *testing.T) {
 	assert.Equal(t, "Clothes not found", res.Message)
 
 	// Seeder After Test
-	seeders.SeedClothes(clothesRepo, userRepo, 25)
+	seeders.SeedClothes(clothesRepo, userRepo, 200)
 }
 
 // Test Case ID : TC-E2E-CL-014
@@ -765,7 +765,7 @@ func TestFailedGetDeletedClothesWithEmptyData(t *testing.T) {
 	assert.Equal(t, "Clothes not found", res.Message)
 
 	// Seeder After Test
-	seeders.SeedClothes(clothesRepo, userRepo, 25)
+	seeders.SeedClothes(clothesRepo, userRepo, 200)
 }
 
 // API PUT : Recover Deleted Clothes By Id

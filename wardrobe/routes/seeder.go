@@ -30,7 +30,7 @@ func SetUpSeeder(
 	seeders.SeedOutfits(outfitRepo, userRepo, 60)
 
 	// This count per User
-	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 20)
+	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 25)
 	seeders.SeedOutfitRelations(outfitRelationRepo, userRepo, clothesRepo, outfitRepo, 10)
 	seeders.SeedSchedules(scheduleRepo, userRepo, clothesRepo, 7)
 	seeders.SeedOutfitUseds(outfitUsedRepo, userRepo, outfitRepo, 7)
