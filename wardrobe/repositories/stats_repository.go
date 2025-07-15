@@ -12,7 +12,7 @@ import (
 // Stats Interface
 type StatsRepository interface {
 	FindMostUsedContext(tableName, targetCol string, userId uuid.UUID) ([]others.StatsContextTotal, error)
-	FindMonthlyClothesUsedByClothesIdAndYear(year int, clothesId string, userId uuid.UUID) ([]others.StatsContextTotal, error)
+	FindMonthlyClothesUsedByClothesIdAndYear(year int, tableName, targetCol, contextCol, contextId string, userId uuid.UUID) ([]others.StatsContextTotal, error)
 }
 
 // Stats Struct
@@ -48,21 +48,21 @@ func (r *statsRepository) FindMostUsedContext(tableName, targetCol string, userI
 	return stats, nil
 }
 
-func (r *statsRepository) FindMonthlyClothesUsedByClothesIdAndYear(year int, clothesId string, userId uuid.UUID) ([]others.StatsContextTotal, error) {
+func (r *statsRepository) FindMonthlyClothesUsedByClothesIdAndYear(year int, tableName, targetCol, contextCol, contextId string, userId uuid.UUID) ([]others.StatsContextTotal, error) {
 	// Query
-	monthQuery := "TRIM(TO_CHAR(created_at, 'Month'))"
-	yearQuery := "TO_CHAR(created_at, 'YYYY')"
+	monthQuery := "TRIM(TO_CHAR(" + targetCol + ", 'Month'))"
+	yearQuery := "TO_CHAR(" + targetCol + ", 'YYYY')"
 
 	// Models
 	var stats []others.StatsContextTotal
 
 	// Query
-	result := r.db.Table("clothes_useds").
+	result := r.db.Table(tableName).
 		Select(fmt.Sprintf("%s as context, COUNT(1) as total", monthQuery)).
 		Where("created_by", userId)
 
-	if clothesId != "all" {
-		result = result.Where("clothes_id", clothesId)
+	if contextId != "all" {
+		result = result.Where(contextCol, contextId)
 	}
 
 	result = result.Where(fmt.Sprintf("%s = ?", yearQuery), strconv.Itoa(year)).

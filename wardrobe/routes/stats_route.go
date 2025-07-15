@@ -28,6 +28,7 @@ func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.Clothe
 		statsUserMonthly := statsUser.Group("/monthly")
 		{
 			statsUserMonthly.GET("/clothes_used/:clothes_id/:year", clothesUsedController.GetMonthlyClothesUsedByClothesIdAndYear)
+			statsUserMonthly.GET("/wash/:clothes_id/:year", washController.GetMonthlyWashByClothesIdAndYear)
 		}
 	}
 }

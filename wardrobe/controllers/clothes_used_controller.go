@@ -196,7 +196,7 @@ func (c *ClothesUsedController) GetMonthlyClothesUsedByClothesIdAndYear(ctx *gin
 	}
 
 	// Service: Get Most Context
-	clothes, err := c.StatsService.GetMonthlyClothesUsedByClothesIdAndYear(year, clothesId, *userID)
+	clothes, err := c.StatsService.GetMonthlyClothesUsedByClothesIdAndYear(year, "clothes_useds", "created_at", "clothes_id", clothesId, *userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.BuildResponseMessage(ctx, "failed", "clothes used", "empty", http.StatusNotFound, nil, nil)
 		return
