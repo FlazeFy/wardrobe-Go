@@ -9,12 +9,17 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.ClothesController, redisClient *redis.Client, db *gorm.DB) {
+func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.ClothesController, clothesUsedController *controllers.ClothesUsedController,
+	redisClient *redis.Client, db *gorm.DB) {
 	// Protected Routes - User
 	protectedUser := api.Group("/")
 	protectedUser.Use(middleware.AuthMiddleware(redisClient, "user"))
 	statsUser := protectedUser.Group("/stats")
 	{
-		statsUser.GET("/most_context/:target_col", clothesController.GetMostContextClothes)
+		statsUserMostContext := statsUser.Group("/most_context")
+		{
+			statsUserMostContext.GET("/clothes/:target_col", clothesController.GetMostContextClothes)
+			statsUserMostContext.GET("/clothes_used/:target_col", clothesUsedController.GetMostContextClothesUseds)
+		}
 	}
 }

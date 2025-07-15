@@ -32,5 +32,5 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB, redisClient *redis.Client,
 	SetUpRouteClothes(api, clothesController, redisClient, db)
 	SetUpRouteClothesUsed(api, clothesUsedController, redisClient, db)
 	SetUpRouteError(api, errorController, redisClient, db)
-	SetUpRouteStats(api, clothesController, redisClient, db)
+	SetUpRouteStats(api, clothesController, clothesUsedController, redisClient, db)
 }

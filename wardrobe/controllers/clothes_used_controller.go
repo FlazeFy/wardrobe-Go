@@ -15,10 +15,14 @@ import (
 
 type ClothesUsedController struct {
 	ClothesUsedService services.ClothesUsedService
+	StatsService       services.StatsService
 }
 
-func NewClothesUsedController(clothesUsedService services.ClothesUsedService) *ClothesUsedController {
-	return &ClothesUsedController{ClothesUsedService: clothesUsedService}
+func NewClothesUsedController(clothesUsedService services.ClothesUsedService, statsService services.StatsService) *ClothesUsedController {
+	return &ClothesUsedController{
+		ClothesUsedService: clothesUsedService,
+		StatsService:       statsService,
+	}
 }
 
 func (c *ClothesUsedController) GetClothesUsedHistory(ctx *gin.Context) {
@@ -128,4 +132,36 @@ func (c *ClothesUsedController) CreateClothesUsed(ctx *gin.Context) {
 	}
 
 	utils.BuildResponseMessage(ctx, "success", "clothes used", "post", http.StatusCreated, clothes_used, nil)
+}
+
+func (c *ClothesUsedController) GetMostContextClothesUseds(ctx *gin.Context) {
+	// Param
+	targetCol := ctx.Param("target_col")
+
+	// Validator : Target Column Validator
+	if !utils.Contains(config.StatsClothesUsedsField, targetCol) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", "target_col is not valid", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Get User ID
+	userID, err := utils.GetUserID(ctx)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", err.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service: Get Most Context
+	clothes, err := c.StatsService.GetMostUsedContext("clothes_useds", targetCol, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	// Response
+	utils.BuildResponseMessage(ctx, "success", "clothes used", "get", http.StatusOK, clothes, nil)
 }

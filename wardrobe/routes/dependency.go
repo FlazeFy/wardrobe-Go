@@ -60,7 +60,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	// Dependency Controller
 	authController := controllers.NewAuthController(authService)
 	clothesController := controllers.NewClothesController(clothesService, statsService)
-	clothesUsedController := controllers.NewClothesUsedController(clothesUsedService)
+	clothesUsedController := controllers.NewClothesUsedController(clothesUsedService, statsService)
 	dictionaryController := controllers.NewDictionaryController(dictionaryService)
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 	historyController := controllers.NewHistoryController(historyService)
