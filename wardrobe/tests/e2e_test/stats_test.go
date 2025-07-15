@@ -328,3 +328,101 @@ func TestFailedGetMonthlyContextSpecificWithInvalidUUID(t *testing.T) {
 		assert.Equal(t, td.Message, res.Message)
 	}
 }
+
+func TestFailedGetMonthlyContextWithForbiddenRole(t *testing.T) {
+	var testData = []TestDataGetMonthlyContext{
+		// Test Case ID : TC-E2E-ST-027
+		{ID: "all", Module: "clothes_used", Year: 2025},
+		// Test Case ID : TC-E2E-ST-028
+		{ID: "all", Module: "outfit_used", Year: 2025},
+		// Test Case ID : TC-E2E-ST-029
+		{ID: "all", Module: "wash", Year: 2025},
+	}
+
+	for _, td := range testData {
+		var res tests.ResponseSimple
+		url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/stats/monthly/%s/%s/%d", td.Module, td.ID, td.Year)
+		token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "admin")
+
+		// Exec
+		req, err := http.NewRequest("GET", url, nil)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		// Prepare Test
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		err = json.Unmarshal(body, &res)
+		assert.NoError(t, err)
+
+		// Get Template Test
+		assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+		assert.NotEmpty(t, res.Message)
+		assert.Equal(t, "access forbidden for this role", res.Message)
+	}
+}
+
+func TestFailedGetMonthlyContextWithEmptyData(t *testing.T) {
+	var testData = []TestDataGetMonthlyContext{
+		// Test Case ID : TC-E2E-ST-030
+		{ID: "all", Module: "clothes_used", Message: "Clothes used not found", Year: 2025},
+		// Test Case ID : TC-E2E-ST-031
+		{ID: "all", Module: "outfit_used", Message: "Outfit used not found", Year: 2025},
+		// Test Case ID : TC-E2E-ST-032
+		{ID: "all", Module: "wash", Message: "Wash not found", Year: 2025},
+	}
+
+	// Load Env
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		panic("Error loading ENV")
+	}
+
+	db := config.ConnectDatabase()
+	userRepo := repositories.NewUserRepository(db)
+	clothesRepo := repositories.NewClothesRepository(db)
+	outfitRepo := repositories.NewOutfitRepository(db)
+	outfitUsedRepo := repositories.NewOutfitUsedRepository(db)
+	clothesUsedRepo := repositories.NewClothesUsedRepository(db)
+	washRepo := repositories.NewWashRepository(db)
+
+	// Precondition
+	clothesUsedRepo.DeleteAll()
+	outfitUsedRepo.DeleteAll()
+	washRepo.DeleteAll()
+
+	for _, td := range testData {
+		var res tests.ResponseSimple
+		url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/stats/monthly/%s/%s/%d", td.Module, td.ID, td.Year)
+		token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+		// Exec
+		req, err := http.NewRequest("GET", url, nil)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		// Prepare Test
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		err = json.Unmarshal(body, &res)
+		assert.NoError(t, err)
+
+		// Get Template Test
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+		assert.NotEmpty(t, res.Status)
+		assert.Equal(t, "failed", res.Status)
+		assert.NotEmpty(t, res.Message)
+		assert.Equal(t, td.Message, res.Message)
+	}
+
+	// Seeder After Test
+	seeders.SeedClothesUseds(clothesUsedRepo, userRepo, clothesRepo, 20)
+	seeders.SeedWashs(washRepo, userRepo, clothesRepo, 10)
+	seeders.SeedOutfitUseds(outfitUsedRepo, userRepo, outfitRepo, 7)
+}
