@@ -40,7 +40,7 @@ func (c *OutfitUsedController) GetMonthlyOutfitUsedByClothesIdAndYear(ctx *gin.C
 	if clothesId != "all" {
 		_, err := uuid.Parse(clothesId)
 		if err != nil {
-			utils.BuildResponseMessage(ctx, "failed", "outfit used", "invalid clothes_id", http.StatusBadRequest, nil, nil)
+			utils.BuildResponseMessage(ctx, "failed", "outfit used", "invalid outfit_id", http.StatusBadRequest, nil, nil)
 			return
 		}
 	}

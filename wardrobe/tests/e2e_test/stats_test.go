@@ -28,6 +28,13 @@ type TestDataGetMostContext struct {
 	Message   string
 }
 
+type TestDataGetMonthlyContext struct {
+	ID      string
+	Module  string
+	Message string
+	Year    int
+}
+
 // API GET : Get Most Context Clothes
 func TestSuccessGetMostContextWithValidData(t *testing.T) {
 	var testData = []TestDataGetMostContext{
@@ -232,4 +239,92 @@ func TestFailedGetMostContextWithEmptyData(t *testing.T) {
 	seeders.SeedSchedules(scheduleRepo, userRepo, clothesRepo, 7)
 	seeders.SeedWashs(washRepo, userRepo, clothesRepo, 10)
 	seeders.SeedUserWeathers(userWeatherRepo, userRepo, 100)
+}
+
+// API GET : Get Monthly Context
+func TestSuccessGetMonthlyContextWithValidData(t *testing.T) {
+	var testData = []TestDataGetMonthlyContext{
+		// Test Case ID : TC-E2E-ST-021
+		{ID: "all", Module: "clothes_used", Message: "Clothes used fetched", Year: 2025},
+		// Test Case ID : TC-E2E-ST-022
+		{ID: "all", Module: "outfit_used", Message: "Outfit used fetched", Year: 2025},
+		// Test Case ID : TC-E2E-ST-023
+		{ID: "all", Module: "wash", Message: "Wash fetched", Year: 2025},
+	}
+
+	for _, td := range testData {
+		var res ResponseGetMostContext
+		url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/stats/monthly/%s/%s/%d", td.Module, td.ID, td.Year)
+		token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+		// Exec
+		req, err := http.NewRequest("GET", url, nil)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		// Prepare Test
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		err = json.Unmarshal(body, &res)
+		assert.NoError(t, err)
+
+		// Get Template Test
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		assert.NotEmpty(t, res.Status)
+		assert.Equal(t, "success", res.Status)
+		assert.NotEmpty(t, res.Message)
+		assert.Equal(t, td.Message, res.Message)
+		assert.NotNil(t, res.Data)
+
+		for _, dt := range res.Data {
+			// Check Object
+			assert.NotEmpty(t, dt.Context)
+			assert.NotEmpty(t, dt.Total)
+
+			// Check Data Type
+			assert.IsType(t, "", dt.Context)
+			assert.IsType(t, 0, dt.Total)
+		}
+	}
+}
+
+func TestFailedGetMonthlyContextSpecificWithInvalidUUID(t *testing.T) {
+	var testData = []TestDataGetMonthlyContext{
+		// Test Case ID : TC-E2E-ST-024
+		{ID: "12345-ABCDE", Module: "clothes_used", Message: "Invalid clothes id", Year: 2025},
+		// Test Case ID : TC-E2E-ST-025
+		{ID: "12345-ABCDE", Module: "outfit_used", Message: "Invalid outfit id", Year: 2025},
+		// Test Case ID : TC-E2E-ST-026
+		{ID: "12345-ABCDE", Module: "wash", Message: "Invalid clothes id", Year: 2025},
+	}
+
+	for _, td := range testData {
+		var res tests.ResponseSimple
+		url := fmt.Sprintf("http://127.0.0.1:9000/api/v1/stats/monthly/%s/%s/%d", td.Module, td.ID, td.Year)
+		token, _ := tests.TemplatePostBasicLogin(t, nil, nil, "user")
+
+		// Exec
+		req, err := http.NewRequest("GET", url, nil)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+token)
+		resp, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+
+		// Prepare Test
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		err = json.Unmarshal(body, &res)
+		assert.NoError(t, err)
+
+		// Get Template Test
+		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+		assert.NotEmpty(t, res.Status)
+		assert.Equal(t, "failed", res.Status)
+		assert.NotEmpty(t, res.Message)
+		assert.Equal(t, td.Message, res.Message)
+	}
 }
