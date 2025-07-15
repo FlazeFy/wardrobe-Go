@@ -38,6 +38,7 @@ var WashTypes = []string{"Laundry", "Self-Wash"}
 var StatsClothesField = []string{"clothes_type", "clothes_category", "clothes_gender", "clothes_made_from", "clothes_size", "clothes_merk"}
 var StatsClothesUsedsField = []string{"used_context"}
 var StatsSchedulesField = []string{"day"}
+var StatsWashField = []string{"wash_type"}
 
 // List Menu
 type MenuItem struct {
