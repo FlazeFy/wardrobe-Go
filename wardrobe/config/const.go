@@ -39,6 +39,7 @@ var StatsClothesField = []string{"clothes_type", "clothes_category", "clothes_ge
 var StatsClothesUsedsField = []string{"used_context"}
 var StatsSchedulesField = []string{"day"}
 var StatsWashField = []string{"wash_type"}
+var StatsWeatherField = []string{"weather_condition", "weather_city"}
 
 // List Menu
 type MenuItem struct {

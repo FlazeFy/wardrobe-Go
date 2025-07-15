@@ -18,7 +18,8 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB, redisClient *redis.Client,
 	clothesUsedController *controllers.ClothesUsedController,
 	scheduleController *controllers.ScheduleController,
 	errorController *controllers.ErrorController,
-	washController *controllers.WashController) {
+	washController *controllers.WashController,
+	userWeatherController *controllers.UserWeatherController) {
 
 	// V1 Endpoint
 	api := r.Group("/api/v1")
@@ -33,5 +34,5 @@ func SetUpRoutes(r *gin.Engine, db *gorm.DB, redisClient *redis.Client,
 	SetUpRouteClothes(api, clothesController, redisClient, db)
 	SetUpRouteClothesUsed(api, clothesUsedController, redisClient, db)
 	SetUpRouteError(api, errorController, redisClient, db)
-	SetUpRouteStats(api, clothesController, clothesUsedController, scheduleController, washController, redisClient, db)
+	SetUpRouteStats(api, clothesController, clothesUsedController, scheduleController, washController, userWeatherController, redisClient, db)
 }
