@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"wardrobe/config"
 	"wardrobe/models"
 	"wardrobe/services"
@@ -153,6 +154,49 @@ func (c *ClothesUsedController) GetMostContextClothesUseds(ctx *gin.Context) {
 
 	// Service: Get Most Context
 	clothes, err := c.StatsService.GetMostUsedContext("clothes_useds", targetCol, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	// Response
+	utils.BuildResponseMessage(ctx, "success", "clothes used", "get", http.StatusOK, clothes, nil)
+}
+
+func (c *ClothesUsedController) GetMonthlyClothesUsedByClothesIdAndYear(ctx *gin.Context) {
+	// Param
+	yearStr := ctx.Param("year")
+	clothesId := ctx.Param("clothes_id")
+
+	// Get User ID
+	userID, err := utils.GetUserID(ctx)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", err.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Validator Clothes Id
+	if clothesId != "all" {
+		_, err := uuid.Parse(clothesId)
+		if err != nil {
+			utils.BuildResponseMessage(ctx, "failed", "clothes used", "invalid clothes_id", http.StatusBadRequest, nil, nil)
+			return
+		}
+	}
+
+	// Validator Year
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "clothes used", "invalid year", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service: Get Most Context
+	clothes, err := c.StatsService.GetMonthlyClothesUsedByClothesIdAndYear(year, clothesId, *userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		utils.BuildResponseMessage(ctx, "failed", "clothes used", "empty", http.StatusNotFound, nil, nil)
 		return

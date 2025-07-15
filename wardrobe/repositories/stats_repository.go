@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"fmt"
+	"strconv"
 	"wardrobe/models/others"
 
 	"github.com/google/uuid"
@@ -11,6 +12,7 @@ import (
 // Stats Interface
 type StatsRepository interface {
 	FindMostUsedContext(tableName, targetCol string, userId uuid.UUID) ([]others.StatsContextTotal, error)
+	FindMonthlyClothesUsedByClothesIdAndYear(year int, clothesId string, userId uuid.UUID) ([]others.StatsContextTotal, error)
 }
 
 // Stats Struct
@@ -34,6 +36,38 @@ func (r *statsRepository) FindMostUsedContext(tableName, targetCol string, userI
 		Group(targetCol).
 		Order("total DESC").
 		Limit(7).
+		Find(&stats)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if len(stats) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	return stats, nil
+}
+
+func (r *statsRepository) FindMonthlyClothesUsedByClothesIdAndYear(year int, clothesId string, userId uuid.UUID) ([]others.StatsContextTotal, error) {
+	// Query
+	monthQuery := "TRIM(TO_CHAR(created_at, 'Month'))"
+	yearQuery := "TO_CHAR(created_at, 'YYYY')"
+
+	// Models
+	var stats []others.StatsContextTotal
+
+	// Query
+	result := r.db.Table("clothes_useds").
+		Select(fmt.Sprintf("%s as context, COUNT(1) as total", monthQuery)).
+		Where("created_by", userId)
+
+	if clothesId != "all" {
+		result = result.Where("clothes_id", clothesId)
+	}
+
+	result = result.Where(fmt.Sprintf("%s = ?", yearQuery), strconv.Itoa(year)).
+		Group(monthQuery).
+		Order("total DESC").
 		Find(&stats)
 
 	if result.Error != nil {

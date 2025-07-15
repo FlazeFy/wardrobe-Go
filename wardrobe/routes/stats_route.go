@@ -25,5 +25,9 @@ func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.Clothe
 			statsUserMostContext.GET("/wash/:target_col", washController.GetMostContextWash)
 			statsUserMostContext.GET("/user_weather/:target_col", userWeatherController.GetMostContextUserWeather)
 		}
+		statsUserMonthly := statsUser.Group("/monthly")
+		{
+			statsUserMonthly.GET("/clothes_used/:clothes_id/:year", clothesUsedController.GetMonthlyClothesUsedByClothesIdAndYear)
+		}
 	}
 }

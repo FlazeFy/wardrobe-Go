@@ -13,6 +13,7 @@ import (
 // Stats Interface
 type StatsService interface {
 	GetMostUsedContext(tableName, targetCol string, userId uuid.UUID) ([]others.StatsContextTotal, error)
+	GetMonthlyClothesUsedByClothesIdAndYear(year int, clothesId string, userId uuid.UUID) ([]others.StatsContextTotal, error)
 }
 
 // Stats Struct
@@ -42,6 +43,28 @@ func (s *statsService) GetMostUsedContext(tableName, targetCol string, userId uu
 
 	// Repo : Find Most Used Context
 	stats, err = s.statsRepo.FindMostUsedContext(tableName, targetCol, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache : Store Redis
+	jsonData, _ := json.Marshal(stats)
+	s.statsCache.SetStatsMostUsedContext(s.redisClient, cacheKey, jsonData)
+
+	return stats, nil
+}
+
+func (s *statsService) GetMonthlyClothesUsedByClothesIdAndYear(year int, clothesId string, userId uuid.UUID) ([]others.StatsContextTotal, error) {
+	// Cache : Get Key
+	cacheKey := s.statsCache.StatsKeyMostUsedContext("clothes", string(year)+"_"+clothesId, userId)
+	// Cache : Temp Stats
+	stats, err := s.statsCache.GetStatsMostUsedContext(s.redisClient, cacheKey)
+	if err == nil {
+		return stats, nil
+	}
+
+	// Repo : Find Monthly Clothes Used By Clothes Id And Year
+	stats, err = s.statsRepo.FindMonthlyClothesUsedByClothesIdAndYear(year, clothesId, userId)
 	if err != nil {
 		return nil, err
 	}
