@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // Template Message
 var ResponseMessages = map[string]string{
 	"post":        "created",
@@ -13,6 +15,9 @@ var ResponseMessages = map[string]string{
 	"empty":       "not found",
 	"conflict":    "already exist",
 }
+
+// Rules
+var RedisTime = 10 * time.Minute
 
 // Rules
 var DictionaryTypes = []string{

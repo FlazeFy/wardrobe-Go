@@ -4,6 +4,7 @@ import (
 	"sync"
 	"wardrobe/bots/line"
 	"wardrobe/bots/telegram"
+	"wardrobe/cache"
 	"wardrobe/controllers"
 	"wardrobe/repositories"
 	"wardrobe/services"
@@ -16,6 +17,9 @@ import (
 func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	// Migrate DB
 	MigrateAll(db)
+
+	// Dependency Cache
+	statsCache := cache.NewStatsCache(redisClient)
 
 	// Dependency Repositories
 	adminRepo := repositories.NewAdminRepository(db)
@@ -40,7 +44,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	// Dependency Services
 	adminService := services.NewAdminService(adminRepo)
 	authService := services.NewAuthService(userRepo, adminRepo, googleTokenRepo, redisClient)
-	clothesService := services.NewClothesService(clothesRepo, userRepo)
+	clothesService := services.NewClothesService(clothesRepo, userRepo, scheduleRepo, clothesUsedRepo, washRepo, outfitRelationRepo)
 	clothesUsedService := services.NewClothesUsedService(clothesUsedRepo)
 	dictionaryService := services.NewDictionaryService(dictionaryRepo)
 	errorService := services.NewErrorService(errorRepo)
@@ -50,7 +54,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	scheduleService := services.NewScheduleService(scheduleRepo, userRepo, clothesRepo)
 	userService := services.NewUserService(userRepo)
 	userWeatherService := services.NewUserWeatherService(userWeatherRepo)
-	statsService := services.NewStatsService(statsRepo)
+	statsService := services.NewStatsService(statsRepo, redisClient, statsCache)
 	washService := services.NewWashService(washRepo)
 
 	// Dependency Controller

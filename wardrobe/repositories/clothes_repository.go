@@ -219,7 +219,7 @@ func (r *clothesRepository) FindClothesShortInfoById(id uuid.UUID) (*models.Clot
 	var clothes models.ClothesShortInfo
 
 	// Query
-	result := r.db.Table("clothes").
+	result := r.db.Unscoped().Table("clothes").
 		Select("clothes_name,clothes_type,clothes_category").
 		Where("id = ?", id).
 		First(&clothes)

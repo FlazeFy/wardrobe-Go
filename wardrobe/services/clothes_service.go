@@ -44,10 +44,15 @@ type clothesService struct {
 }
 
 // Clothes Constructor
-func NewClothesService(clothesRepo repositories.ClothesRepository, userRepo repositories.UserRepository) ClothesService {
+func NewClothesService(clothesRepo repositories.ClothesRepository, userRepo repositories.UserRepository, scheduleRepo repositories.ScheduleRepository,
+	clothesUsedRepo repositories.ClothesUsedRepository, washRepo repositories.WashRepository, outfitRelationRepo repositories.OutfitRelationRepository) ClothesService {
 	return &clothesService{
-		clothesRepo: clothesRepo,
-		userRepo:    userRepo,
+		clothesRepo:        clothesRepo,
+		userRepo:           userRepo,
+		scheduleRepo:       scheduleRepo,
+		clothesUsedRepo:    clothesUsedRepo,
+		washRepo:           washRepo,
+		outfitRelationRepo: outfitRelationRepo,
 	}
 }
 
@@ -111,7 +116,7 @@ func (s *clothesService) CreateClothes(clothes *models.Clothes, userID uuid.UUID
 	return clothes, err
 }
 
-func (s *clothesService) HardDeleteClothesById(userID, clothesID uuid.UUID) error {
+func (s *clothesService) HardDeleteClothesById(clothesID, userID uuid.UUID) error {
 	// Get Clothes
 	clothes_old, err := s.clothesRepo.FindClothesShortInfoById(clothesID)
 	if err != nil {
