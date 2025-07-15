@@ -65,7 +65,7 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	feedbackController := controllers.NewFeedbackController(feedbackService)
 	historyController := controllers.NewHistoryController(historyService)
 	questionController := controllers.NewQuestionController(questionService)
-	scheduleController := controllers.NewScheduleController(scheduleService)
+	scheduleController := controllers.NewScheduleController(scheduleService, statsService)
 	errorController := controllers.NewErrorController(errorService)
 
 	// Routes Endpoint

@@ -10,7 +10,7 @@ import (
 )
 
 func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.ClothesController, clothesUsedController *controllers.ClothesUsedController,
-	redisClient *redis.Client, db *gorm.DB) {
+	scheduleController *controllers.ScheduleController, redisClient *redis.Client, db *gorm.DB) {
 	// Protected Routes - User
 	protectedUser := api.Group("/")
 	protectedUser.Use(middleware.AuthMiddleware(redisClient, "user"))
@@ -20,6 +20,7 @@ func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.Clothe
 		{
 			statsUserMostContext.GET("/clothes/:target_col", clothesController.GetMostContextClothes)
 			statsUserMostContext.GET("/clothes_used/:target_col", clothesUsedController.GetMostContextClothesUseds)
+			statsUserMostContext.GET("/schedule/:target_col", scheduleController.GetMostContextSchedule)
 		}
 	}
 }

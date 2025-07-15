@@ -15,10 +15,14 @@ import (
 
 type ScheduleController struct {
 	ScheduleService services.ScheduleService
+	StatsService    services.StatsService
 }
 
-func NewScheduleController(scheduleService services.ScheduleService) *ScheduleController {
-	return &ScheduleController{ScheduleService: scheduleService}
+func NewScheduleController(scheduleService services.ScheduleService, statsService services.StatsService) *ScheduleController {
+	return &ScheduleController{
+		ScheduleService: scheduleService,
+		StatsService:    statsService,
+	}
 }
 
 // Query
@@ -81,6 +85,38 @@ func (c *ScheduleController) GetScheduleForTomorrow(ctx *gin.Context) {
 		"two_days_later":     utils.CheckIfEmpty(dataTwoDayLater),
 		"two_days_later_day": twoDaysLater,
 	}, nil)
+}
+
+func (c *ScheduleController) GetMostContextSchedule(ctx *gin.Context) {
+	// Param
+	targetCol := ctx.Param("target_col")
+
+	// Validator : Target Column Validator
+	if !utils.Contains(config.StatsSchedulesField, targetCol) {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "target_col is not valid", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Get User ID
+	userID, err := utils.GetUserID(ctx)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", err.Error(), http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service: Get Most Context
+	schedule, err := c.StatsService.GetMostUsedContext("schedules", targetCol, *userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "schedule", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	// Response
+	utils.BuildResponseMessage(ctx, "success", "schedule", "get", http.StatusOK, schedule, nil)
 }
 
 // Command
