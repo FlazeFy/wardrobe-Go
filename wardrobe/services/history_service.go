@@ -3,13 +3,14 @@ package services
 import (
 	"wardrobe/models"
 	"wardrobe/repositories"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 )
 
 // History Interface
 type HistoryService interface {
-	GetAllHistory(userID *uuid.UUID) ([]models.GetHistory, error)
+	GetAllHistory(pagination utils.Pagination, userID *uuid.UUID) ([]models.GetHistory, int64, error)
 	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
 
 	// Task Scheduler
@@ -28,8 +29,8 @@ func NewHistoryService(historyRepo repositories.HistoryRepository) HistoryServic
 	}
 }
 
-func (r *historyService) GetAllHistory(userID *uuid.UUID) ([]models.GetHistory, error) {
-	return r.historyRepo.FindAllHistory(userID)
+func (r *historyService) GetAllHistory(pagination utils.Pagination, userID *uuid.UUID) ([]models.GetHistory, int64, error) {
+	return r.historyRepo.FindAllHistory(pagination, userID)
 }
 
 func (r *historyService) HardDeleteHistoryByID(ID, createdBy uuid.UUID) error {

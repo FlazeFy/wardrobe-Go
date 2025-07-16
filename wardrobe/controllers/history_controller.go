@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"wardrobe/services"
 	"wardrobe/utils"
@@ -20,10 +21,23 @@ func NewHistoryController(historyService services.HistoryService) *HistoryContro
 }
 
 // Queries
+// @Summary      Get All History
+// @Description  Returns a list of all users histories
+// @Tags         History
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  others.ResponseGetHistory
+// @Failure      400  {object}  others.ResponseBadRequestInvalidUserId
+// @Failure      404  {object}  others.ResponseNotFound
+// @Failure      500  {object}  others.ResponseInternalServerError
+// @Router       /api/v1/histories [get]
 func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 	var userID *uuid.UUID
 	var role string
 	var errRole, errUser error
+
+	// Pagination
+	pagination := utils.GetPagination(ctx)
 
 	// Get Role
 	role, errRole = utils.GetRole(ctx)
@@ -43,7 +57,7 @@ func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 
 	// Service : Get All History
 	var history interface{}
-	history, err := c.HistoryService.GetAllHistory(userID)
+	history, total, err := c.HistoryService.GetAllHistory(pagination, userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -58,10 +72,27 @@ func (c *HistoryController) GetAllHistory(ctx *gin.Context) {
 		history = utils.StripFields(history, "username")
 	}
 
-	utils.BuildResponseMessage(ctx, "success", "history", "get", http.StatusOK, history, nil)
+	// Response
+	totalPages := int(math.Ceil(float64(total) / float64(pagination.Limit)))
+	metadata := gin.H{
+		"total":       total,
+		"page":        pagination.Page,
+		"limit":       pagination.Limit,
+		"total_pages": totalPages,
+	}
+	utils.BuildResponseMessage(ctx, "success", "history", "get", http.StatusOK, history, metadata)
 }
 
 // Command
+// @Summary      Hard Delete History By Id
+// @Description  Permanentally delete history by Id
+// @Tags         History
+// @Success      200  {object}  others.ResponseHardDeleteHistoryById
+// @Failure      400  {object}  others.ResponseBadRequestInvalidUserId
+// @Failure      404  {object}  others.ResponseNotFound
+// @Failure      500  {object}  others.ResponseInternalServerError
+// @Router       /api/v1/histories/destroy/{id} [delete]
+// @Param        id  path  string  true  "Id of history"
 func (c *HistoryController) HardDeleteHistoryById(ctx *gin.Context) {
 	// Params
 	id := ctx.Param("id")

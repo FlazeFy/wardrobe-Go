@@ -17,10 +17,10 @@ type (
 		User      User      `json:"-" gorm:"foreignKey:CreatedBy;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	}
 	GetHistory struct {
-		ID             uuid.UUID `json:"id"`
-		HistoryType    string    `json:"history_type"`
-		HistoryContext string    `json:"history_context"`
-		CreatedAt      time.Time `json:"created_at"`
-		Username       string    `json:"username"`
+		ID             uuid.UUID `json:"id" example:"a01bd5b9-6cab-48a6-bec3-cb19fe07372e"`
+		HistoryType    string    `json:"history_type" example:"Quam rerum."`
+		HistoryContext string    `json:"history_context" example:"Voluptatibus nihil accusantium."`
+		CreatedAt      time.Time `json:"created_at" example:"a01bd5b9-6cab-48a6-bec3-cb19fe07372e"`
+		Username       string    `json:"username" example:"flazefy"`
 	}
 )

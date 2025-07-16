@@ -127,9 +127,119 @@
                     }
                 }
             }
+        },
+        "/api/v1/histories": {
+            "get": {
+                "description": "Returns a list of all users histories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "History"
+                ],
+                "summary": "Get All History",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseGetHistory"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseBadRequestInvalidUserId"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseInternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/histories/destroy/{id}": {
+            "delete": {
+                "description": "Permanentally delete history by Id",
+                "tags": [
+                    "History"
+                ],
+                "summary": "Hard Delete History By Id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Id of history",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseHardDeleteHistoryById"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseBadRequestInvalidUserId"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseNotFound"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/others.ResponseInternalServerError"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "models.GetHistory": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "a01bd5b9-6cab-48a6-bec3-cb19fe07372e"
+                },
+                "history_context": {
+                    "type": "string",
+                    "example": "Voluptatibus nihil accusantium."
+                },
+                "history_type": {
+                    "type": "string",
+                    "example": "Quam rerum."
+                },
+                "id": {
+                    "type": "string",
+                    "example": "a01bd5b9-6cab-48a6-bec3-cb19fe07372e"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "flazefy"
+                }
+            }
+        },
         "others.LoginData": {
             "type": "object",
             "properties": {
@@ -161,6 +271,23 @@
                     "maxLength": 36,
                     "minLength": 6,
                     "example": "nopassword"
+                }
+            }
+        },
+        "others.Metadata": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         },
@@ -225,6 +352,41 @@
                 "status": {
                     "type": "string",
                     "example": "failed"
+                }
+            }
+        },
+        "others.ResponseGetHistory": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GetHistory"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "History fetched"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/others.Metadata"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "others.ResponseHardDeleteHistoryById": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "history permanentally deleted"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

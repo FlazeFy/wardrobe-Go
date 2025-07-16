@@ -3,6 +3,7 @@ package repositories
 import (
 	"time"
 	"wardrobe/models"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -10,7 +11,7 @@ import (
 
 // History Interface
 type HistoryRepository interface {
-	FindAllHistory(userID *uuid.UUID) ([]models.GetHistory, error)
+	FindAllHistory(pagination utils.Pagination, userID *uuid.UUID) ([]models.GetHistory, int64, error)
 	HardDeleteHistoryByID(ID, createdBy uuid.UUID) error
 	CreateHistory(history *models.History, userID uuid.UUID) error
 	// Task Scheduler
@@ -29,24 +30,39 @@ func NewHistoryRepository(db *gorm.DB) HistoryRepository {
 	return &historyRepository{db: db}
 }
 
-func (r *historyRepository) FindAllHistory(userID *uuid.UUID) ([]models.GetHistory, error) {
+func (r *historyRepository) FindAllHistory(pagination utils.Pagination, userID *uuid.UUID) ([]models.GetHistory, int64, error) {
 	// Model
 	var histories []models.GetHistory
+	var total int64
 
+	// Pagination Count
+	offset := (pagination.Page - 1) * pagination.Limit
+	countQuery := r.db.Table("histories").
+		Joins("JOIN users ON users.id = histories.created_by")
+	if userID != nil {
+		countQuery = countQuery.Where("created_by = ?", userID)
+	}
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Query
 	query := r.db.Table("histories").
 		Select("histories.id, history_type, history_context, histories.created_at, username").
-		Joins("JOIN users ON users.id = histories.created_by")
+		Joins("JOIN users ON users.id = histories.created_by").
+		Limit(pagination.Limit).
+		Offset(offset)
 	if userID != nil {
 		query = query.Where("created_by = ?", userID)
 	}
 	if err := query.Find(&histories).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	if len(histories) == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, 0, gorm.ErrRecordNotFound
 	}
 
-	return histories, nil
+	return histories, total, nil
 }
 
 func (r *historyRepository) CreateHistory(history *models.History, userID uuid.UUID) error {

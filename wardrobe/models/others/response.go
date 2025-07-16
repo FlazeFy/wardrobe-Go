@@ -1,5 +1,7 @@
 package others
 
+import "wardrobe/models"
+
 type (
 	// Auth : BasicLogin
 	ResponsePostBasicLogin struct {
@@ -19,6 +21,18 @@ type (
 	ResponseBadRequestBasicSignOut struct {
 		Message string `json:"message" example:"missing authorization header"`
 		Status  string `json:"status" example:"failed"`
+	}
+	// History : GetHistory
+	ResponseGetHistory struct {
+		Message  string              `json:"message" example:"History fetched"`
+		Status   string              `json:"status" example:"success"`
+		Data     []models.GetHistory `json:"data"`
+		Metadata Metadata            `json:"metadata"`
+	}
+	// History : HardDeleteHistoryById
+	ResponseHardDeleteHistoryById struct {
+		Message string `json:"message" example:"history permanentally deleted"`
+		Status  string `json:"status" example:"success"`
 	}
 	// For Response
 	ResponseBadRequest struct {
