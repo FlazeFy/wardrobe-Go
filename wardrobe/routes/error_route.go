@@ -16,5 +16,6 @@ func SetUpRouteError(api *gin.RouterGroup, errorController *controllers.ErrorCon
 	errorsAdmin := protectedAdmin.Group("/errors")
 	{
 		errorsAdmin.GET("/", errorController.GetAllError)
+		errorsAdmin.DELETE("/destroy/:id", errorController.HardDeleteErrorById)
 	}
 }
