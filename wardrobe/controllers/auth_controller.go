@@ -82,6 +82,17 @@ func (c *AuthController) GoogleRegister(ctx *gin.Context) {
 	}, nil)
 }
 
+// @Summary      Post Basic Login
+// @Description  Login to the Apps using basic login
+// @Tags         Auth
+// @Accept       application/json
+// @Produce      json
+// @Param        request  body  others.LoginRequest true  "Post Basic Login Request Body"
+// @Success      200  {object}  others.ResponsePostBasicLogin
+// @Failure      400  {object}  others.ResponseBadRequest
+// @Failure      404  {object}  others.ResponseNotFound
+// @Failure      500  {object}  others.ResponseInternalServerError
+// @Router       /api/v1/auths/login [post]
 func (c *AuthController) BasicLogin(ctx *gin.Context) {
 	// Models
 	var req others.LoginRequest
@@ -115,6 +126,14 @@ func (c *AuthController) BasicLogin(ctx *gin.Context) {
 	}, nil)
 }
 
+// @Summary      Post Basic Sign Out
+// @Description  Sign Out from the Apps
+// @Tags         Auth
+// @Accept       application/json
+// @Produce      json
+// @Success      200  {object}  others.ResponsePostBasicSignOut
+// @Failure      400  {object}  others.ResponseBadRequestBasicSignOut
+// @Router       /api/v1/auths/signout [post]
 func (c *AuthController) BasicSignOut(ctx *gin.Context) {
 	// Header
 	authHeader := ctx.GetHeader("Authorization")
@@ -140,6 +159,15 @@ func (c *AuthController) BasicSignOut(ctx *gin.Context) {
 	utils.BuildResponseMessage(ctx, "success", role, "sign out", http.StatusOK, nil, nil)
 }
 
+// @Summary      Get My Profile
+// @Description  Get current user profile
+// @Tags         Auth
+// @Accept       application/json
+// @Produce      json
+// @Success      200  {object}  others.MyProfile
+// @Failure      400  {object}  others.ResponseBadRequestInvalidUserId
+// @Failure      404  {object}  others.ResponseNotFound
+// @Router       /api/v1/auths/profile [get]
 func (c *AuthController) GetMyProfile(ctx *gin.Context) {
 	// Get Role
 	role, err := utils.GetRole(ctx)

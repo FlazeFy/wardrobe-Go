@@ -1,0 +1,196 @@
+basePath: /api/v1
+definitions:
+  others.LoginData:
+    properties:
+      role:
+        example: user
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        type: string
+    type: object
+  others.LoginRequest:
+    properties:
+      email:
+        example: flazen.test@gmail.com
+        maxLength: 36
+        minLength: 6
+        type: string
+      password:
+        example: nopassword
+        maxLength: 36
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  others.MyProfile:
+    properties:
+      created_at:
+        example: "2025-07-16T20:25:19.945914+07:00"
+        type: string
+      email:
+        example: testeruser@gmail.com
+        type: string
+      telegram_is_valid:
+        example: false
+        type: boolean
+      telegram_user_id:
+        example: "1317453312"
+        type: string
+      username:
+        example: testeruser
+        type: string
+    type: object
+  others.ResponseBadRequest:
+    properties:
+      message:
+        example: email is not valid
+        type: string
+      status:
+        example: failed
+        type: string
+    type: object
+  others.ResponseBadRequestBasicSignOut:
+    properties:
+      message:
+        example: missing authorization header
+        type: string
+      status:
+        example: failed
+        type: string
+    type: object
+  others.ResponseBadRequestInvalidUserId:
+    properties:
+      message:
+        example: invalid user id
+        type: string
+      status:
+        example: failed
+        type: string
+    type: object
+  others.ResponseInternalServerError:
+    properties:
+      message:
+        example: something went wrong
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  others.ResponseNotFound:
+    properties:
+      message:
+        example: account not found
+        type: string
+      status:
+        example: failed
+        type: string
+    type: object
+  others.ResponsePostBasicLogin:
+    properties:
+      data:
+        $ref: '#/definitions/others.LoginData'
+      message:
+        example: User login
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  others.ResponsePostBasicSignOut:
+    properties:
+      message:
+        example: User signed out
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+host: localhost:9000
+info:
+  contact:
+    email: flazen.edu@gmail.com
+    name: Leonardho R. Sitanggang
+  description: API Documentation for Wardrobe BE - Go Gin
+  title: Wardrobe API
+  version: "1.0"
+paths:
+  /api/v1/auths/login:
+    post:
+      consumes:
+      - application/json
+      description: Login to the Apps using basic login
+      parameters:
+      - description: Post Basic Login Request Body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/others.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/others.ResponsePostBasicLogin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/others.ResponseBadRequest'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/others.ResponseNotFound'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/others.ResponseInternalServerError'
+      summary: Post Basic Login
+      tags:
+      - Auth
+  /api/v1/auths/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get current user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/others.MyProfile'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/others.ResponseBadRequestInvalidUserId'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/others.ResponseNotFound'
+      summary: Get My Profile
+      tags:
+      - Auth
+  /api/v1/auths/signout:
+    post:
+      consumes:
+      - application/json
+      description: Sign Out from the Apps
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/others.ResponsePostBasicSignOut'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/others.ResponseBadRequestBasicSignOut'
+      summary: Post Basic Sign Out
+      tags:
+      - Auth
+swagger: "2.0"

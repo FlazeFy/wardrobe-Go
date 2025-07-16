@@ -134,15 +134,15 @@ func TestFailedGetMostContextWithInvalidTargetCol(t *testing.T) {
 func TestFailedGetMostContextWithForbiddenRole(t *testing.T) {
 	var testData = []TestDataGetMostContext{
 		// Test Case ID : TC-E2E-ST-011
-		{TargetCol: "clothes_category_invalid", Module: "clothes"},
+		{TargetCol: "clothes_category", Module: "clothes"},
 		// Test Case ID : TC-E2E-ST-012
-		{TargetCol: "used_context_invalid", Module: "clothes_used"},
+		{TargetCol: "used_context", Module: "clothes_used"},
 		// Test Case ID : TC-E2E-ST-013
-		{TargetCol: "day_invalid", Module: "schedule"},
+		{TargetCol: "day", Module: "schedule"},
 		// Test Case ID : TC-E2E-ST-014
-		{TargetCol: "wash_type_invalid", Module: "wash"},
+		{TargetCol: "wash_type", Module: "wash"},
 		// Test Case ID : TC-E2E-ST-015
-		{TargetCol: "weather_condition_invalid", Module: "user_weather"},
+		{TargetCol: "weather_condition", Module: "user_weather"},
 	}
 
 	for _, td := range testData {
