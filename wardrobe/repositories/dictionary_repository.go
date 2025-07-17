@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 	"wardrobe/models"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -12,7 +13,7 @@ import (
 // Dictionary Interface
 type DictionaryRepository interface {
 	CreateDictionary(dictionary *models.Dictionary) error
-	FindAllDictionary() ([]models.Dictionary, error)
+	FindAllDictionary(pagination utils.Pagination) ([]models.Dictionary, int64, error)
 	FindDictionaryByType(dictionaryType string) ([]models.Dictionary, error)
 	FindOneDictionaryByName(dictionaryName string) (*models.Dictionary, error)
 	HardDeleteDictionaryByID(ID uuid.UUID) error
@@ -31,21 +32,33 @@ func NewDictionaryRepository(db *gorm.DB) DictionaryRepository {
 	return &dictionaryRepository{db: db}
 }
 
-func (r *dictionaryRepository) FindAllDictionary() ([]models.Dictionary, error) {
+func (r *dictionaryRepository) FindAllDictionary(pagination utils.Pagination) ([]models.Dictionary, int64, error) {
 	// Model
 	var dictionaries []models.Dictionary
+	var total int64
+
+	// Pagination Count
+	offset := (pagination.Page - 1) * pagination.Limit
+	countQuery := r.db.Model(&models.Dictionary{})
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	// Query
-	if err := r.db.Order("dictionary_type ASC").
+	result := r.db.Order("dictionary_type ASC").
 		Order("dictionary_name ASC").
-		Find(&dictionaries).Error; err != nil {
-		return nil, err
-	}
+		Limit(pagination.Limit).
+		Offset(offset).
+		Find(&dictionaries)
+
 	if len(dictionaries) == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, 0, gorm.ErrRecordNotFound
+	}
+	if result.Error != nil {
+		return nil, 0, result.Error
 	}
 
-	return dictionaries, nil
+	return dictionaries, total, nil
 }
 
 func (r *dictionaryRepository) FindDictionaryByType(dictionaryType string) ([]models.Dictionary, error) {

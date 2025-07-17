@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"wardrobe/config"
 	"wardrobe/models"
@@ -23,8 +24,11 @@ func NewDictionaryController(dictionaryService services.DictionaryService) *Dict
 
 // Queries
 func (c *DictionaryController) GetAllDictionary(ctx *gin.Context) {
+	// Pagination
+	pagination := utils.GetPagination(ctx)
+
 	// Service : Get All Dictionary
-	dictionary, err := c.DictionaryService.GetAllDictionary()
+	dictionary, total, err := c.DictionaryService.GetAllDictionary(pagination)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -35,7 +39,14 @@ func (c *DictionaryController) GetAllDictionary(ctx *gin.Context) {
 		return
 	}
 
-	utils.BuildResponseMessage(ctx, "success", "dictionary", "get", http.StatusOK, dictionary, nil)
+	totalPages := int(math.Ceil(float64(total) / float64(pagination.Limit)))
+	metadata := gin.H{
+		"total":       total,
+		"page":        pagination.Page,
+		"limit":       pagination.Limit,
+		"total_pages": totalPages,
+	}
+	utils.BuildResponseMessage(ctx, "success", "dictionary", "get", http.StatusOK, dictionary, metadata)
 }
 
 func (c *DictionaryController) GetDictionaryByType(ctx *gin.Context) {

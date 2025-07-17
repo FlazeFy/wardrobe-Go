@@ -3,6 +3,7 @@ package services
 import (
 	"wardrobe/models"
 	"wardrobe/repositories"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 )
@@ -11,7 +12,7 @@ import (
 type FeedbackService interface {
 	CreateFeedback(feedback *models.Feedback, userID uuid.UUID) error
 	HardDeleteFeedbackByID(ID uuid.UUID) error
-	GetAllFeedback() ([]models.Feedback, error)
+	GetAllFeedback(pagination utils.Pagination) ([]models.Feedback, int64, error)
 }
 
 // Feedback Struct
@@ -26,8 +27,8 @@ func NewFeedbackService(feedbackRepo repositories.FeedbackRepository) FeedbackSe
 	}
 }
 
-func (r *feedbackService) GetAllFeedback() ([]models.Feedback, error) {
-	return r.feedbackRepo.FindAllFeedback()
+func (r *feedbackService) GetAllFeedback(pagination utils.Pagination) ([]models.Feedback, int64, error) {
+	return r.feedbackRepo.FindAllFeedback(pagination)
 }
 
 func (r *feedbackService) CreateFeedback(feedback *models.Feedback, userID uuid.UUID) error {

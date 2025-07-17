@@ -3,6 +3,7 @@ package repositories
 import (
 	"time"
 	"wardrobe/models"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -11,7 +12,7 @@ import (
 // Feedback Interface
 type FeedbackRepository interface {
 	CreateFeedback(feedback *models.Feedback, userID uuid.UUID) error
-	FindAllFeedback() ([]models.Feedback, error)
+	FindAllFeedback(pagination utils.Pagination) ([]models.Feedback, int64, error)
 	HardDeleteFeedbackByID(ID uuid.UUID) error
 
 	// For Feedback
@@ -28,19 +29,32 @@ func NewFeedbackRepository(db *gorm.DB) FeedbackRepository {
 	return &feedbackRepository{db: db}
 }
 
-func (r *feedbackRepository) FindAllFeedback() ([]models.Feedback, error) {
+func (r *feedbackRepository) FindAllFeedback(pagination utils.Pagination) ([]models.Feedback, int64, error) {
 	// Model
 	var feedbacks []models.Feedback
+	var total int64
+
+	// Pagination Count
+	offset := (pagination.Page - 1) * pagination.Limit
+	countQuery := r.db.Model(&models.Feedback{})
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	// Query
-	if err := r.db.Preload("User").Find(&feedbacks).Error; err != nil {
-		return nil, err
-	}
+	result := r.db.Preload("User").
+		Limit(pagination.Limit).
+		Offset(offset).
+		Find(&feedbacks)
+
 	if len(feedbacks) == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, 0, gorm.ErrRecordNotFound
+	}
+	if result.Error != nil {
+		return nil, 0, result.Error
 	}
 
-	return feedbacks, nil
+	return feedbacks, total, nil
 }
 
 func (r *feedbackRepository) CreateFeedback(feedback *models.Feedback, userID uuid.UUID) error {

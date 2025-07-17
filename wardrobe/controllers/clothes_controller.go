@@ -420,3 +420,36 @@ func (c *ClothesController) GetMostContextClothes(ctx *gin.Context) {
 	// Response
 	utils.BuildResponseMessage(ctx, "success", "clothes", "get", http.StatusOK, clothes, nil)
 }
+
+func (c *ClothesController) GetMostContextClothesByAdmin(ctx *gin.Context) {
+	// Param
+	targetCol := ctx.Param("target_col")
+	userIDStr := ctx.Param("user_id")
+
+	// Validator : Target Column Validator
+	if !utils.Contains(config.StatsClothesField, targetCol) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes", "target_col is not valid", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Parse Param UUID
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		utils.BuildResponseMessage(ctx, "failed", "clothes", "invalid user id", http.StatusBadRequest, nil, nil)
+		return
+	}
+
+	// Service: Get Most Context
+	clothes, err := c.StatsService.GetMostUsedContext("clothes", targetCol, userID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.BuildResponseMessage(ctx, "failed", "clothes", "empty", http.StatusNotFound, nil, nil)
+		return
+	}
+	if err != nil {
+		utils.BuildErrorMessage(ctx, err.Error())
+		return
+	}
+
+	// Response
+	utils.BuildResponseMessage(ctx, "success", "clothes", "get", http.StatusOK, clothes, nil)
+}

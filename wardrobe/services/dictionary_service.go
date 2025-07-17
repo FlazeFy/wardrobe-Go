@@ -4,6 +4,7 @@ import (
 	"errors"
 	"wardrobe/models"
 	"wardrobe/repositories"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -11,7 +12,7 @@ import (
 
 // Dictionary Interface
 type DictionaryService interface {
-	GetAllDictionary() ([]models.Dictionary, error)
+	GetAllDictionary(pagination utils.Pagination) ([]models.Dictionary, int64, error)
 	GetDictionaryByType(dictionaryType string) ([]models.Dictionary, error)
 	CreateDictionary(dictionary *models.Dictionary) error
 	HardDeleteDictionaryByID(ID uuid.UUID) error
@@ -29,8 +30,8 @@ func NewDictionaryService(dictionaryRepo repositories.DictionaryRepository) Dict
 	}
 }
 
-func (r *dictionaryService) GetAllDictionary() ([]models.Dictionary, error) {
-	return r.dictionaryRepo.FindAllDictionary()
+func (r *dictionaryService) GetAllDictionary(pagination utils.Pagination) ([]models.Dictionary, int64, error) {
+	return r.dictionaryRepo.FindAllDictionary(pagination)
 }
 
 func (r *dictionaryService) GetDictionaryByType(dictionaryType string) ([]models.Dictionary, error) {

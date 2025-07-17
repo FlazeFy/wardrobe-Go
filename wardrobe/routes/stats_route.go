@@ -32,4 +32,15 @@ func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.Clothe
 			statsUserMonthly.GET("/outfit_used/:clothes_id/:year", outfitUsedController.GetMonthlyOutfitUsedByClothesIdAndYear)
 		}
 	}
+
+	// Protected Routes - Admin
+	protectedAdmin := api.Group("/")
+	protectedAdmin.Use(middleware.AuthMiddleware(redisClient, "admin"))
+	statsAdmin := protectedAdmin.Group("/stats")
+	{
+		statsAdminMostContext := statsAdmin.Group("/most_context")
+		{
+			statsAdminMostContext.GET("/clothes/:target_col/:user_id", clothesController.GetMostContextClothesByAdmin)
+		}
+	}
 }

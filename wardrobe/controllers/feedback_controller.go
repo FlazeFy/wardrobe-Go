@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"wardrobe/models"
 	"wardrobe/services"
@@ -22,8 +23,11 @@ func NewFeedbackController(feedbackService services.FeedbackService) *FeedbackCo
 
 // Queries
 func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
+	// Pagination
+	pagination := utils.GetPagination(ctx)
+
 	// Service : Get All Feedback
-	feedback, err := c.FeedbackService.GetAllFeedback()
+	feedback, total, err := c.FeedbackService.GetAllFeedback(pagination)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -34,7 +38,14 @@ func (c *FeedbackController) GetAllFeedback(ctx *gin.Context) {
 		return
 	}
 
-	utils.BuildResponseMessage(ctx, "success", "feedback", "get", http.StatusOK, feedback, nil)
+	totalPages := int(math.Ceil(float64(total) / float64(pagination.Limit)))
+	metadata := gin.H{
+		"total":       total,
+		"page":        pagination.Page,
+		"limit":       pagination.Limit,
+		"total_pages": totalPages,
+	}
+	utils.BuildResponseMessage(ctx, "success", "feedback", "get", http.StatusOK, feedback, metadata)
 }
 
 // Command
