@@ -41,6 +41,9 @@ func SetUpRouteStats(api *gin.RouterGroup, clothesController *controllers.Clothe
 		statsAdminMostContext := statsAdmin.Group("/most_context")
 		{
 			statsAdminMostContext.GET("/clothes/:target_col/:user_id", clothesController.GetMostContextClothesByAdmin)
+			statsAdminMostContext.GET("/clothes_used/:target_col/:user_id", clothesUsedController.GetMostContextClothesUsedsByAdmin)
+			statsAdminMostContext.GET("/schedule/:target_col/:user_id", scheduleController.GetMostContextScheduleByAdmin)
+			statsAdminMostContext.GET("/wash/:target_col/:user_id", washController.GetMostContextWashByAdmin)
 		}
 	}
 }
