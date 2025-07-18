@@ -31,6 +31,16 @@ type (
 		TelegramUserId  *string   `json:"telegram_user_id" gorm:"type:varchar(36);null"`
 		TelegramIsValid bool      `json:"telegram_is_valid"`
 	}
+	UserAnalytic struct {
+		ID              uuid.UUID `json:"id"`
+		Username        string    `json:"username"`
+		Email           string    `json:"email"`
+		TotalClothes    int       `json:"total_clothes"`
+		TotalOutfit     int       `json:"total_outfit"`
+		TelegramUserId  *string   `json:"telegram_user_id"`
+		TelegramIsValid bool      `json:"telegram_is_valid"`
+		CreatedAt       time.Time `json:"created_at"`
+	}
 )
 
 // For Generic Interface

@@ -71,11 +71,12 @@ func SetUpDependency(r *gin.Engine, db *gorm.DB, redisClient *redis.Client) {
 	userWeatherController := controllers.NewUserWeatherController(userWeatherService, statsService)
 	washController := controllers.NewWashController(washService, statsService)
 	outfitUsedController := controllers.NewOutfitUsedController(outfitUsedService, statsService)
+	userController := controllers.NewUserController(userService)
 
 	// Routes Endpoint
 	SetUpRoutes(r, db, redisClient, authController, questionController, feedbackController,
 		dictionaryController, historyController, clothesController, clothesUsedController, scheduleController,
-		errorController, washController, userWeatherController, outfitUsedController,
+		errorController, washController, userWeatherController, outfitUsedController, userController,
 	)
 
 	// Task Scheduler

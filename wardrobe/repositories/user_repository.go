@@ -2,9 +2,11 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"time"
 	"wardrobe/models"
 	"wardrobe/models/others"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -12,6 +14,7 @@ import (
 
 // User Interface
 type UserRepository interface {
+	FindAllUser(pagination utils.Pagination, order, username string) ([]models.UserAnalytic, int64, error)
 	FindByUsernameOrEmail(username, email string) (*models.User, error)
 	FindUserContactByID(id uuid.UUID) (*models.UserContact, error)
 	FindByEmail(email string) (*models.User, error)
@@ -35,6 +38,51 @@ type userRepository struct {
 // User Constructor
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
+}
+
+func (r *userRepository) FindAllUser(pagination utils.Pagination, order, username string) ([]models.UserAnalytic, int64, error) {
+	// Model
+	var total int64
+	var users []models.UserAnalytic
+
+	// Pagination Count
+	offset := (pagination.Page - 1) * pagination.Limit
+	countQuery := r.db.Table("users")
+	if username != "all" {
+		countQuery = countQuery.Where("username LIKE = ?", "%"+username+"%")
+	}
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Model
+	query := r.db.Table("users").
+		Select(`
+			users.id, username, email, telegram_user_id, telegram_is_valid, users.created_at,
+			COUNT(DISTINCT clothes.id) AS total_clothes,
+			COUNT(DISTINCT outfits.id) AS total_outfit
+		`).
+		Joins("JOIN clothes ON clothes.created_by = users.id").
+		Joins("JOIN outfits ON outfits.created_by = users.id").
+		Group("users.id").
+		Order(fmt.Sprintf("username %s", order)).
+		Limit(pagination.Limit).
+		Offset(offset)
+
+	if username != "all" {
+		query = query.Where("username LIKE = ?", "%"+username+"%")
+	}
+
+	result := query.Find(&users)
+
+	if result.Error != nil {
+		return nil, 0, result.Error
+	}
+	if len(users) == 0 {
+		return nil, 0, gorm.ErrRecordNotFound
+	}
+
+	return users, total, nil
 }
 
 func (r *userRepository) FindByUsernameOrEmail(username, email string) (*models.User, error) {

@@ -41,6 +41,9 @@ var StatsSchedulesField = []string{"day"}
 var StatsWashField = []string{"wash_type"}
 var StatsWeatherField = []string{"weather_condition", "weather_city"}
 
+// Query
+var QueryOrder = []string{"desc", "asc"}
+
 // List Menu
 type MenuItem struct {
 	Label string
