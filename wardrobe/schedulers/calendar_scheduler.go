@@ -30,7 +30,7 @@ func (s *CalendarScheduler) SchedulerCalendarSycnSchedule() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -38,7 +38,7 @@ func (s *CalendarScheduler) SchedulerCalendarSycnSchedule() {
 	day := utils.GetTomorrowDayName()
 	schedules, err := s.ScheduleService.FindScheduleReadyToAssignCalendarTaskByDay(day)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -83,13 +83,13 @@ func (s *CalendarScheduler) SchedulerCalendarSycnSchedule() {
 				if dt.TelegramUserId != nil && dt.TelegramIsValid {
 					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 					if err != nil {
-						fmt.Println("Failed to connect to Telegram bot")
+						log.Println("Failed to connect to Telegram bot")
 						return
 					}
 
 					telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 					if err != nil {
-						fmt.Println("Invalid Telegram User Id")
+						log.Println("Invalid Telegram User Id")
 						return
 					}
 
@@ -99,7 +99,7 @@ func (s *CalendarScheduler) SchedulerCalendarSycnSchedule() {
 
 					_, err = bot.Send(doc)
 					if err != nil {
-						fmt.Println(err.Error())
+						log.Println(err.Error())
 						return
 					}
 				}

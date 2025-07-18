@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 	"wardrobe/config"
 	"wardrobe/routes"
 
@@ -22,7 +23,23 @@ import (
 // @contact.name   Leonardho R. Sitanggang
 // @contact.email  flazen.edu@gmail.com
 
+func initLogging() {
+	now := time.Now()
+	logFileName := "logs/wardrobe-" + now.Format("January-2006") + ".log"
+
+	f, err := os.OpenFile(logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+
+	log.SetOutput(f)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+}
+
 func main() {
+	initLogging()
+	log.Println("Wardrobe API service is starting...")
+
 	// Load Env
 	err := godotenv.Load()
 	if err != nil {

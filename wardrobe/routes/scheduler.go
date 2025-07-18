@@ -19,16 +19,17 @@ func SetUpScheduler(
 	reminderScheduler := schedulers.NewReminderScheduler(adminService, clothesService, clothesUsedService, questionService)
 	weatherScheduler := schedulers.NewWeatherScheduler(adminService, userService, userWeatherService)
 	calendarScheduler := schedulers.NewCalendarScheduler(adminService, scheduleService)
+	houseKeepingScheduler := schedulers.NewHouseKeepingScheduler(adminService)
 
 	// Init Scheduler
 	c := cron.New()
-	Scheduler(c, auditScheduler, cleanScheduler, reminderScheduler, weatherScheduler, calendarScheduler)
+	Scheduler(c, auditScheduler, cleanScheduler, reminderScheduler, weatherScheduler, calendarScheduler, houseKeepingScheduler)
 	c.Start()
 	defer c.Stop()
 }
 
 func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanScheduler *schedulers.CleanScheduler, reminderScheduler *schedulers.ReminderScheduler,
-	weatherScheduler *schedulers.WeatherScheduler, calendarScheduler *schedulers.CalendarScheduler) {
+	weatherScheduler *schedulers.WeatherScheduler, calendarScheduler *schedulers.CalendarScheduler, houseKeepingScheduler *schedulers.HouseKeepingScheduler) {
 	// For Production
 	// Clean Scheduler
 	c.AddFunc("10 0 * * *", weatherScheduler.SchedulerWeatherRoutineFetch)
@@ -40,6 +41,7 @@ func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanSch
 	c.AddFunc("20 3 * * *", reminderScheduler.SchedulerReminderUnironedClothes)
 	c.AddFunc("0 3 * * *", reminderScheduler.SchedulerReminderWashUsedClothes)
 	c.AddFunc("45 1 * * *", calendarScheduler.SchedulerCalendarSycnSchedule)
+	c.AddFunc("0 5 2 * *", houseKeepingScheduler.SchedulerMonthlyLog)
 
 	// For Development
 	go func() {
@@ -62,6 +64,9 @@ func Scheduler(c *cron.Cron, auditScheduler *schedulers.AuditScheduler, cleanSch
 		// weatherScheduler.SchedulerWeatherRoutineFetch()
 
 		// Calendar Scheduler
-		calendarScheduler.SchedulerCalendarSycnSchedule()
+		// calendarScheduler.SchedulerCalendarSycnSchedule()
+
+		// House Keeping Scheduler
+		houseKeepingScheduler.SchedulerMonthlyLog()
 	}()
 }

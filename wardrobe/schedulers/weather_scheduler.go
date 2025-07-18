@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -36,7 +37,7 @@ func (s *WeatherScheduler) BroadCastErrorToAdmin() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -45,13 +46,13 @@ func (s *WeatherScheduler) BroadCastErrorToAdmin() {
 			if dt.TelegramUserId != nil && dt.TelegramIsValid {
 				bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 				if err != nil {
-					fmt.Println("Failed to connect to Telegram bot")
+					log.Println("Failed to connect to Telegram bot")
 					return
 				}
 
 				telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 				if err != nil {
-					fmt.Println("Invalid Telegram User Id")
+					log.Println("Invalid Telegram User Id")
 					return
 				}
 
@@ -61,7 +62,7 @@ func (s *WeatherScheduler) BroadCastErrorToAdmin() {
 
 				_, err = bot.Send(doc)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					return
 				}
 			}
@@ -73,7 +74,7 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 	// Service : Scheduler Get User Ready Fetch Weather
 	users, err := s.UserService.SchedulerGetUserReadyFetchWeather()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		s.BroadCastErrorToAdmin()
 		return
 	}
@@ -87,7 +88,7 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 			url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&units=metric&appid=%s", dt.TrackLat, dt.TrackLong, open_weather_key)
 			resp, err := client.Get(url)
 			if err != nil {
-				fmt.Println("failed to request weather API: %w", err)
+				log.Println("failed to request weather API: %w", err)
 				s.BroadCastErrorToAdmin()
 				return
 			}
@@ -95,13 +96,13 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				fmt.Println("failed to read weather API response: %w", err)
+				log.Println("failed to read weather API response: %w", err)
 				s.BroadCastErrorToAdmin()
 				return
 			}
 			var apiResp models.OpenWeatherAPIResponse
 			if err := json.Unmarshal(body, &apiResp); err != nil {
-				fmt.Println("failed to parse weather API JSON: %w", err)
+				log.Println("failed to parse weather API JSON: %w", err)
 				s.BroadCastErrorToAdmin()
 				return
 			}
@@ -118,7 +119,7 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 			// Service : Create User Weather
 			err = s.UserWeatherService.CreateUserWeather(weather, dt.UserID)
 			if err != nil {
-				fmt.Println("failed to create weather: %w", err)
+				log.Println("failed to create weather: %w", err)
 				s.BroadCastErrorToAdmin()
 				return
 			}
@@ -129,14 +130,14 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 			if dt.TelegramUserId != nil && dt.TelegramIsValid {
 				bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 				if err != nil {
-					fmt.Println("Failed to connect to Telegram bot")
+					log.Println("Failed to connect to Telegram bot")
 					s.BroadCastErrorToAdmin()
 					return
 				}
 
 				telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 				if err != nil {
-					fmt.Println("Invalid Telegram User Id")
+					log.Println("Invalid Telegram User Id")
 					s.BroadCastErrorToAdmin()
 					return
 				}
@@ -146,7 +147,7 @@ func (s *WeatherScheduler) SchedulerWeatherRoutineFetch() {
 
 				_, err = bot.Send(doc)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					s.BroadCastErrorToAdmin()
 					return
 				}

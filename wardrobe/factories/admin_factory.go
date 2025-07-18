@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func AdminFactory(username, email, telegramUserId, password *string) models.Admin {
+func AdminFactory(username, email, telegramUserId, password *string, isTelegramValid bool) models.Admin {
 	var finalUsername string
 	if username != nil && *username != "" {
 		finalUsername = *username
@@ -41,7 +41,7 @@ func AdminFactory(username, email, telegramUserId, password *string) models.Admi
 		Username:        finalUsername,
 		Password:        string(hashedPass),
 		TelegramUserId:  finalTelegramUserId,
-		TelegramIsValid: false,
+		TelegramIsValid: isTelegramValid,
 		Email:           finalEmail,
 	}
 }

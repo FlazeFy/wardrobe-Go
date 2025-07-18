@@ -2,6 +2,7 @@ package schedulers
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -30,14 +31,14 @@ func (s *AuditScheduler) SchedulerAuditError() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
 	// Service : Get All Error Audit
 	errorsList, err := s.ErrorService.SchedulerGetAllErrorAudit()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -47,7 +48,7 @@ func (s *AuditScheduler) SchedulerAuditError() {
 		filename := fmt.Sprintf("audit_error_%s.pdf", datetime)
 		err = utils.GeneratePDFErrorAudit(errorsList, filename)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 			return
 		}
 
@@ -55,13 +56,13 @@ func (s *AuditScheduler) SchedulerAuditError() {
 			if dt.TelegramUserId != nil && dt.TelegramIsValid {
 				bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 				if err != nil {
-					fmt.Println("Failed to connect to Telegram bot")
+					log.Println("Failed to connect to Telegram bot")
 					return
 				}
 
 				telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 				if err != nil {
-					fmt.Println("Invalid Telegram User Id")
+					log.Println("Invalid Telegram User Id")
 					return
 				}
 
@@ -71,7 +72,7 @@ func (s *AuditScheduler) SchedulerAuditError() {
 
 				_, err = bot.Send(doc)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					return
 				}
 			}

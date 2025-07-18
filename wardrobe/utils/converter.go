@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"strings"
 	"unicode"
 )
@@ -31,13 +31,13 @@ func EmailToUsername(email string) string {
 func StripFields(data interface{}, keysToRemove ...string) []map[string]interface{} {
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println("marshal error:", err)
+		log.Println("marshal error:", err)
 		return nil
 	}
 
 	var result []map[string]interface{}
 	if err := json.Unmarshal(jsonBytes, &result); err != nil {
-		fmt.Println("unmarshal error:", err)
+		log.Println("unmarshal error:", err)
 		return nil
 	}
 

@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"wardrobe/models"
+	"wardrobe/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -11,7 +12,7 @@ import (
 // Question Interface
 type QuestionRepository interface {
 	CreateQuestion(question *models.Question) error
-	FindAllQuestion() ([]models.Question, error)
+	FindAllQuestion(pagination utils.Pagination) ([]models.Question, int64, error)
 	FindUnansweredQuestion() ([]models.UnansweredQuestion, error)
 
 	// For Seeder
@@ -38,19 +39,31 @@ func (r *questionRepository) CreateQuestion(question *models.Question) error {
 	return r.db.Create(question).Error
 }
 
-func (r *questionRepository) FindAllQuestion() ([]models.Question, error) {
+func (r *questionRepository) FindAllQuestion(pagination utils.Pagination) ([]models.Question, int64, error) {
 	// Model
 	var questions []models.Question
+	var total int64
+
+	// Pagination Count
+	offset := (pagination.Page - 1) * pagination.Limit
+	countQuery := r.db.Model(&models.Question{})
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
 
 	// Query
-	if err := r.db.Find(&questions).Error; err != nil {
-		return nil, err
-	}
+	result := r.db.Limit(pagination.Limit).
+		Offset(offset).
+		Find(&questions)
+
 	if len(questions) == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, 0, gorm.ErrRecordNotFound
+	}
+	if result.Error != nil {
+		return nil, 0, result.Error
 	}
 
-	return questions, nil
+	return questions, total, nil
 }
 
 func (r *questionRepository) FindUnansweredQuestion() ([]models.UnansweredQuestion, error) {

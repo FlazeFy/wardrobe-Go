@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"math"
 	"net/http"
 	"wardrobe/models"
 	"wardrobe/services"
@@ -21,8 +22,11 @@ func NewQuestionController(questionService services.QuestionService) *QuestionCo
 
 // Queries
 func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
+	// Pagination
+	pagination := utils.GetPagination(ctx)
+
 	// Service : Get All Question
-	questions, err := c.QuestionService.GetAllQuestion()
+	questions, total, err := c.QuestionService.GetAllQuestion(pagination)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -33,7 +37,14 @@ func (c *QuestionController) GetAllQuestion(ctx *gin.Context) {
 		return
 	}
 
-	utils.BuildResponseMessage(ctx, "success", "question", "get", http.StatusOK, questions, nil)
+	totalPages := int(math.Ceil(float64(total) / float64(pagination.Limit)))
+	metadata := gin.H{
+		"total":       total,
+		"page":        pagination.Page,
+		"limit":       pagination.Limit,
+		"total_pages": totalPages,
+	}
+	utils.BuildResponseMessage(ctx, "success", "question", "get", http.StatusOK, questions, metadata)
 }
 
 // Command

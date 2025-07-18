@@ -17,7 +17,7 @@ func SeedUsers(repo repositories.UserRepository, count int) {
 	userEmail := os.Getenv("USER_EMAIL")
 	userPassword := os.Getenv("USER_PASSWORD")
 	userTelegramID := os.Getenv("USER_TELEGRAM_USER_ID")
-	userTest := factories.UserFactory(&userUsername, &userEmail, &userTelegramID, &userPassword)
+	userTest := factories.UserFactory(&userUsername, &userEmail, &userTelegramID, &userPassword, true)
 	_, err := repo.CreateUser(&userTest)
 	if err != nil {
 		log.Printf("failed to seed admin %d:\n", err)
@@ -26,7 +26,7 @@ func SeedUsers(repo repositories.UserRepository, count int) {
 
 	// Fill Table
 	for i := 0; i < count; i++ {
-		user := factories.UserFactory(nil, nil, nil, nil)
+		user := factories.UserFactory(nil, nil, nil, nil, false)
 		_, err := repo.CreateUser(&user)
 		if err != nil {
 			log.Printf("failed to seed user %d: %v\n", i, err)

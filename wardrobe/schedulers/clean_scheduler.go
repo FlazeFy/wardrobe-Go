@@ -2,6 +2,7 @@ package schedulers
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -44,14 +45,14 @@ func (s *CleanScheduler) SchedulerCleanHistory() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
 	// Service : Delete History For Last N Days
 	total, err := s.HistoryService.DeleteHistoryForLastNDays(days)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -61,13 +62,13 @@ func (s *CleanScheduler) SchedulerCleanHistory() {
 			if dt.TelegramUserId != nil && dt.TelegramIsValid {
 				bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 				if err != nil {
-					fmt.Println("Failed to connect to Telegram bot")
+					log.Println("Failed to connect to Telegram bot")
 					return
 				}
 
 				telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 				if err != nil {
-					fmt.Println("Invalid Telegram User Id")
+					log.Println("Invalid Telegram User Id")
 					return
 				}
 
@@ -76,7 +77,7 @@ func (s *CleanScheduler) SchedulerCleanHistory() {
 
 				_, err = bot.Send(msg)
 				if err != nil {
-					fmt.Println("Failed to send message to Telegram")
+					log.Println("Failed to send message to Telegram")
 					return
 				}
 			}
@@ -90,14 +91,14 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 	// Service : Get All Admin Contact
 	contact, err := s.AdminService.GetAllAdminContact()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
 	// Service : Get Clothes Plan Destroy
 	plans, err := s.ClothesService.GetClothesPlanDestroy(days)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -113,28 +114,28 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 			// Service : Scheduler Hard Delete Clothes By Id
 			_, err = s.ClothesService.SchedulerHardDeleteClothesById(dt.ID)
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				return
 			}
 
 			// Service : Scheduler Hard Delete Clothes Used By Clothes Id
 			_, err = s.ClothesUsedService.DeleteClothesUsedByClothesId(dt.ID)
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				return
 			}
 
 			// Service : Scheduler Hard Delete Schedule By Clothes Id
 			_, err = s.ScheduleService.DeleteScheduleByClothesId(dt.ID)
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				return
 			}
 
 			// Service : Scheduler Hard Delete Wash By Clothes Id
 			_, err = s.WashService.DeleteWashByClothesId(dt.ID)
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 				return
 			}
 			totalClothes++
@@ -155,13 +156,13 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 				if dt.TelegramUserId != nil && dt.TelegramIsValid {
 					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 					if err != nil {
-						fmt.Println("Failed to connect to Telegram bot")
+						log.Println("Failed to connect to Telegram bot")
 						return
 					}
 
 					telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 					if err != nil {
-						fmt.Println("Invalid Telegram User Id")
+						log.Println("Invalid Telegram User Id")
 						return
 					}
 
@@ -170,7 +171,7 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 
 					_, err = bot.Send(msg)
 					if err != nil {
-						fmt.Println("Failed to send message to Telegram")
+						log.Println("Failed to send message to Telegram")
 						return
 					}
 					totalUser++
@@ -188,13 +189,13 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 				if dt.TelegramUserId != nil && dt.TelegramIsValid {
 					bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_BOT_TOKEN"))
 					if err != nil {
-						fmt.Println("Failed to connect to Telegram bot")
+						log.Println("Failed to connect to Telegram bot")
 						return
 					}
 
 					telegramID, err := strconv.ParseInt(*dt.TelegramUserId, 10, 64)
 					if err != nil {
-						fmt.Println("Invalid Telegram User Id")
+						log.Println("Invalid Telegram User Id")
 						return
 					}
 
@@ -203,7 +204,7 @@ func (s *CleanScheduler) SchedulerCleanDeletedClothes() {
 
 					_, err = bot.Send(msg)
 					if err != nil {
-						fmt.Println("Failed to send message to Telegram")
+						log.Println("Failed to send message to Telegram")
 						return
 					}
 				}
