@@ -49,7 +49,7 @@ func (r *userRepository) FindAllUser(pagination utils.Pagination, order, usernam
 	offset := (pagination.Page - 1) * pagination.Limit
 	countQuery := r.db.Table("users")
 	if username != "all" {
-		countQuery = countQuery.Where("username LIKE = ?", "%"+username+"%")
+		countQuery = countQuery.Where("username LIKE ?", "%"+username+"%")
 	}
 	if err := countQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -70,7 +70,7 @@ func (r *userRepository) FindAllUser(pagination utils.Pagination, order, usernam
 		Offset(offset)
 
 	if username != "all" {
-		query = query.Where("username LIKE = ?", "%"+username+"%")
+		query = query.Where("username LIKE ?", "%"+username+"%")
 	}
 
 	result := query.Find(&users)
